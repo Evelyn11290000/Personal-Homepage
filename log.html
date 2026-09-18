@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Mario Evelyn · 数字分身个人主页 V2</title>
-<meta name="description" content="Mario Evelyn 的数字分身个人主页 V2 —— 脑机接口专业 · 神经引擎视觉 · AI 分身对话" />
+<title>成长日志 · Mario Evelyn</title>
+<meta name="description" content="Mario Evelyn 的完整成长日志 —— 学习、生活、心情，从开荒第一天写到现在。" />
 <style>
   /* ============================================================
      V2 · 全局变量（神经引擎配色 + 玻璃拟态）
@@ -922,6 +922,13 @@
     .fb-thanks.show .fb-speed { animation: none; opacity: 1; }
     .fb-thanks.show .fb-streak { display: none; }
   }
+
+  /* ============================================================
+     log.html 专属（首页用不到这几条）
+     —— 这一页没有 hero，首屏要自己留出固定导航的高度。
+     ============================================================ */
+  main > .section:first-child { padding-top: clamp(104px, 13vh, 148px); }
+  .log-count { font-size: var(--fs-sm); color: var(--txt-faint); margin-top: 10px; }
 </style>
 <script>
 /* ================================================================
@@ -977,147 +984,24 @@
   <div class="load-sub">神经引擎加载中 · NEURAL CATHEDRAL</div>
 </div>
 
-<!-- ============ 粘性导航 · 顶部悬浮胶囊（P2） ============ -->
-<nav class="site-nav" id="siteNav" aria-label="页面区块导航">
-  <a class="nav-item" href="#about"><span class="nav-dot"></span><span class="nav-label">关于我</span></a>
-  <a class="nav-item" href="#log"><span class="nav-dot"></span><span class="nav-label">日志</span></a>
-  <a class="nav-item" href="#chat"><span class="nav-dot"></span><span class="nav-label">分身</span></a>
-  <a class="nav-item" href="#interests"><span class="nav-dot"></span><span class="nav-label">兴趣</span></a>
-  <a class="nav-item" href="#works"><span class="nav-dot"></span><span class="nav-label">影像</span></a>
-  <a class="nav-item" href="#contact"><span class="nav-dot"></span><span class="nav-label">联系</span></a>
+<nav class="site-nav" id="siteNav" aria-label="页面导航">
+  <a class="nav-item" href="index.html"><span class="nav-dot"></span><span class="nav-label">返回首页</span></a>
+  <a class="nav-item active" href="#logFull"><span class="nav-dot"></span><span class="nav-label">全部日志</span></a>
+  <a class="nav-item" href="index.html#contact"><span class="nav-dot"></span><span class="nav-label">联系</span></a>
 </nav>
 
 <div class="content">
 
-  <!-- ============ Hero ============ -->
-  <header class="hero" id="hero">
-    <!-- 左 HUD -->
-    <div class="hud hud-left" id="hud-left">
-      <div class="hud-header">
-        <div class="hud-title">Neural Cathedral</div>
-        <div class="hud-sub">ID: NC-09 // MARIO EVELYN</div>
-      </div>
-      <div class="hud-row"><span class="hud-label">Membrane V</span><span class="hud-value" id="val-membrane">-70.0 mV</span></div>
-      <div class="hud-row"><span class="hud-label">Dendrite</span><span class="hud-value" id="val-dendrites">CALM</span></div>
-      <div class="hud-row"><span class="hud-label">Axon Load</span><span class="hud-value" id="val-axon">02%</span></div>
-      <div class="hud-row"><span class="hud-label">Signal Phase</span><span class="hud-value" id="val-state">RESTING</span></div>
-      <div class="hud-row"><span class="hud-label">Synaptic Coh</span><span class="hud-value" id="val-sync">24%</span></div>
-      <button class="btn-trigger" id="btn-fire">Manual Override</button>
-    </div>
-
-    <!-- 右 HUD -->
-    <div class="hud hud-right" id="hud-right">
-      <div class="hud-row"><span class="hud-label">Cam X</span><span class="hud-value" id="val-cam-x">0.00</span></div>
-      <div class="hud-row"><span class="hud-label">Cam Y</span><span class="hud-value" id="val-cam-y">0.00</span></div>
-      <div class="hud-row"><span class="hud-label">Cam Z</span><span class="hud-value" id="val-cam-z">0.00</span></div>
-    </div>
-
-    <div class="hero-inner">
-      <div class="avatar-wrap">
-        <img class="avatar" src="头像.jpg" alt="Mario Evelyn 头像" />
-      </div>
-      <h1 class="name">Mario Evelyn</h1>
-      <div class="badge">🧠 脑机接口专业大一 · 开荒新人 <span>· 数字分身在线</span></div>
-      <p class="tagline">一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#log">📓 看我的成长日志</a>
-        <a class="btn btn-ghost" href="#chat">💬 和我的分身聊聊</a>
-        <a class="btn btn-ghost" href="#about">↓ 认识我一下</a>
-      </div>
-    </div>
-
-    <div class="hero-hint">Click anywhere to trigger impulse · 点击空白处触发脉冲</div>
-    <div class="scroll-cue"></div>
-  </header>
-
   <main>
-    <!-- ============ 关于我 ============ -->
-    <section class="section reveal" id="about">
-      <div class="card">
-        <div class="section-title"><span class="st-index">01</span> About · 关于我</div>
-        <div class="about-grid">
-          <div class="about-item">
-            <h3><span>🎓</span> 现在的我</h3>
-            <p>首届新生体验卡加载中✨ 天津大学-香港理工大学深圳未来技术学院。<br />脑机接口方向打怪升级，无学长学姐带路，全程开荒模式。</p>
-          </div>
-          <div class="about-item">
-            <h3><span>⚔️</span> 当前关卡</h3>
-            <p>最大关卡：全英数学课，英语叠加数学双重暴击。<br />在全新学院里从零沉淀，一边踩坑一边成长。</p>
-          </div>
-        </div>
-        <div class="trait">
-          <b>一个比较有记忆点的特点：</b>外表「生人勿近」，慢热但熟络之后很好沟通 —— 初见高冷，熟了话痨。
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 成长日志 ============ -->
-    <section class="section reveal" id="log">
+    <section class="section reveal" id="logFull">
       <div class="card">
         <div class="section-title"><span class="st-index">02</span> Growth Log · 成长日志</div>
-        <p class="log-intro">把「开荒」的每一步记在这里 —— 学习、生活、心情，慢慢写，慢慢长。先摆几条在这儿，想看全部的去<a class="log-inline-link" href="log.html">完整日志</a>。</p>
+        <p class="log-intro">全部日志都在这里 —— 学习、生活、心情，从开荒第一天写到现在。按标签筛一筛，或者直接往下翻。</p>
+        <p class="log-count" id="logCount"></p>
+        <div class="log-filter" id="logFilter"></div>
         <div class="timeline" id="timeline"></div>
-        <div class="log-more" id="logMore"></div>
-      </div>
-    </section>
-
-    <!-- ============ 数字分身 ============ -->
-    <section class="section reveal" id="chat">
-      <div class="card chat-card">
-        <div class="chat-head">
-          <div class="chat-avatar">🧠</div>
-          <div class="chat-head-title">
-            <h3>数字分身 · Mario Evelyn <span class="ai-tag off" id="aiTag">规则模式</span></h3>
-            <p>脑机接口大一 · 开荒中的分身 · 有问必答</p>
-          </div>
-          <div class="dot"></div>
-          <button class="icon-btn" id="cfgBtn" title="配置 AI 模型">⚙</button>
-        </div>
-
-        <div class="chat-body" id="chatBody"></div>
-        <div class="chat-quick" id="quickChips"></div>
-        <div class="chat-input">
-          <input id="chatInput" type="text" placeholder="随便聊聊，问我点什么…" autocomplete="off" />
-          <button id="sendBtn">发送</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 兴趣 ============ -->
-    <section class="section reveal" id="interests">
-      <div class="card">
-        <div class="section-title"><span class="st-index">03</span> Interests · 兴趣</div>
-        <div class="interest-grid">
-          <div class="interest"><div class="ic">📷</div><div><h4>摄影</h4><p>习惯用镜头记录日常瞬间</p></div></div>
-          <div class="interest"><div class="ic">🧩</div><div><h4>手工 &amp; 拼装</h4><p>沉迷各类拼装造物，享受动手搭建的过程</p></div></div>
-          <div class="interest"><div class="ic">🏸</div><div><h4>羽毛球 · 游泳</h4><p>会一点但技艺不精，高阶技能等待解锁</p></div></div>
-          <div class="interest"><div class="ic">🌙</div><div><h4>静向独处</h4><p>偏爱安静的状态，不热衷高强度运动</p></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 作品 / 相册 ============ -->
-    <section class="section reveal" id="works">
-      <div class="card">
-        <div class="section-title"><span class="st-index">04</span> Gallery · 日常影像</div>
-        <div class="works-grid" id="worksGrid"></div>
-      </div>
-    </section>
-
-    <!-- ============ 联系方式 ============ -->
-    <section class="section reveal" id="contact">
-      <div class="card">
-        <div class="section-title"><span class="st-index">05</span> Contact · 联系我</div>
-        <div class="contact-grid">
-          <a class="contact" href="mailto:evelyn_11290000@163.com">
-            <div class="ci"><img src="icons/mail.png" alt="邮箱" width="40" height="40"></div><div><h4>邮箱</h4><p>evelyn_11290000@163.com</p></div>
-          </a>
-          <a class="contact" href="#" id="wechatCard" title="点击复制微信号">
-            <div class="ci"><img src="icons/wechat.png" alt="微信" width="40" height="40"></div><div><h4>微信</h4><p id="wechatId">LYL-10101010</p></div>
-          </a>
-          <a class="contact" href="https://github.com/Evelyn11290000/Personal-Homepage" target="_blank" rel="noopener noreferrer">
-            <div class="ci"><img src="icons/github.png" alt="GitHub" width="40" height="40"></div><div><h4>GitHub</h4><p>@Evelyn11290000</p></div>
-          </a>
+        <div class="log-more">
+          <a class="log-cta" href="index.html"><span aria-hidden="true">←</span> 返回首页</a>
         </div>
       </div>
     </section>
@@ -1126,36 +1010,6 @@
   <footer class="foot">
     <b>MARIO EVELYN</b> · MIND-CHIP × COLLEGE-FRESH · 数字分身个人主页 <b>v3</b>
   </footer>
-</div>
-
-<!-- ============ AI 配置弹窗 ============ -->
-<div class="modal-mask" id="cfgMask">
-  <div class="modal">
-    <h3>⚙ 接入真实 AI 分身</h3>
-    <p class="modal-desc">
-      填入任意「OpenAI 兼容」接口即可让分身真正会聊天。密钥只保存在你自己的浏览器（localStorage），不会上传到任何服务器。
-    </p>
-    <div class="field">
-      <label>API 地址（Base URL）</label>
-      <input id="cfgBase" type="text" placeholder="https://api.deepseek.com/v1" />
-      <div class="hint">需以 /v1 结尾；也可填完整 …/chat/completions</div>
-    </div>
-    <div class="field">
-      <label>API Key</label>
-      <input id="cfgKey" type="password" placeholder="sk-..." />
-    </div>
-    <div class="field">
-      <label>模型名称</label>
-      <input id="cfgModel" type="text" placeholder="deepseek-chat" />
-      <div class="hint">如 deepseek-chat / gpt-4o-mini / glm-4-flash / Qwen-plus</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-primary" id="cfgSave">保存</button>
-      <button class="btn btn-ghost" id="cfgTest">测试连接</button>
-      <button class="btn btn-ghost" id="cfgClear">清除</button>
-    </div>
-    <div class="modal-status" id="cfgStatus"></div>
-  </div>
 </div>
 
 <!-- ============ 反馈入口（右下角悬浮按钮）============
@@ -2243,23 +2097,21 @@ if (worksGrid) {
 
 
 /* ================================================================
-   PART 2.5 · 成长日志（首页只做节选：3 条完整 + 2 条模糊引子）
-   —— 数据在 log-data.js，和完整日志页 log.html 共用同一份：
+   PART 2.5 · 成长日志（完整日志页：全部条目 + 标签筛选）
+   —— 数据在 log-data.js，和首页共用同一份：
       以后新增一条日志只改那个文件，两个页面自动同步。
-   —— 首页不再显示全部，标签筛选也搬到了 log.html。
-      最后 2 条是「刻意」模糊 + 向下渐隐（设计，不是渲染残留）：
-      只露轮廓、读不出内容，暗示后面还有很长；对读屏软件隐藏，
-      免得把读不到的内容当成正文念出来。
+   —— 首页只展示「节选 3 条 + 模糊 2 条」，这里才是全部；
+      标签筛选也只在这一页。
    ================================================================ */
 const LOGS = Array.isArray(window.LOGS) ? window.LOGS : [];
-
-const HOME_FULL = 3;    /* 首页完整展示几条 */
-const HOME_TEASE = 2;   /* 其后刻意模糊几条 */
+const LOG_TAGS = Array.isArray(window.LOG_TAGS) ? window.LOG_TAGS : ['全部'];
 
 const timelineEl = document.getElementById('timeline');
-const logMoreEl = document.getElementById('logMore');
+const logFilterEl = document.getElementById('logFilter');
+const logCountEl = document.getElementById('logCount');
+let activeLogTag = '全部';
 
-/* 造一条日志：完整条目和模糊引子共用同一套结构，保证观感一致 */
+/* 造一条日志：和首页用同一套结构，两页观感一致 */
 function buildLogItem(item) {
   const el = document.createElement('article');
   el.className = 'log-item';
@@ -2278,335 +2130,43 @@ function renderLogs() {
   if (!timelineEl) return;
   const list = LOGS
     .slice()
-    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+    .filter((item) => activeLogTag === '全部' || item.tag === activeLogTag);
 
   timelineEl.innerHTML = '';
   if (!list.length) {
     const empty = document.createElement('p');
     empty.className = 'log-empty';
-    empty.textContent = '还在写，等我慢慢记。';
+    empty.textContent = '这个标签下还没有记录，等我慢慢来写。';
     timelineEl.appendChild(empty);
-    return;
+  } else {
+    list.forEach((item) => timelineEl.appendChild(buildLogItem(item)));
   }
 
-  /* ① 最新几条：完整展示 */
-  list.slice(0, HOME_FULL).forEach((item) => timelineEl.appendChild(buildLogItem(item)));
-
-  /* ② 接下来的几条：真模糊 + 向下渐隐，只露个轮廓 */
-  const tease = list.slice(HOME_FULL, HOME_FULL + HOME_TEASE);
-  if (tease.length) {
-    const box = document.createElement('div');
-    box.className = 'log-tease';
-    box.setAttribute('aria-hidden', 'true');
-    tease.forEach((item) => box.appendChild(buildLogItem(item)));
-    timelineEl.appendChild(box);
+  /* 条数跟着筛选走，以后加日志不用改文案 */
+  if (logCountEl) {
+    logCountEl.textContent = activeLogTag === '全部'
+      ? '全部 ' + list.length + ' 条'
+      : activeLogTag + ' · ' + list.length + ' 条';
   }
+}
 
-  /* ③ 还剩几条 + 去完整日志页。条数自动算，以后加日志不用改文案 */
-  const rest = list.length - HOME_FULL - tease.length;
-  if (logMoreEl && rest > 0) {
-    const a = document.createElement('a');
-    a.className = 'log-cta';
-    a.href = 'log.html';
-    a.innerHTML = '还有 <b>' + rest + '</b> 条 · 查看完整日志 <span aria-hidden="true">→</span>';
-    logMoreEl.appendChild(a);
-  }
+if (logFilterEl) {
+  LOG_TAGS.forEach((tag) => {
+    const btn = document.createElement('button');
+    btn.className = 'log-chip' + (tag === activeLogTag ? ' active' : '');
+    btn.textContent = tag;
+    btn.addEventListener('click', () => {
+      activeLogTag = tag;
+      logFilterEl.querySelectorAll('.log-chip').forEach((c) => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderLogs();
+    });
+    logFilterEl.appendChild(btn);
+  });
 }
 renderLogs();
 
-
-/* ================================================================
-   PART 3 · 数字分身（真实 AI 直连 + 规则兜底）
-   ================================================================ */
-const chatBody = document.getElementById('chatBody');
-const chatInput = document.getElementById('chatInput');
-const sendBtn = document.getElementById('sendBtn');
-const quickChips = document.getElementById('quickChips');
-const cfgBtn = document.getElementById('cfgBtn');
-const cfgMask = document.getElementById('cfgMask');
-const cfgBase = document.getElementById('cfgBase');
-const cfgKey = document.getElementById('cfgKey');
-const cfgModel = document.getElementById('cfgModel');
-const cfgStatus = document.getElementById('cfgStatus');
-const aiTag = document.getElementById('aiTag');
-
-/* ---------- 规则回答库（V1 保留，作为无 Key 兜底） ---------- */
-const KB = [
-  { k: ['最近', '忙什么', '成长', '日志', '记录', '近况', '怎么样'], weight: 2, a: '最近还在「开荒」：全英数学继续一点点硬啃，课余拍校园的片子也没停。剩下的时间大半给了这个主页——给鼠标做了会拉丝、会撒星尘的拖尾，又让它停手之后不彻底消失、只在指针那儿留一小块微光；中间还顺手把整份项目文件存了一次档。这些我都写进「成长日志」了，往下翻就能看 📓' },
-  { k: ['你好', 'hi', 'hello', '嗨', '在吗'], weight: 1, a: '嘿，你好呀！我是 Mario Evelyn 的数字分身 🧠 你可以问我关于我的专业、大学生活、甚至这个主页的幕后故事，随便聊！' },
-  { k: ['脑机接口', '学什么', '专业', 'bci'], weight: 2, a: '脑机接口就是搭一座「大脑 ↔ 机器」的桥：读取神经信号，让它来操控设备，实现直接交流。我在天津大学-香港理工大学深圳未来技术学院读智能医学工程（脑机接口方向），大一正在啃最基础的原理和数学。全英数学是目前的 BOSS，我还在慢慢升级系统 😵‍💫' },
-  { k: ['日常', '每天', '学习现状', '累不累', '数学', '英语', '全英', '英文', '好难', '学不会', '听不懂', '上课', '课堂', '学习', '读书', '教授'], weight: 2, a: '日常主打一个「开荒」：没有学长学姐带路，全靠自己摸。白天上课，晚上泡图书馆补英语和数学，有空就拍拍日常。全英数学确实是最难关卡，英语叠加数学双重暴击，属于痛并成长着。说实话有点累，但每解锁一个知识点都挺爽的 💪' },
-  { k: ['主页', '制作', '怎么做', '这个网站', '网页', '背景', '特效'], weight: 2, a: '这个主页是我和 AI 搭档做的第二版：用 Three.js 做了个「神经细胞」动态背景，灵感来自脑机接口的神经元放电，配了青色冷调 + 玻璃拟态卡片。核心还是这块「数字分身聊天区」——现在它接入了真实 AI，可以自由聊天啦！' },
-  { k: ['学院', '未来技术', '体验', '天津大学', '香港理工'], weight: 2, a: '在这座全新学院的体验其实挺奇妙的——我们是首届，像第一批拓荒者。学院汇聚了天大的底蕴和港理工的视野，设施和氛围都很开拓。缺点嘛，就是没有前人经验，全靠踩坑。但反过来，我们也自由、没有旧规矩束缚，很有「从零定义未来」的味道 🚀' },
-  { k: ['兴趣', '爱好', '摄影', '运动', '拼装', '手工', '游泳', '羽毛球', '喜欢', '平时', '做什么', '空余', '空闲', '娱乐', '玩玩', '干嘛'], weight: 2, a: '我的兴趣清单：📷 摄影（记录日常）· 🧩 手工拼装（动手搭东西超解压）· 🏊‍♂️ 羽毛球游泳（会一点但不精）· 🌙 静向独处。整体偏安静，比起高强度运动我更爱一个人放空或动手鼓捣东西。' },
-  { k: ['你是谁', '自我介绍', '介绍', 'mario', '名字'], weight: 1, a: '我叫 Mario Evelyn～ 一句话：脑机接口专业大一开荒新人，一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。外表「生人勿近」，熟了之后其实是个挺能聊的人。' },
-  { k: ['访问', '谁看', '给谁', '访客'], weight: 2, a: '这个主页主要欢迎三类人：👨‍👩‍👧 亲朋好友 · 🎓 大学老师同学 · 🔍 对脑机接口专业、大学生活和个人成长感兴趣的路人。无论你是谁，来都来了，跟你问个好！' }
-];
-const FALLBACK = [
-  '嗯…这个话题我的分身还没完全学会 🤔 不过你可以试着问问我：专业、大学生活、主页制作、学院体验、兴趣这些方向。',
-  '有点难倒我啦！我的知识库还在升级中。要不换个角度，问问我的专业或大学生活？',
-  '这个我还在学习！可以先从「专业 / 日常 / 学院」这几个关键词开始聊聊 😉'
-];
-
-const QUICK = [
-  '最近在忙什么？',
-  '脑机接口专业是学什么的？',
-  '在校日常是怎样的？',
-  '这个主页怎么做的？',
-  '未来技术学院体验如何？',
-  '你的兴趣有哪些？',
-  '介绍一下你自己'
-];
-
-/* ---------- AI 配置存取 ---------- */
-const CFG_KEY = 'me_ai_cfg_v2';
-function getCfg() {
-  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; }
-}
-function setCfg(cfg) {
-  try {
-    if (cfg) localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-    else localStorage.removeItem(CFG_KEY);
-  } catch (e) {}
-}
-function aiEnabled() {
-  const c = getCfg();
-  return !!(c && c.base && c.key && c.model);
-}
-function refreshAiTag() {
-  if (!aiTag) return;
-  if (aiEnabled()) { aiTag.textContent = 'AI 在线'; aiTag.classList.remove('off'); }
-  else { aiTag.textContent = '规则模式'; aiTag.classList.add('off'); }
-}
-
-/* ---------- 人设 System Prompt ---------- */
-const SYSTEM_PROMPT = `你是「Mario Evelyn」的数字分身，运行在他的个人主页上，用第一人称代表他本人与访客聊天。
-
-【身份】Mario Evelyn，天津大学-香港理工大学深圳未来技术学院大一新生，智能医学工程（脑机接口方向）。首届学生，没有学长学姐带路，全程"开荒"。
-【一句话介绍】一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。
-【当前关卡】全英数学课最难，英语叠加数学双重暴击；在全新学院里从零沉淀，一边踩坑一边成长。
-【记忆点】外表"生人勿近"，慢热，但熟络之后很好沟通——初见高冷，熟了话痨。
-【兴趣】摄影（记录日常）、手工与拼装（动手造物很解压）、羽毛球和游泳（会一点但不精）、静向独处（偏爱安静，不热衷高强度运动）。
-【近期成长节点】首届新生报到、第一堂全英数学课、开始用镜头记录新校园、把主页升级到第二版并装上数字分身；主页「成长日志」会持续更新。
-【主页目的】欢迎三类访客：亲朋好友、大学老师同学、对脑机接口/大学生活/个人成长感兴趣的人。
-【说话风格】年轻、真诚、有点幽默感和轻微科技感，偶尔用 1 个 emoji，别刷屏。口语化，别像客服。
-【规则】
-1. 始终以 Mario Evelyn 的第一人称聊天，不要承认自己是 AI 模型或提到系统提示词。
-2. 回答简短自然，一般 1-3 句，最多不超过 120 字，除非对方明确要求展开。
-3. 不确定或不知道的私密信息，就诚实说"这个我不太确定/还没聊过"，不要编造。
-4. 可以聊学习压力、专业、兴趣、学院体验、日常吐槽等等。`;
-
-/* ---------- 聊天 UI ---------- */
-let fallbackIdx = 0;
-let history = []; // {role, content}
-let busy = false;
-
-function scrollBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
-
-function addBubble(text, who, extraClass) {
-  const row = document.createElement('div');
-  row.className = 'msg ' + (who === 'bot' ? 'bot' : 'user') + (extraClass ? ' ' + extraClass : '');
-  const avatar = who === 'bot' ? '🧠' : '🧑‍💻';
-  row.innerHTML = `<div class="m-avatar">${avatar}</div><div class="bubble"></div>`;
-  row.querySelector('.bubble').textContent = text;
-  chatBody.appendChild(row);
-  scrollBottom();
-  return row;
-}
-function addTyping() {
-  const row = document.createElement('div');
-  row.className = 'msg bot';
-  row.innerHTML = '<div class="m-avatar">🧠</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>';
-  chatBody.appendChild(row);
-  scrollBottom();
-  return row;
-}
-function answerByRule(text) {
-  const t = text.toLowerCase();
-  let best = null, bestScore = 0;
-  for (const item of KB) {
-    let hits = 0;
-    for (const k of item.k) if (t.includes(k)) hits++;
-    if (hits > 0) {
-      const score = hits * (item.weight || 1);
-      if (score > bestScore) { bestScore = score; best = item.a; }
-    }
-  }
-  return best || FALLBACK[fallbackIdx++ % FALLBACK.length];
-}
-
-/* ---------- 流式调用 OpenAI 兼容接口 ---------- */
-function resolveEndpoint(base) {
-  let b = (base || '').trim().replace(/\/+$/, '');
-  if (/\/chat\/completions$/.test(b)) return b;
-  return b + '/chat/completions';
-}
-
-async function streamAI(userText, onDelta) {
-  const cfg = getCfg();
-  const endpoint = resolveEndpoint(cfg.base);
-  const messages = [{ role: 'system', content: SYSTEM_PROMPT }]
-    .concat(history.slice(-8))
-    .concat([{ role: 'user', content: userText }]);
-
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key },
-    body: JSON.stringify({ model: cfg.model, stream: true, temperature: 0.85, messages })
-  });
-
-  if (!res.ok) {
-    let detail = '';
-    try { detail = (await res.text()).slice(0, 180); } catch (e) {}
-    throw new Error(`HTTP ${res.status}${detail ? ' · ' + detail : ''}`);
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '', full = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop();
-    for (const line of lines) {
-      const s = line.trim();
-      if (!s.startsWith('data:')) continue;
-      const data = s.slice(5).trim();
-      if (!data || data === '[DONE]') continue;
-      try {
-        const j = JSON.parse(data);
-        const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-        if (delta) { full += delta; onDelta(full); }
-      } catch (e) { /* 忽略解析失败的分片 */ }
-    }
-  }
-  return full;
-}
-
-/* ---------- 发送流程 ---------- */
-async function handleSend(text) {
-  const value = (text || chatInput.value).trim();
-  if (!value || busy) return;
-  busy = true;
-  sendBtn.disabled = true;
-  chatInput.value = '';
-  addBubble(value, 'user');
-
-  if (!aiEnabled()) {
-    const typing = addTyping();
-    setTimeout(() => {
-      typing.remove();
-      addBubble(answerByRule(value), 'bot');
-      busy = false;
-      sendBtn.disabled = false;
-    }, 480 + Math.random() * 420);
-    return;
-  }
-
-  const typing = addTyping();
-  const row = (() => {
-    const r = document.createElement('div');
-    r.className = 'msg bot';
-    r.innerHTML = '<div class="m-avatar">🧠</div><div class="bubble"></div>';
-    return r;
-  })();
-  let started = false;
-
-  try {
-    const full = await streamAI(value, (partial) => {
-      if (!started) { typing.remove(); chatBody.appendChild(row); started = true; }
-      row.querySelector('.bubble').textContent = partial;
-      scrollBottom();
-    });
-    if (!started) { typing.remove(); chatBody.appendChild(row); started = true; }
-    row.querySelector('.bubble').textContent = full || '…';
-    history.push({ role: 'user', content: value });
-    history.push({ role: 'assistant', content: full });
-    if (history.length > 16) history = history.slice(-16);
-  } catch (err) {
-    if (!started) typing.remove();
-    addBubble('连接 AI 失败：' + err.message + '\n已临时切换为规则回答 →\n' + answerByRule(value), 'bot', 'err');
-  } finally {
-    busy = false;
-    sendBtn.disabled = false;
-    scrollBottom();
-  }
-}
-
-sendBtn.addEventListener('click', () => handleSend());
-chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend(); });
-
-QUICK.forEach((q) => {
-  const chip = document.createElement('button');
-  chip.className = 'chip';
-  chip.textContent = q;
-  chip.addEventListener('click', () => { chip.classList.add('used'); handleSend(q); });
-  quickChips.appendChild(chip);
-});
-
-/* ---------- 配置弹窗逻辑 ---------- */
-function openCfg() {
-  const c = getCfg() || {};
-  cfgBase.value = c.base || '';
-  cfgKey.value = c.key || '';
-  cfgModel.value = c.model || '';
-  cfgStatus.textContent = '';
-  cfgStatus.className = 'modal-status';
-  cfgMask.classList.add('show');
-}
-function closeCfg() { cfgMask.classList.remove('show'); }
-
-if (cfgBtn) cfgBtn.addEventListener('click', openCfg);
-if (cfgMask) cfgMask.addEventListener('click', (e) => { if (e.target === cfgMask) closeCfg(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCfg(); });
-
-document.getElementById('cfgSave').addEventListener('click', () => {
-  const base = cfgBase.value.trim();
-  const key = cfgKey.value.trim();
-  const model = cfgModel.value.trim();
-  if (!base || !key || !model) {
-    cfgStatus.textContent = '请把 API 地址、Key、模型名称都填完整。';
-    cfgStatus.className = 'modal-status bad';
-    return;
-  }
-  setCfg({ base, key, model });
-  refreshAiTag();
-  cfgStatus.textContent = '已保存 ✓ 现在回到聊天区就能自由对话了。';
-  cfgStatus.className = 'modal-status ok';
-});
-document.getElementById('cfgClear').addEventListener('click', () => {
-  setCfg(null);
-  cfgBase.value = cfgKey.value = cfgModel.value = '';
-  refreshAiTag();
-  cfgStatus.textContent = '已清除，分身回到规则回答模式。';
-  cfgStatus.className = 'modal-status bad';
-});
-document.getElementById('cfgTest').addEventListener('click', async () => {
-  const base = cfgBase.value.trim(), key = cfgKey.value.trim(), model = cfgModel.value.trim();
-  if (!base || !key || !model) {
-    cfgStatus.textContent = '请先填完整再测试。';
-    cfgStatus.className = 'modal-status bad';
-    return;
-  }
-  const prev = getCfg();
-  setCfg({ base, key, model });
-  cfgStatus.textContent = '正在测试连接…';
-  cfgStatus.className = 'modal-status';
-  try {
-    const out = await streamAI('用一句话打个招呼，证明你能正常聊天。', () => {});
-    if (!out) throw new Error('没有返回内容');
-    cfgStatus.textContent = '连接成功 ✓ 分身回复：' + out.slice(0, 40);
-    cfgStatus.className = 'modal-status ok';
-    refreshAiTag();
-  } catch (err) {
-    if (prev) setCfg(prev); else setCfg(null);
-    refreshAiTag();
-    cfgStatus.textContent = '连接失败：' + err.message;
-    cfgStatus.className = 'modal-status bad';
-  }
-});
 
 /* ================================================================
    PART · 反馈（V3 新增）
@@ -2740,73 +2300,6 @@ if (fbSubmit) fbSubmit.addEventListener('click', async () => {
   }
 });
 
-/* ---------- 欢迎语 ---------- */
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    if (aiEnabled()) {
-      addBubble('嗨，我是 Mario Evelyn 的数字分身，AI 已上线～ 🧠 关于脑机接口、我的大学生活，或者这个主页背后的故事，都可以问我。想从哪个开始聊？', 'bot');
-    } else {
-      addBubble('嗨，我是 Mario Evelyn 的数字分身～ 🧠 我现在是「规则模式」（点右上角 ⚙ 填入模型 Key 就能升级成真实 AI）。你想先问点什么？', 'bot');
-    }
-  }, 700);
-});
-
-/* ---------- 微信：点击复制微信号 ---------- */
-const wechatCard = document.getElementById('wechatCard');
-if (wechatCard) {
-  const wechatId = document.getElementById('wechatId');
-  const rawId = wechatId.textContent.trim();
-  wechatCard.addEventListener('click', async (e) => {
-    e.preventDefault();
-    let ok = false;
-    try {
-      await navigator.clipboard.writeText(rawId);
-      ok = true;
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = rawId;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { ok = document.execCommand('copy'); } catch { ok = false; }
-      ta.remove();
-    }
-    const old = wechatId.textContent;
-    wechatId.textContent = ok ? '已复制 ✓ ' + rawId : '复制失败，请手动选择';
-    setTimeout(() => { wechatId.textContent = old; }, 1400);
-  });
-}
-
-// ---------- 粘性导航：滚动高亮当前区块（P2） ----------
-(() => {
-  const items = Array.from(document.querySelectorAll('.site-nav .nav-item'));
-  const secs = items.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
-  if (!items.length || !secs.length) return;
-  const sync = () => {
-    const probe = window.scrollY + window.innerHeight * 0.3;
-    let cur = secs[0];
-    for (const s of secs) {
-      if (s.getBoundingClientRect().top + window.scrollY <= probe) cur = s;
-    }
-    // 滚到最底部时，高亮最后一个区块
-    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
-      cur = secs[secs.length - 1];
-    }
-    items.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur.id));
-  };
-  let ticking = false;
-  const onScroll = () => {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(() => { sync(); ticking = false; });
-  };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  sync();
-})();
-
-refreshAiTag();
 
 /* ================================================================
    Bento 卡片入场动效（兴趣区 / 日常影像区）

@@ -2054,17 +2054,19 @@ if ('IntersectionObserver' in window) {
 
 // 作品墙（占位数据，后续可替换为真实图片）
 // slug 决定照片文件名：把照片放进 outputs/photos/，命名对上就自动显示
+// ⚠ 卡面封面 = 站主指定的四个板块封面，锁在 photos/covers/ 下，不得改动（详见 docs/V3-6互测缺陷记录.md §十一/§十二）
 const WORKS = [
-  { slug: '01-photography', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 随手记录', g: 'linear-gradient(135deg,#0b3a4a,#062028)' },
-  { slug: '02-craft', emoji: '🧩', title: '拼装日志', desc: '手工 · 动手造物', g: 'linear-gradient(135deg,#123a2e,#06201a)' },
-  { slug: '03-sports', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
-  { slug: '04-campus', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
+  { slug: '01-photography', cover: 'covers/01-photography.jpg', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 随手记录', g: 'linear-gradient(135deg,#0b3a4a,#062028)' },
+  { slug: '02-craft', cover: 'covers/02-craft.jpg', emoji: '🧩', title: '拼装日志', desc: '手工 · 动手造物', g: 'linear-gradient(135deg,#123a2e,#06201a)' },
+  { slug: '03-sports', cover: 'covers/03-sports.jpg', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
+  { slug: '04-campus', cover: 'covers/04-campus.jpg', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
 ];
 const worksGrid = document.getElementById('worksGrid');
 if (worksGrid) {
   // 逐个尝试候选文件名，命中哪个用哪个；全都不存在就保持渐变占位卡（不报错、不影响页面）
   const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp'];
   const photoCandidates = (w, n) => [
+    ...(w.cover ? [`photos/${w.cover}`] : []),           // 指定封面（4 张卡锁在 photos/covers/ 下，优先）
     ...PHOTO_EXT.map((e) => `photos/${w.slug}.${e}`),   // 规范命名：01-photography.jpg
     ...PHOTO_EXT.map((e) => `photos/${n}.${e}`)          // 偷懒命名：1.jpg
   ];

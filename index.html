@@ -2292,7 +2292,9 @@ if ('IntersectionObserver' in window) {
 // slug 决定照片文件名：把照片放进 outputs/photos/，命名对上就自动显示
 //
 // 相册：album 是点进去能左右翻的作品集（照片都放 outputs/photos/），多张卡各挂一个
-// 想加一张作品 → 往对应相册数组里再加一行；想换卡面封面 → 换 photos/<卡片slug>.jpg 这个文件
+// ⚠ 卡面封面 = 站主指定的四个板块封面，已用 cover 字段锁在 photos/covers/ 下，任何会话都不得改动；
+//    禁止用相册照片替换封面（相册自己的图请用 shot-* / craft-* 这类独立文件名）。详见 docs/V3-6互测缺陷记录.md §十一/§十二
+// 想加一张作品 → 往对应相册数组里再加一行
 const CRAFT_ALBUM = [
   { src: 'craft-01.jpg', title: '宇航员', desc: '给宇航员配了个玻璃罩 —— 看着像标本，其实随时准备起飞。' },
   { src: 'craft-02.jpg', title: '月宫', desc: '月亮、小红灯笼、一棵开花的树：把中秋的想象一块块搭出来。' },
@@ -2322,10 +2324,10 @@ const PHOTO_ALBUM = [
 ];
 
 const WORKS = [
-  { slug: '01-photography', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 点开翻看', g: 'linear-gradient(135deg,#0b3a4a,#062028)', album: PHOTO_ALBUM },
-  { slug: '02-craft', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', album: CRAFT_ALBUM },
-  { slug: '03-sports', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
-  { slug: '04-campus', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
+  { slug: '01-photography', cover: 'covers/01-photography.jpg', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 点开翻看', g: 'linear-gradient(135deg,#0b3a4a,#062028)', album: PHOTO_ALBUM },
+  { slug: '02-craft', cover: 'covers/02-craft.jpg', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', album: CRAFT_ALBUM },
+  { slug: '03-sports', cover: 'covers/03-sports.jpg', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
+  { slug: '04-campus', cover: 'covers/04-campus.jpg', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
 ];
 
 /* ================================================================
@@ -2444,7 +2446,7 @@ if (worksGrid) {
   // 逐个尝试候选文件名，命中哪个用哪个；全都不存在就保持渐变占位卡（不报错、不影响页面）
   const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp'];
   const photoCandidates = (w, n) => [
-    ...(w.cover ? [`photos/${w.cover}`] : []),           // 指定封面（可选）；4 张卡现都走下面的 <slug> 命名
+    ...(w.cover ? [`photos/${w.cover}`] : []),           // 指定封面（可选）：4 张卡现都锁在 photos/covers/ 下，优先于下面的命名
     ...PHOTO_EXT.map((e) => `photos/${w.slug}.${e}`),   // 规范命名：01-photography.jpg
     ...PHOTO_EXT.map((e) => `photos/${n}.${e}`)          // 偷懒命名：1.jpg
   ];

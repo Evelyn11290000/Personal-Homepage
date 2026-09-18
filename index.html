@@ -1,0 +1,2818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Mario Evelyn · 数字分身个人主页 V2</title>
+<meta name="description" content="Mario Evelyn 的数字分身个人主页 V2 —— 脑机接口专业 · 神经引擎视觉 · AI 分身对话" />
+<style>
+  /* ============================================================
+     V2 · 全局变量（神经引擎配色 + 玻璃拟态）
+     ============================================================ */
+  :root {
+    --bg: #010204;
+    --cyan: #22e0ff;
+    --cyan-2: #00f0ff;
+    --teal: #2dd4bf;
+    --blue: #38bdf8;
+    --gold: #ffaa00;
+    --magenta: #ff2fa0;
+    --txt: #e8f6fb;
+    --txt-dim: #93aab8;
+    --txt-faint: #566d7a;
+    --glass: rgba(9, 20, 28, 0.55);
+    --glass-2: rgba(10, 22, 30, 0.72);
+    --line: rgba(34, 224, 255, 0.16);
+    --line-2: rgba(34, 224, 255, 0.3);
+    --maxw: 980px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ---------- 排版阶梯 Typography ---------- */
+    --fs-hero: clamp(34px, 6vw, 52px);    /* 首屏姓名：页面最大 */
+    --fs-lead: clamp(15px, 2.4vw, 17px);  /* 首屏副标题 */
+    --fs-h3: 15.5px;                      /* 卡片小标题 */
+    --fs-body: 15px;                      /* 正文 */
+    --fs-ui: 14.5px;                      /* 按钮 / 输入框 */
+    --fs-sm: 14px;                        /* 次级正文 / 说明 */
+    --fs-cap: 12.5px;                     /* 区块标签 / 说明文字 */
+    --fs-tag: 11.5px;                     /* 标签胶囊 */
+    --lh-body: 1.7;                       /* 中文正文行高 */
+    --lh-tight: 1.15;                     /* 大标题行高 */
+
+    /* ---------- 圆角阶梯 ---------- */
+    --r-card: 18px;      /* 大卡片 / 主面板 */
+    --r-panel: 14px;     /* 条目 / 气泡 / 子面板 */
+    --r-md: 12px;        /* 输入框 / 按钮 / 图标块 */
+    --r-sm: 10px;        /* 小图标块 */
+    --r-pill: 999px;     /* 胶囊 */
+    --radius: var(--r-card); /* 兼容旧引用 */
+
+    /* ---------- 阴影阶梯 ---------- */
+    --sh-card: 0 24px 70px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --sh-soft: 0 10px 30px rgba(0, 240, 255, 0.28);
+    --sh-glow: 0 0 22px rgba(0, 240, 255, 0.25);
+
+    /* ---------- 间距阶梯 ---------- */
+    --sp-section: clamp(58px, 7vw, 74px); /* 区块之间的呼吸感 */
+    --sp-card: 30px 32px;                 /* 卡片内边距 */
+    --sp-gap: 22px;                       /* 卡片之间 */
+    --gutter: 22px;                       /* 页面左右留白 */
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    line-height: var(--lh-body);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: rgba(34, 224, 255, 0.3); color: #fff; }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #03080c; }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--cyan-2), var(--teal));
+    border-radius: var(--r-pill); border: 3px solid #03080c;
+  }
+
+  /* ============================================================
+     背景层：3D 神经引擎 + 暗角 + 扫描线
+     ============================================================ */
+  #neural-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+    pointer-events: none; /* 背景穿透，不干扰页面交互与滚动 */
+  }
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 34%, rgba(1, 6, 10, 0) 30%, rgba(1, 3, 5, 0.74) 76%, rgba(1, 2, 4, 0.96) 100%),
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+  }
+  /* 背景压暗层：让 3D 神经背景更暗、不抢戏（想更暗就调大这个 alpha） */
+  .bg-dim {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: rgba(1, 3, 6, 0.34);
+  }
+  /* 背景没加载出来时的保底渐变 */
+  .bg-fallback {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(900px 520px at 78% -8%, rgba(0, 240, 255, 0.12), transparent 60%),
+      radial-gradient(760px 460px at 8% 18%, rgba(45, 212, 191, 0.10), transparent 58%),
+      radial-gradient(700px 700px at 50% 50%, rgba(0, 51, 170, 0.14), transparent 70%),
+      var(--bg);
+  }
+
+  /* 光标光晕层（canvas 2D，低分辨率放大 → 柔）
+     z-index 与 #neural-canvas 同为 0，靠 DOM 顺序压在背景之上、
+     又仍在 .vignette / .bg-dim 之下，所以整体会被压暗一点点，与调参时看到的一致。 */
+  #aurora-2d {
+    position: fixed; inset: 0; z-index: 0;
+    width: 100%; height: 100%; display: block;
+    pointer-events: none; opacity: 0;
+    mix-blend-mode: screen;   /* 叠加发光，暗底上不糊成一片 */
+  }
+
+  /* （原「自定义光标」圆环已按用户要求移除：只保留跟随鼠标的 2D 光晕，见 #aurora-2d） */
+
+  /* ★ 光标本体：一个青色光点（颜色取头像光圈 --cyan-2 #00f0ff）*/
+  #cursor-dot {
+    position: fixed; left: 0; top: 0; width: 16px; height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #c8fdff 20%, #00f0ff 46%, rgba(0, 240, 255, 0) 72%);
+    box-shadow: 0 0 10px rgba(0, 240, 255, .62), 0 0 24px rgba(0, 240, 255, .3);
+    pointer-events: none; z-index: 9999; opacity: 0;
+    mix-blend-mode: screen; will-change: transform;
+  }
+  @media (pointer: coarse) { #cursor-dot { display: none; } }
+  /* ★「光晕即光标」：隐藏系统箭头（输入框除外，否则打字时看不到插入点）
+     只在光晕真的启用 + 精确指针设备 + 首次移动鼠标之后 才加上这个类（由 JS 控制）。 */
+  html.glow-cursor, html.glow-cursor *:not(input):not(textarea) { cursor: none; }
+
+  /* 加载层 */
+  #loader {
+    position: fixed; inset: 0; z-index: 9000;
+    background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.8s ease;
+  }
+  .spinner {
+    width: 52px; height: 52px;
+    border: 2px solid rgba(0, 240, 255, 0.12);
+    border-top-color: var(--cyan-2);
+    border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    margin-bottom: 22px;
+    box-shadow: 0 0 22px rgba(0, 240, 255, 0.25);
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  #loader .load-title {
+    font-size: 11px; letter-spacing: 3px; color: rgba(255, 255, 255, 0.55); text-transform: uppercase;
+  }
+  #loader .load-sub { font-size: 10px; letter-spacing: 1.6px; color: rgba(255, 255, 255, 0.28); margin-top: 8px; }
+
+  /* ============================================================
+     内容层
+     ============================================================ */
+  .content { position: relative; z-index: 2; }
+
+  /* ---------- HUD 面板（首屏装饰） ---------- */
+  .hud {
+    position: absolute;
+    z-index: 5;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06) 45%, rgba(0, 240, 255, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: var(--r-card);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+  }
+  .hud-left { top: clamp(14px, 3vw, 30px); left: clamp(14px, 3vw, 30px); padding: 14px; width: min(232px, calc(100vw - 28px)); }
+  .hud-right { bottom: clamp(14px, 3vw, 30px); right: clamp(14px, 3vw, 30px); padding: 10px 14px; min-width: 132px; text-align: right; }
+  .hud-header { border-bottom: 1px solid rgba(255, 255, 255, 0.12); padding-bottom: 8px; margin-bottom: 10px; }
+  .hud-title { font-size: 11px; letter-spacing: 2.4px; color: var(--cyan-2); font-weight: 700; text-transform: uppercase; text-shadow: 0 0 10px rgba(0, 240, 255, 0.45); }
+  .hud-sub { font-size: 8px; color: rgba(255, 255, 255, 0.42); letter-spacing: 1.3px; margin-top: 3px; }
+  .hud-row { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 7px; font-size: 9px; letter-spacing: 0.8px; }
+  .hud-label { color: rgba(255, 255, 255, 0.5); text-transform: uppercase; }
+  .hud-value { font-weight: 600; color: var(--cyan-2); text-shadow: 0 0 8px rgba(0, 240, 255, 0.5); font-variant-numeric: tabular-nums; transition: color 0.3s, text-shadow 0.3s; }
+  .value-active { color: var(--gold); text-shadow: 0 0 10px rgba(255, 170, 0, 0.6); }
+  .value-refract { color: var(--magenta); text-shadow: 0 0 10px rgba(255, 0, 170, 0.6); }
+  .btn-trigger {
+    margin-top: 11px; width: 100%; padding: 9px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: var(--cyan-2); font-size: 9px; letter-spacing: 2px;
+    border-radius: var(--r-pill); cursor: pointer; text-transform: uppercase;
+    transition: all 0.2s; font-family: inherit;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 15px rgba(0, 240, 255, 0.1);
+  }
+  .btn-trigger:hover { background: rgba(0, 240, 255, 0.16); box-shadow: 0 0 22px rgba(0, 240, 255, 0.42); }
+  .btn-trigger:active { transform: scale(0.96); }
+  .btn-trigger.disabled { border-color: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.3); background: transparent; box-shadow: none; cursor: not-allowed; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 22px 96px;
+  }
+  .hero-inner { max-width: 720px; position: relative; z-index: 6; }
+
+  .avatar-wrap { position: relative; width: 132px; height: 132px; margin: 0 auto 22px; }
+  .avatar-wrap::before {
+    content: ""; position: absolute; inset: -10px; border-radius: 50%;
+    background: conic-gradient(from 0deg, rgba(0,240,255,0), rgba(0,240,255,0.75), rgba(45,212,191,0.5), rgba(0,240,255,0));
+    animation: ring 7s linear infinite;
+    filter: blur(1px); opacity: 0.85;
+  }
+  .avatar-wrap::after {
+    content: ""; position: absolute; inset: -10px; border-radius: 50%;
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
+  }
+  @keyframes ring { to { transform: rotate(360deg); } }
+  .avatar {
+    position: relative; z-index: 1;
+    width: 132px; height: 132px; border-radius: 50%;
+    object-fit: cover; display: block;
+    border: 2px solid rgba(0, 240, 255, 0.55);
+    background: #061018;
+    animation: floaty 6s ease-in-out infinite;
+  }
+  @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  .name {
+    font-size: var(--fs-hero);
+    font-weight: 800; letter-spacing: 1px; line-height: var(--lh-tight);
+    background: linear-gradient(120deg, #ffffff 10%, var(--cyan-2) 55%, var(--teal) 95%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 24px rgba(0, 240, 255, 0.28));
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    margin-top: 16px; padding: 7px 15px;
+    font-size: var(--fs-cap); color: var(--teal); letter-spacing: 0.5px;
+    border: 1px solid rgba(45, 212, 191, 0.32);
+    border-radius: var(--r-pill); background: rgba(45, 212, 191, 0.08);
+    backdrop-filter: blur(6px);
+  }
+  .badge span { color: var(--txt-dim); }
+  .tagline {
+    margin: 22px auto 0; max-width: 620px;
+    color: var(--txt-dim); font-size: var(--fs-lead);
+  }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 34px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px; border-radius: var(--r-pill);
+    font-size: var(--fs-ui); font-weight: 600; text-decoration: none; cursor: pointer;
+    transition: transform 0.18s var(--ease), box-shadow 0.25s, background 0.25s;
+    -webkit-tap-highlight-color: transparent; user-select: none; border: 1px solid transparent;
+    font-family: inherit;
+  }
+  .btn-primary {
+    color: #032430;
+    background: linear-gradient(120deg, var(--cyan-2), var(--teal));
+    box-shadow: var(--sh-soft);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0, 240, 255, 0.42); }
+  .btn-primary:active { transform: scale(0.96); }
+  .btn-ghost {
+    color: var(--txt); background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.22); backdrop-filter: blur(8px);
+  }
+  .btn-ghost:hover { transform: translateY(-2px); background: rgba(0, 240, 255, 0.12); border-color: rgba(0, 240, 255, 0.5); }
+  .btn-ghost:active { transform: scale(0.96); }
+
+  .hero-hint {
+    position: absolute; left: 50%; bottom: clamp(64px, 11vh, 96px); transform: translateX(-50%);
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4); white-space: nowrap; pointer-events: none;
+    animation: pulseText 2.4s infinite; z-index: 6;
+  }
+  @keyframes pulseText { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.85; } }
+
+  .scroll-cue {
+    position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+    width: 22px; height: 36px; border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: var(--r-md); z-index: 6; pointer-events: none;
+  }
+  .scroll-cue::after {
+    content: ""; position: absolute; left: 50%; top: 7px; transform: translateX(-50%);
+    width: 3px; height: 7px; border-radius: 3px; background: var(--cyan-2);
+    animation: cue 1.8s ease-in-out infinite;
+  }
+  @keyframes cue { 0% { opacity: 0; transform: translate(-50%, 0); } 40% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, 12px); } }
+
+  /* ============================================================
+     粘性导航：顶部居中悬浮胶囊（P2）
+     全部复用既有 token（--glass-2 / --r-pill / --sh-card / --fs-cap）
+     ============================================================ */
+  .site-nav {
+    position: fixed;
+    top: clamp(12px, 2.2vw, 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: flex; align-items: center; gap: 2px;
+    padding: 6px 8px;
+    border-radius: var(--r-pill);
+    background: var(--glass-2);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: var(--sh-card);
+  }
+  .nav-item {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 13px; border-radius: var(--r-pill);
+    font-size: var(--fs-cap); color: var(--txt-dim);
+    text-decoration: none; white-space: nowrap;
+    transition: color 0.2s, background 0.2s;
+  }
+  .nav-item:hover { color: var(--txt); background: rgba(0, 240, 255, 0.08); }
+  .nav-item.active { color: var(--cyan-2); background: rgba(0, 240, 255, 0.12); }
+  .nav-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 8px currentColor;
+    opacity: 0.5; transition: opacity 0.2s, transform 0.2s;
+  }
+  .nav-item.active .nav-dot { opacity: 1; transform: scale(1.3); }
+
+  /* 锚点补偿：跳转后标题不被固定导航遮住 */
+  .section, .hero { scroll-margin-top: 92px; }
+
+  /* ---------- 通用区块 ---------- */
+  .section { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter) var(--sp-section); }
+  .section:last-of-type { padding-bottom: 40px; }
+  .card {
+    position: relative;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    padding: var(--sp-card);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    box-shadow: var(--sh-card);
+    overflow: hidden;
+  }
+  .card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.55), transparent);
+    opacity: 0.7;
+  }
+  .card + .card { margin-top: var(--sp-gap); }
+
+  .section-title {
+    display: flex; align-items: center; gap: 11px;
+    font-size: var(--fs-cap); letter-spacing: 2.6px; text-transform: uppercase;
+    color: var(--cyan-2); margin-bottom: var(--sp-gap);
+  }
+  .section-title .st-index {
+    font-size: 11px; color: var(--txt-faint); letter-spacing: 1px; font-variant-numeric: tabular-nums;
+  }
+  .section-title::before {
+    content: ""; width: 8px; height: 8px; border-radius: 2px;
+    background: var(--cyan-2); box-shadow: 0 0 14px var(--cyan-2);
+  }
+  .section-title::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, rgba(0, 240, 255, 0.35), transparent);
+  }
+
+  /* 关于我 */
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .about-item h3 { font-size: var(--fs-h3); color: var(--blue); margin-bottom: 9px; display: flex; align-items: center; gap: 8px; }
+  .about-item p { color: var(--txt-dim); font-size: var(--fs-body); }
+  .trait {
+    margin-top: 22px; padding: 18px 20px; border-radius: var(--r-panel);
+    background: linear-gradient(120deg, rgba(0, 240, 255, 0.09), rgba(45, 212, 191, 0.04));
+    border: 1px solid rgba(0, 240, 255, 0.2); font-size: var(--fs-body);
+  }
+  .trait b { color: var(--cyan-2); }
+
+  /* 兴趣 */
+  /* grid-auto-rows: 1fr 保证两行等高：否则窄窗口下文字换行会让上下两行高度不同，
+     四张卡看起来就不一样大了 */
+  .interest-grid { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 14px; }
+  .interest {
+    display: flex; gap: 13px; align-items: flex-start; padding: 17px;
+    border-radius: var(--r-panel); background: rgba(6, 14, 20, 0.55);
+    border: 1px solid var(--line);
+    transition: transform 0.25s var(--ease), border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  }
+  .interest:hover {
+    transform: translateY(-4px) scale(1.012); border-color: var(--line-2);
+    background: rgba(8, 20, 28, 0.7); box-shadow: 0 16px 40px rgba(0, 240, 255, 0.1);
+  }
+  .interest .ic {
+    font-size: 21px; width: 42px; height: 42px; border-radius: var(--r-md);
+    display: grid; place-items: center; flex-shrink: 0;
+    background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.22);
+  }
+  .interest h4 { font-size: var(--fs-body); margin-bottom: 3px; }
+  .interest p { font-size: var(--fs-sm); color: var(--txt-dim); }
+
+  /* 作品墙 */
+  /* 4 张卡 → 2×2 等大网格（3 列会留出 2 个空洞） */
+  .works-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .work {
+    position: relative; border-radius: var(--r-panel); overflow: hidden;
+    border: 1px solid var(--line); background: rgba(6, 14, 20, 0.6);
+    aspect-ratio: 4 / 3;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 16px; cursor: pointer;
+    transition: transform 0.28s var(--ease), border-color 0.28s, box-shadow 0.28s;
+  }
+  .work .work-bg {
+    position: absolute; inset: 0; opacity: 0.85;
+    transition: transform 0.5s var(--ease), opacity 0.3s;
+  }
+  .work:hover { transform: translateY(-5px); border-color: var(--line-2); box-shadow: 0 20px 46px rgba(0, 240, 255, 0.14); }
+  .work:hover .work-bg { transform: scale(1.06); opacity: 1; }
+  /* 真实照片层：photos/ 里放了对得上的文件名就淡入，没有就一直是透明（露出渐变占位卡） */
+  .work .work-img {
+    position: absolute; inset: 0; z-index: 0;
+    width: 100%; height: 100%; object-fit: cover; object-position: center;
+    opacity: 0; transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  }
+  .work .work-img.ok { opacity: 1; }
+  .work.has-photo .work-bg { opacity: 0; }   /* 有照片就不再渲染底下的渐变 */
+  .work:hover .work-img.ok { transform: scale(1.06); }
+  .work .work-emoji { position: absolute; top: 14px; left: 15px; font-size: 24px; z-index: 2; }
+  .work .work-body { position: relative; z-index: 2; }
+  .work h4 { font-size: var(--fs-ui); margin-bottom: 2px; }
+  .work p { font-size: var(--fs-cap); color: var(--txt-dim); }
+  .work::after {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, rgba(2, 6, 10, 0.92) 12%, rgba(2, 6, 10, 0.18) 60%, transparent);
+  }
+  .work-note { margin-top: 14px; font-size: var(--fs-cap); color: var(--txt-faint); }
+
+  /* ---------- 成长日志 · 时间线 ---------- */
+  .log-intro { font-size: var(--fs-sm); color: var(--txt-dim); margin-bottom: 16px; }
+  .log-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .log-chip {
+    font-size: var(--fs-cap); color: var(--txt-dim); padding: 5px 14px; border-radius: var(--r-pill);
+    border: 1px solid var(--line); background: rgba(6, 14, 20, 0.5); cursor: pointer;
+    transition: all 0.18s; font-family: inherit; -webkit-tap-highlight-color: transparent;
+  }
+  .log-chip:hover { border-color: var(--line-2); color: var(--txt); }
+  .log-chip:active { transform: scale(0.94); }
+  .log-chip.active {
+    color: #032430; font-weight: 600; border-color: transparent;
+    background: linear-gradient(120deg, var(--cyan-2), var(--teal));
+    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.25);
+  }
+  .timeline { position: relative; padding-left: 26px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px;
+    background: linear-gradient(to bottom, rgba(0, 240, 255, 0.5), rgba(45, 212, 191, 0.06));
+  }
+  .log-item { position: relative; padding-bottom: 26px; }
+  .log-item:last-child { padding-bottom: 0; }
+  .log-dot {
+    position: absolute; left: -26px; top: 3px; width: 16px; height: 16px; border-radius: 50%;
+    background: #061018; border: 2px solid var(--cyan-2);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+  }
+  .log-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 6px; }
+  .log-date { font-size: var(--fs-cap); letter-spacing: 1px; color: var(--cyan-2); font-variant-numeric: tabular-nums; }
+  .log-tag {
+    font-size: var(--fs-tag); padding: 1px 9px; border-radius: var(--r-pill);
+    border: 1px solid rgba(45, 212, 191, 0.35); color: var(--teal); background: rgba(45, 212, 191, 0.08);
+  }
+  .log-item h4 { font-size: var(--fs-h3); margin-bottom: 5px; }
+  .log-item p { font-size: var(--fs-sm); color: var(--txt-dim); }
+  .log-empty { font-size: var(--fs-sm); color: var(--txt-faint); }
+
+  /* ---------- 数字分身聊天 ---------- */
+  .chat-card { display: flex; flex-direction: column; height: 560px; padding: 0; overflow: hidden; }
+  .chat-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 18px; border-bottom: 1px solid var(--line);
+    background: rgba(4, 10, 15, 0.6);
+  }
+  .chat-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid rgba(0, 240, 255, 0.5);
+    display: grid; place-items: center; font-size: 20px; flex-shrink: 0;
+    background: rgba(0, 240, 255, 0.12);
+  }
+  .chat-head-title { flex: 1; min-width: 0; }
+  .chat-head-title h3 { font-size: var(--fs-h3); display: flex; align-items: center; gap: 8px; }
+  .chat-head-title p { font-size: var(--fs-cap); color: var(--txt-faint); }
+  .ai-tag {
+    font-size: var(--fs-tag); padding: 2px 8px; border-radius: var(--r-pill); letter-spacing: 0.6px;
+    border: 1px solid rgba(45, 212, 191, 0.4); color: var(--teal); background: rgba(45, 212, 191, 0.1);
+  }
+  .ai-tag.off { border-color: rgba(255, 255, 255, 0.18); color: var(--txt-faint); background: rgba(255, 255, 255, 0.05); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 10px var(--teal); animation: pulse 1.6s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: var(--r-sm); flex-shrink: 0;
+    display: grid; place-items: center; cursor: pointer; font-size: var(--fs-body);
+    background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.16);
+    color: var(--txt-dim); transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+  }
+  .icon-btn:hover { background: rgba(0, 240, 255, 0.14); color: #fff; border-color: rgba(0, 240, 255, 0.5); }
+  .icon-btn:active { transform: scale(0.92); }
+
+  .chat-body { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { display: flex; gap: 10px; max-width: 90%; }
+  .msg.bot { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg .m-avatar {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    font-size: var(--fs-body); flex-shrink: 0;
+    background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.26);
+  }
+  .msg.user .m-avatar { background: rgba(56, 189, 248, 0.18); border-color: rgba(56, 189, 248, 0.38); }
+  .bubble {
+    padding: 11px 14px; border-radius: var(--r-panel); font-size: var(--fs-ui); line-height: 1.68;
+    word-break: break-word; white-space: pre-wrap;
+  }
+  .msg.bot .bubble { background: rgba(16, 28, 38, 0.9); border: 1px solid rgba(0, 240, 255, 0.16); border-top-left-radius: 4px; }
+  .msg.user .bubble { background: linear-gradient(120deg, rgba(0, 240, 255, 0.24), rgba(45, 212, 191, 0.16)); border: 1px solid rgba(45, 212, 191, 0.32); border-top-right-radius: 4px; }
+  .msg.err .bubble { border-color: rgba(255, 47, 160, 0.45); color: #ffc9e5; background: rgba(60, 8, 34, 0.5); }
+
+  .chat-quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 18px; border-top: 1px solid var(--line); background: rgba(4, 10, 15, 0.6); }
+  .chip {
+    font-size: var(--fs-cap); color: var(--blue); padding: 6px 12px; border-radius: var(--r-pill);
+    border: 1px solid rgba(56, 189, 248, 0.26); background: rgba(56, 189, 248, 0.06);
+    cursor: pointer; transition: all 0.15s; user-select: none; font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip:hover { background: rgba(0, 240, 255, 0.18); color: #fff; }
+  .chip:active { transform: scale(0.92); background: rgba(0, 240, 255, 0.34); color: #fff; bordercolor: rgba(0,240,255,0.6); box-shadow: 0 0 12px rgba(0, 240, 255, 0.42); }
+  .chip.used { opacity: 0.4; cursor: default; pointer-events: none; filter: grayscale(0.5); }
+
+  .chat-input { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); background: rgba(4, 10, 15, 0.6); }
+  .chat-input input {
+    flex: 1; background: rgba(10, 20, 28, 0.85); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 11px 14px; color: var(--txt); font-size: var(--fs-ui); outline: none; font-family: inherit;
+  }
+  .chat-input input:focus { border-color: rgba(0, 240, 255, 0.55); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1); }
+  .chat-input button {
+    border: none; border-radius: var(--r-md); padding: 0 22px; font-size: var(--fs-sm); font-weight: 600;
+    color: #032430; background: linear-gradient(120deg, var(--cyan-2), var(--teal));
+    cursor: pointer; transition: filter 0.15s, transform 0.1s; font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chat-input button:hover { filter: brightness(1.1); }
+  .chat-input button:active { transform: scale(0.94); }
+  .chat-input button:disabled { filter: grayscale(0.6) brightness(0.8); cursor: not-allowed; }
+
+  .typing { display: inline-flex; gap: 4px; padding: 4px 2px; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan-2); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: 0.2s; }
+  .typing i:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+
+  /* 联系方式 */
+  .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .contact {
+    display: flex; align-items: center; gap: 12px; padding: 16px 18px;
+    border-radius: var(--r-panel); background: rgba(6, 14, 20, 0.55); border: 1px solid var(--line);
+    text-decoration: none; color: inherit;
+    transition: transform 0.25s var(--ease), border-color 0.25s, background 0.25s;
+  }
+  .contact:hover { transform: translateY(-4px); border-color: var(--line-2); background: rgba(8, 20, 28, 0.72); }
+  .contact .ci { width: 40px; height: 40px; border-radius: var(--r-sm); display: grid; place-items: center; overflow: hidden; background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.2); flex-shrink: 0; }
+  .contact .ci img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  .contact h4 { font-size: var(--fs-sm); color: var(--txt-dim); font-weight: 500; }
+  .contact p { font-size: var(--fs-sm); color: var(--txt); word-break: break-all; }
+
+  /* 页脚 */
+  .foot { text-align: center; padding: 34px 20px 60px; font-size: var(--fs-cap); color: var(--txt-faint); letter-spacing: 1.4px; position: relative; z-index: 2; }
+  .foot b { color: var(--txt-dim); font-weight: 500; }
+
+  /* 滚动入场 */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.85s var(--ease), transform 0.85s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ============================================================
+     Bento 卡片入场动效
+     参考 beaucoup.studio 的「色块溶解揭示 + 上滑入场」，用在兴趣区
+     与日常影像区两个 2×2 网格上：卡片进视口时逐张揭示。
+
+     关键点：入场位移用 translate 属性，卡片原有 hover 用 transform 属性。
+     两者是彼此独立的 CSS 属性、不会互相覆盖 —— 所以兴趣卡的 -4px 上浮
+     和影像卡的背景放大手感，加了动效之后完全不受影响。
+
+     想调手感，只改下面四个值就够：
+     ============================================================ */
+  :root {
+    --mo-dur: 0.7s;                        /* 溶解 + 上滑时长 */
+    --mo-shift: 32px;                      /* 入场上滑距离；设 0px 就只溶解、不位移 */
+    --mo-stagger: 0.07s;                   /* 同屏卡片逐张揭示的间隔；设 0s 就同时出现 */
+    --mo-wipe: rgba(0, 240, 255, 0.22);    /* 色块浓度；调高更明显，调低更含蓄 */
+  }
+
+  /* 待入场：卡片盖着色块、位于下方、整体透明 */
+  .interest.mo-ready, .work.mo-ready {
+    translate: 0 var(--mo-shift);
+    opacity: 0;
+    transition:
+      translate var(--mo-dur) var(--ease) calc(var(--mo-i, 0) * var(--mo-stagger)),
+      opacity   var(--mo-dur) var(--ease) calc(var(--mo-i, 0) * var(--mo-stagger)),
+      transform 0.28s var(--ease), border-color 0.28s, box-shadow 0.28s;
+  }
+  .interest.mo-ready { position: relative; }   /* ::before 需要定位基准 */
+
+  /* 色块层：盖在卡片最上层，揭示时整块溶解掉 */
+  .interest.mo-ready::before, .work.mo-ready::before {
+    content: ""; position: absolute; inset: -1px; z-index: 3;
+    border-radius: inherit; background: var(--mo-wipe);
+    pointer-events: none; opacity: 1; backface-visibility: hidden;
+    transition: opacity var(--mo-dur) var(--ease) calc(var(--mo-i, 0) * var(--mo-stagger));
+  }
+
+  /* 已入场：色块溶解、卡片归位（必须排在 .mo-ready 之后才能覆盖） */
+  .interest.mo-in::before, .work.mo-in::before { opacity: 0; }
+  .interest.mo-in, .work.mo-in { translate: none; opacity: 1; }
+
+  /* ============================================================
+     AI 配置弹窗
+     ============================================================ */
+  .modal-mask {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(1, 3, 6, 0.78); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    width: min(460px, 100%); max-height: 88vh; overflow-y: auto;
+    background: linear-gradient(160deg, rgba(14, 26, 34, 0.98), rgba(6, 14, 20, 0.98));
+    border: 1px solid rgba(0, 240, 255, 0.28); border-radius: var(--r-card);
+    padding: 24px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .modal .modal-desc { font-size: var(--fs-cap); color: var(--txt-dim); margin-bottom: 20px; line-height: 1.6; }
+  .field { margin-bottom: 15px; }
+  .field label { display: block; font-size: var(--fs-cap); color: var(--txt-dim); margin-bottom: 6px; letter-spacing: 0.4px; }
+  .field input {
+    width: 100%; background: rgba(6, 14, 20, 0.9); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: 10px 12px; color: var(--txt); font-size: var(--fs-sm);
+    outline: none; font-family: inherit;
+  }
+  .field input:focus { border-color: rgba(0, 240, 255, 0.55); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1); }
+  .field .hint { font-size: 11.5px; color: var(--txt-faint); margin-top: 5px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-actions .btn { flex: 1; justify-content: center; padding: 11px 14px; font-size: var(--fs-sm); }
+  .modal-status { margin-top: 12px; font-size: var(--fs-cap); min-height: 18px; }
+  .modal-status.ok { color: var(--teal); }
+  .modal-status.bad { color: #ff7ac0; }
+
+  /* ============================================================
+     响应式
+     ============================================================ */
+  @media (max-width: 860px) {
+    .works-grid { grid-template-columns: 1fr 1fr; }
+    .contact-grid { grid-template-columns: 1fr; }
+    /* 导航改为右上角圆点条：左上 HUD 占位较宽，居中会与之相撞 */
+    .site-nav { left: auto; right: clamp(12px, 2.2vw, 20px); transform: none; gap: 0; padding: 5px 7px; }
+    .nav-label { display: none; }
+    .nav-item { padding: 8px 10px; }
+  }
+  @media (max-width: 640px) {
+    /* 移动端在 token 层收紧间距，而不是逐个覆写选择器 */
+    :root { --sp-card: 22px 18px; --gutter: 18px; --sp-section: 52px; --sp-gap: 18px; }
+    /* 手机上左侧 HUD（196px）+ 6 个圆点在 375px 内放不下，导航移到底部居中 */
+    .site-nav { top: auto; bottom: 14px; left: 50%; right: auto; transform: translateX(-50%); padding: 5px 6px; }
+    .nav-item { padding: 7px 9px; }
+    .hero { padding: 132px 18px 92px; }
+    .avatar-wrap, .avatar { width: 106px; height: 106px; }
+    .about-grid, .interest-grid { grid-template-columns: 1fr; }
+    .works-grid { grid-template-columns: 1fr; }
+    /* 不再在此覆写 .card 的 padding：媒体查询位于 .chat-card 之后，
+       同权重会盖掉聊天区自身的 padding:0。改用上面的 --sp-card token。 */
+    .chat-card { height: 74vh; min-height: 480px; }
+    .hud-left { top: 10px; left: 10px; width: min(196px, calc(100vw - 20px)); padding: 9px 10px; border-radius: var(--r-panel); }
+    .hud-right { display: none; }
+    .hud-title { font-size: 9px; letter-spacing: 1.4px; }
+    .hud-sub { font-size: 6.5px; letter-spacing: 0.7px; }
+    .hud-row { font-size: 7.5px; gap: 10px; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .btn-trigger { margin-top: 7px; padding: 6px 8px; font-size: 7px; letter-spacing: 1.1px; }
+    .hero-hint { font-size: 8px; letter-spacing: 1.2px; bottom: 74px; }
+  }
+  /* ================================================================
+     滚动联动动效（上滑 / 淡出 / 溶解）
+     —— 不是「点一下刷一层幕布」的硬切，而是每一帧按当前滚动位置连续算出
+        每个区块的 透明度 / 位移 / 模糊：滚多少变多少、停在哪儿就是哪个状态，
+        所以观感是「随滑动自然而然转变」，而不是一次性播完。
+     —— 引擎用 requestAnimationFrame 逐帧写内联样式，不用 CSS transition /
+        animation，因此不会被页面那条 reduced-motion 全局降级规则误伤；
+        是否启用由 JS 依据「减少动态效果」系统开关决定。
+     —— 只接管 main 里的 section：hero 内部的 HUD 是 position:fixed，
+        给祖先加 transform / opacity 会把它们钉死在 hero 上，故不碰 hero。
+     参数（已定稿）：位移 86px / 过渡跨度 0.60×区块高 / 溶解模糊 10px /
+        淡出强度 100% / 曲线柔顺 / 点导航平滑滚动。
+     ================================================================ */
+  section.fx-on {
+    transition: none !important;
+    will-change: opacity, transform;
+  }
+  section.fx-on.fx-blur { will-change: opacity, transform, filter; }
+
+  /* ---------- 减弱模式（系统「减少动态效果」开关，或用 ?rm=1 强制开启以便取证） ----------
+     全部交给 <html class="rm"> 这一个开关统管：CSS 这套降级规则、JS 里的 3D 背景与滚动引擎
+     读的是同一个状态，不会出现「CSS 已经关掉动画、JS 还在逐帧重绘」这种半吊子状态。
+     （CSS 媒体查询没法表达「被 ?rm= 覆盖」，所以媒体查询只在 <head> 的脚本里读一次、
+       换算成这个 class。） */
+  html.rm *, html.rm *::before, html.rm *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  html.rm { scroll-behavior: auto; }
+  /* 光标光点是纯装饰：减弱模式下不显示，系统箭头照常（JS 侧 GLOW.on 也是 false） */
+  html.rm #cursor-dot { display: none; }
+
+  /* ============================================================
+     反馈入口（右下角悬浮按钮）+ 反馈表单（V3 新增）
+     —— 视觉全部沿用现有体系：玻璃拟态 + --cyan-2 青色光晕；弹窗直接复用
+        上面的 .modal-mask / .modal / .field / .modal-actions / .modal-status
+     —— 这里只新增本区块自己的规则，不改动上面任何一条既有样式
+     —— 动效的减弱模式由上面的 html.rm 全局规则统一接管，无需单独处理
+     ============================================================ */
+  .fb-fab {
+    position: fixed; z-index: 9990;
+    right: 22px; bottom: 22px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 16px; border-radius: 999px; cursor: pointer;
+    font-family: inherit; font-size: var(--fs-sm); letter-spacing: 0.6px;
+    color: var(--txt);
+    background: linear-gradient(160deg, rgba(14, 26, 34, 0.92), rgba(6, 14, 20, 0.92));
+    border: 1px solid rgba(0, 240, 255, 0.34);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 22px rgba(0, 240, 255, 0.16);
+    transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+  }
+  .fb-fab:hover {
+    transform: translateY(-2px);
+    border-color: rgba(0, 240, 255, 0.62);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 240, 255, 0.3);
+  }
+  .fb-fab:active { transform: translateY(0); }
+  .fb-fab svg { width: 16px; height: 16px; flex: none; }
+
+  /* 表单补齐 select / textarea 两种控件；.field input 那组原规则一字未动 */
+  .field select, .field textarea {
+    width: 100%; background: rgba(6, 14, 20, 0.9); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: 10px 12px; color: var(--txt);
+    font-size: var(--fs-sm); outline: none; font-family: inherit;
+  }
+  .field select:focus, .field textarea:focus {
+    border-color: rgba(0, 240, 255, 0.55); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1);
+  }
+  .field select option { background: #06101a; color: var(--txt); }
+  .field textarea { min-height: 108px; resize: vertical; line-height: 1.65; }
+  .field .req { color: var(--cyan-2); }
+  .field .opt { color: var(--txt-faint); }
+
+  /* 「不会公开」的承诺提示：用青绿描边，与表单其余部分区分开 */
+  .fb-privacy {
+    display: flex; align-items: center; gap: 7px;
+    font-size: var(--fs-cap); color: var(--teal);
+    background: rgba(45, 212, 191, 0.08);
+    border: 1px solid rgba(45, 212, 191, 0.22);
+    border-radius: var(--r-sm); padding: 9px 11px; margin-bottom: 18px;
+  }
+
+  /* 提交中按钮禁用：给一个看得见的「正在处理」状态 */
+  .modal-actions .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  @media (max-width: 640px) {
+    /* 手机上粘性导航被移到了底部居中（见上面的 640px 块），
+       反馈按钮相应抬高，避免两个悬浮元素叠在一起 */
+    .fb-fab { right: 14px; bottom: 64px; padding: 10px 13px; }
+  }
+
+  /* ============================================================
+     提交成功致谢动效（V3）
+     —— 字体 Rubik Glitch（Google Fonts / OFL 许可），自托管在 vendor/fonts/rubik-glitch.woff2，
+        不走境外 CDN，断网也能显示，发布包里必须带上。
+        选它的原因：笔画内部自带故障位移纹理，是候选里最花的一款，辨识度最高；
+        代价是体积 71K，约为其它候选的 5 倍。
+     —— 动效三层叠加：文字冲入（运动模糊 + 过冲回弹）、速度线拉长再收回、
+        一道残影横穿画面。前两层表达「它来了」，只有残影能表达「它已经走了」。
+     ============================================================ */
+  @font-face {
+    font-family: 'Rubik Glitch';
+    src: url('./vendor/fonts/rubik-glitch.woff2') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+
+  /* 表单视图与致谢视图二选一，同时只显示一个。
+     padding 留得比排版本身需要的多一点：Rubik Glitch 的故障碎块会探出字身框，
+     边缘留白不足会被这里的 overflow:hidden（为了裁住残影）切掉。 */
+  .fb-thanks { display: none; position: relative; overflow: hidden; padding: 34px 4px 30px; }
+  .fb-thanks.show { display: block; }
+
+  .fb-thanks-row { display: flex; align-items: center; justify-content: center; gap: 15px; }
+
+  .fb-thanks-text {
+    font-family: 'Rubik Glitch', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    font-size: clamp(19px, 5vw, 32px);
+    line-height: 1.16; white-space: nowrap; letter-spacing: 0.5px;
+    color: #fff;
+    /* Rubik Glitch 没有真实斜体，这里合成 -8° 倾斜，与赛车标志同一姿态 */
+    transform: skewX(-8deg);
+    /* 光晕比配 Faster One 时收了一档：Rubik Glitch 笔画内部有碎块纹理，
+       光晕过强会把那些细节糊平，反而丢掉它最好看的部分 */
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.55), 0 0 30px rgba(0, 240, 255, 0.26);
+    opacity: 0;
+  }
+
+  /* 速度线：三条长度递减的青色光带，跟着文字一起冲进来 */
+  .fb-speed {
+    display: inline-flex; flex-direction: column; align-items: flex-end; gap: 5px;
+    transform: skewX(-22deg); opacity: 0;
+  }
+  .fb-speed i {
+    display: block; height: 4px; border-radius: 1px;
+    background: linear-gradient(90deg, rgba(0, 240, 255, 0.15), var(--cyan-2));
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.85);
+  }
+  .fb-speed i:nth-child(1) { width: 38px; }
+  .fb-speed i:nth-child(2) { width: 25px; }
+  .fb-speed i:nth-child(3) { width: 13px; }
+
+  /* 横穿画面的残影：速度感的真正来源 */
+  .fb-streak {
+    position: absolute; top: 50%; left: 0; width: 42%; height: 2px;
+    pointer-events: none; opacity: 0; filter: blur(1px);
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.95), transparent);
+  }
+
+  .fb-thanks-sub {
+    margin-top: 13px; text-align: center; opacity: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 10.5px; letter-spacing: 1.1px; text-transform: uppercase;
+    color: var(--txt-faint);
+  }
+
+  /* 只给读屏用：致谢动画期间，中文完成提示不该出现在画面上（此处刻意只留英文） */
+  .modal-status.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+  }
+
+  /* 三层共用一条时间线：0.78s 速度线收回、小字接上，1.15s 全部结束 */
+  .fb-thanks.show .fb-thanks-text { animation: fbWhoosh 1.15s var(--ease) forwards; }
+  .fb-thanks.show .fb-speed { animation: fbLines 1.15s var(--ease) forwards; }
+  .fb-thanks.show .fb-streak { animation: fbStreakPass 1.05s ease-out forwards; }
+  .fb-thanks.show .fb-thanks-sub { animation: fbSubIn 0.5s var(--ease) 0.78s forwards; }
+
+  @keyframes fbWhoosh {
+    0%        { opacity: 0; transform: translateX(-120px) scaleX(0.8) skewX(-26deg); filter: blur(20px); }
+    26%       { opacity: 1; filter: blur(3px); }
+    52%       { transform: translateX(9px) scaleX(1.04) skewX(-8deg); filter: blur(0); }
+    68%       { transform: translateX(-4px) scaleX(0.99) skewX(-8deg); }
+    82%       { transform: translateX(1.5px) scaleX(1) skewX(-8deg); }
+    92%, 100% { opacity: 1; transform: translateX(0) skewX(-8deg); filter: blur(0); }
+  }
+  @keyframes fbLines {
+    0%   { opacity: 0; transform: translateX(-46px) scaleX(0.2) skewX(-22deg); }
+    30%  { opacity: 1; }
+    52%  { transform: translateX(0) scaleX(2.4) skewX(-22deg); }
+    76%  { transform: translateX(0) scaleX(1) skewX(-22deg); }
+    100% { opacity: 1; transform: translateX(0) scaleX(1) skewX(-22deg); }
+  }
+  @keyframes fbStreakPass {
+    0%   { opacity: 0; transform: translateX(-120%) scaleX(0.4); }
+    18%  { opacity: 1; }
+    55%  { opacity: 1; transform: translateX(150%) scaleX(1.6); }
+    100% { opacity: 0; transform: translateX(320%) scaleX(0.7); }
+  }
+  @keyframes fbSubIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+  /* 手机上收窄速度线，保证「THANK YOU」既不换行也不被裁切 */
+  @media (max-width: 420px) {
+    .fb-thanks-row { gap: 10px; }
+    .fb-speed i:nth-child(1) { width: 26px; }
+    .fb-speed i:nth-child(2) { width: 17px; }
+    .fb-speed i:nth-child(3) { width: 9px; }
+  }
+
+  /* 系统开了「减少动态效果」就直接给结果，不做位移与模糊 */
+  @media (prefers-reduced-motion: reduce) {
+    .fb-thanks.show .fb-thanks-text,
+    .fb-thanks.show .fb-thanks-sub { animation: none; opacity: 1; }
+    .fb-thanks.show .fb-speed { animation: none; opacity: 1; }
+    .fb-thanks.show .fb-streak { display: none; }
+  }
+</style>
+<script>
+/* ================================================================
+   减弱模式开关（必须最早执行：否则页面会先按"有动效"渲染一帧再跳变）
+   —— 正常访客：完全跟随系统「减少动态效果」开关；
+   —— ?rm=1 / ?rm=0：自动化取证用的强制开关（在没开系统开关的机器上也能验两种表现），
+      普通访问不会带这个参数，不影响线上行为。
+   —— 结果统一落到 <html class="rm">：CSS 与两处 JS（3D 背景 / 滚动引擎）都读它。
+   ================================================================ */
+(function () {
+  var q = new URLSearchParams(location.search).get('rm');
+  var forced = (q === '1') ? true : (q === '0') ? false : null;
+  var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  window.__rmOn = function () { return document.documentElement.classList.contains('rm'); };
+
+  function apply(on) { document.documentElement.classList.toggle('rm', on); }
+  apply(forced === null ? mq.matches : forced);
+
+  /* 用户在使用中改了系统开关：跟着切换（带 ?rm= 强制时忽略） */
+  try {
+    mq.addEventListener('change', function (e) {
+      if (forced !== null) return;
+      apply(e.matches);
+      window.dispatchEvent(new Event('rmchange'));
+    });
+  } catch (err) { /* 老浏览器没有 addEventListener：忽略 */ }
+})();
+</script>
+</head>
+<body>
+
+<!-- 背景层 -->
+<div class="bg-fallback"></div>
+<canvas id="neural-canvas"></canvas>
+<canvas id="aurora-2d" aria-hidden="true"></canvas>
+<!-- ★ 光标：青色光点（光晕画布画的是它的倒影）-->
+<div id="cursor-dot" aria-hidden="true"></div>
+<div class="vignette"></div>
+<div class="bg-dim"></div>
+
+<!-- 加载层 -->
+<div id="loader">
+  <div class="spinner"></div>
+  <div class="load-title">Initializing Bioelectric Engine</div>
+  <div class="load-sub">神经引擎加载中 · NEURAL CATHEDRAL</div>
+</div>
+
+<!-- ============ 粘性导航 · 顶部悬浮胶囊（P2） ============ -->
+<nav class="site-nav" id="siteNav" aria-label="页面区块导航">
+  <a class="nav-item" href="#about"><span class="nav-dot"></span><span class="nav-label">关于我</span></a>
+  <a class="nav-item" href="#log"><span class="nav-dot"></span><span class="nav-label">日志</span></a>
+  <a class="nav-item" href="#chat"><span class="nav-dot"></span><span class="nav-label">分身</span></a>
+  <a class="nav-item" href="#interests"><span class="nav-dot"></span><span class="nav-label">兴趣</span></a>
+  <a class="nav-item" href="#works"><span class="nav-dot"></span><span class="nav-label">影像</span></a>
+  <a class="nav-item" href="#contact"><span class="nav-dot"></span><span class="nav-label">联系</span></a>
+</nav>
+
+<div class="content">
+
+  <!-- ============ Hero ============ -->
+  <header class="hero" id="hero">
+    <!-- 左 HUD -->
+    <div class="hud hud-left" id="hud-left">
+      <div class="hud-header">
+        <div class="hud-title">Neural Cathedral</div>
+        <div class="hud-sub">ID: NC-09 // MARIO EVELYN</div>
+      </div>
+      <div class="hud-row"><span class="hud-label">Membrane V</span><span class="hud-value" id="val-membrane">-70.0 mV</span></div>
+      <div class="hud-row"><span class="hud-label">Dendrite</span><span class="hud-value" id="val-dendrites">CALM</span></div>
+      <div class="hud-row"><span class="hud-label">Axon Load</span><span class="hud-value" id="val-axon">02%</span></div>
+      <div class="hud-row"><span class="hud-label">Signal Phase</span><span class="hud-value" id="val-state">RESTING</span></div>
+      <div class="hud-row"><span class="hud-label">Synaptic Coh</span><span class="hud-value" id="val-sync">24%</span></div>
+      <button class="btn-trigger" id="btn-fire">Manual Override</button>
+    </div>
+
+    <!-- 右 HUD -->
+    <div class="hud hud-right" id="hud-right">
+      <div class="hud-row"><span class="hud-label">Cam X</span><span class="hud-value" id="val-cam-x">0.00</span></div>
+      <div class="hud-row"><span class="hud-label">Cam Y</span><span class="hud-value" id="val-cam-y">0.00</span></div>
+      <div class="hud-row"><span class="hud-label">Cam Z</span><span class="hud-value" id="val-cam-z">0.00</span></div>
+    </div>
+
+    <div class="hero-inner">
+      <div class="avatar-wrap">
+        <img class="avatar" src="头像.jpg" alt="Mario Evelyn 头像" />
+      </div>
+      <h1 class="name">Mario Evelyn</h1>
+      <div class="badge">🧠 脑机接口专业大一 · 开荒新人 <span>· 数字分身在线</span></div>
+      <p class="tagline">一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#log">📓 看我的成长日志</a>
+        <a class="btn btn-ghost" href="#chat">💬 和我的分身聊聊</a>
+        <a class="btn btn-ghost" href="#about">↓ 认识我一下</a>
+      </div>
+    </div>
+
+    <div class="hero-hint">Click anywhere to trigger impulse · 点击空白处触发脉冲</div>
+    <div class="scroll-cue"></div>
+  </header>
+
+  <main>
+    <!-- ============ 关于我 ============ -->
+    <section class="section reveal" id="about">
+      <div class="card">
+        <div class="section-title"><span class="st-index">01</span> About · 关于我</div>
+        <div class="about-grid">
+          <div class="about-item">
+            <h3><span>🎓</span> 现在的我</h3>
+            <p>首届新生体验卡加载中✨ 天津大学-香港理工大学深圳未来技术学院。<br />脑机接口方向打怪升级，无学长学姐带路，全程开荒模式。</p>
+          </div>
+          <div class="about-item">
+            <h3><span>⚔️</span> 当前关卡</h3>
+            <p>最大关卡：全英数学课，英语叠加数学双重暴击。<br />在全新学院里从零沉淀，一边踩坑一边成长。</p>
+          </div>
+        </div>
+        <div class="trait">
+          <b>一个比较有记忆点的特点：</b>外表「生人勿近」，慢热但熟络之后很好沟通 —— 初见高冷，熟了话痨。
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 成长日志 ============ -->
+    <section class="section reveal" id="log">
+      <div class="card">
+        <div class="section-title"><span class="st-index">02</span> Growth Log · 成长日志</div>
+        <p class="log-intro">把「开荒」的每一步记在这里 —— 学习、生活、心情，慢慢写，慢慢长。</p>
+        <div class="log-filter" id="logFilter"></div>
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </section>
+
+    <!-- ============ 数字分身 ============ -->
+    <section class="section reveal" id="chat">
+      <div class="card chat-card">
+        <div class="chat-head">
+          <div class="chat-avatar">🧠</div>
+          <div class="chat-head-title">
+            <h3>数字分身 · Mario Evelyn <span class="ai-tag off" id="aiTag">规则模式</span></h3>
+            <p>脑机接口大一 · 开荒中的分身 · 有问必答</p>
+          </div>
+          <div class="dot"></div>
+          <button class="icon-btn" id="cfgBtn" title="配置 AI 模型">⚙</button>
+        </div>
+
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-quick" id="quickChips"></div>
+        <div class="chat-input">
+          <input id="chatInput" type="text" placeholder="随便聊聊，问我点什么…" autocomplete="off" />
+          <button id="sendBtn">发送</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 兴趣 ============ -->
+    <section class="section reveal" id="interests">
+      <div class="card">
+        <div class="section-title"><span class="st-index">03</span> Interests · 兴趣</div>
+        <div class="interest-grid">
+          <div class="interest"><div class="ic">📷</div><div><h4>摄影</h4><p>习惯用镜头记录日常瞬间</p></div></div>
+          <div class="interest"><div class="ic">🧩</div><div><h4>手工 &amp; 拼装</h4><p>沉迷各类拼装造物，享受动手搭建的过程</p></div></div>
+          <div class="interest"><div class="ic">🏸</div><div><h4>羽毛球 · 游泳</h4><p>会一点但技艺不精，高阶技能等待解锁</p></div></div>
+          <div class="interest"><div class="ic">🌙</div><div><h4>静向独处</h4><p>偏爱安静的状态，不热衷高强度运动</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 作品 / 相册 ============ -->
+    <section class="section reveal" id="works">
+      <div class="card">
+        <div class="section-title"><span class="st-index">04</span> Gallery · 日常影像</div>
+        <div class="works-grid" id="worksGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ 联系方式 ============ -->
+    <section class="section reveal" id="contact">
+      <div class="card">
+        <div class="section-title"><span class="st-index">05</span> Contact · 联系我</div>
+        <div class="contact-grid">
+          <a class="contact" href="mailto:evelyn_11290000@163.com">
+            <div class="ci"><img src="icons/mail.png" alt="邮箱" width="40" height="40"></div><div><h4>邮箱</h4><p>evelyn_11290000@163.com</p></div>
+          </a>
+          <a class="contact" href="#" id="wechatCard" title="点击复制微信号">
+            <div class="ci"><img src="icons/wechat.png" alt="微信" width="40" height="40"></div><div><h4>微信</h4><p id="wechatId">LYL-10101010</p></div>
+          </a>
+          <a class="contact" href="#" onclick="return false">
+            <div class="ci"><img src="icons/github.png" alt="GitHub" width="40" height="40"></div><div><h4>GitHub</h4><p>暂不公开</p></div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <b>MARIO EVELYN</b> · MIND-CHIP × COLLEGE-FRESH · 数字分身个人主页 <b>v3</b>
+  </footer>
+</div>
+
+<!-- ============ AI 配置弹窗 ============ -->
+<div class="modal-mask" id="cfgMask">
+  <div class="modal">
+    <h3>⚙ 接入真实 AI 分身</h3>
+    <p class="modal-desc">
+      填入任意「OpenAI 兼容」接口即可让分身真正会聊天。密钥只保存在你自己的浏览器（localStorage），不会上传到任何服务器。
+    </p>
+    <div class="field">
+      <label>API 地址（Base URL）</label>
+      <input id="cfgBase" type="text" placeholder="https://api.deepseek.com/v1" />
+      <div class="hint">需以 /v1 结尾；也可填完整 …/chat/completions</div>
+    </div>
+    <div class="field">
+      <label>API Key</label>
+      <input id="cfgKey" type="password" placeholder="sk-..." />
+    </div>
+    <div class="field">
+      <label>模型名称</label>
+      <input id="cfgModel" type="text" placeholder="deepseek-chat" />
+      <div class="hint">如 deepseek-chat / gpt-4o-mini / glm-4-flash / Qwen-plus</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="cfgSave">保存</button>
+      <button class="btn btn-ghost" id="cfgTest">测试连接</button>
+      <button class="btn btn-ghost" id="cfgClear">清除</button>
+    </div>
+    <div class="modal-status" id="cfgStatus"></div>
+  </div>
+</div>
+
+<!-- ============ 反馈入口（右下角悬浮按钮）============
+     放在页面正文之外、独立于 #page 容器：它是常驻入口，不参与滚动动效。 -->
+<button class="fb-fab" id="fbFab" type="button" aria-label="给主页留言反馈" title="给主页留言反馈">
+  <!-- 图标：message-square（Lucide，ISC 许可），内联以 currentColor 上色，无外部依赖 -->
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+  <span>反馈</span>
+</button>
+
+<!-- ============ 反馈弹窗 ============
+     视觉完全复用上面的 .modal-mask / .modal 体系，不引入新的视觉语言；
+     字段遵循「能少填就少填」：只有反馈内容是必填。 -->
+<div class="modal-mask" id="fbMask">
+  <div class="modal">
+    <!-- 表单视图：与下面的致谢视图二选一显示，由 JS 切换 -->
+    <div id="fbForm">
+    <h3>💬 给主页留一句反馈</h3>
+    <p class="modal-desc">
+      你在页面上遇到的一切都可以写在这里：哪句话看不懂、哪个按钮不好找、手机上有没有显示不对的地方……
+      写清「位置 + 你的感受」就够了，不用特意组织语言。
+    </p>
+
+    <div class="fb-privacy">🔒 只有主页作者能看到，不会公开展示</div>
+
+    <div class="field">
+      <label>怎么称呼你 <span class="opt">（选填）</span></label>
+      <input id="fbName" type="text" placeholder="昵称就行，不用真名" maxlength="40" />
+    </div>
+
+    <div class="field">
+      <label>你和主页作者的关系</label>
+      <select id="fbRelation">
+        <option value="">请选择…</option>
+        <option>同学</option>
+        <option>老师</option>
+        <option>家人</option>
+        <option>朋友</option>
+        <option>其他</option>
+        <option>不想说</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>你用什么设备看的</label>
+      <select id="fbDevice">
+        <option value="">请选择…</option>
+        <option>电脑</option>
+        <option>手机</option>
+        <option>平板</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>反馈内容 <span class="req">*</span></label>
+      <textarea id="fbMessage" placeholder="例如：「手机上兴趣那四张卡片有点挤」——位置加感受，一句话也可以。" maxlength="1000"></textarea>
+      <div class="hint">最多 1000 字</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="fbSubmit">提交反馈</button>
+      <button class="btn btn-ghost" id="fbCancel">取消</button>
+    </div>
+    </div><!-- /#fbForm -->
+
+    <!-- 致谢视图（提交成功后显示，约 1.15s 播完，随后自动收起）
+         只保留英文：THANK YOU + 一行小字，中文提示交给 aria-live 播报。
+         纯装饰元素对读屏隐藏，真正的完成语义在 #fbStatus 上。 -->
+    <div class="fb-thanks" id="fbThanks" aria-hidden="true">
+      <span class="fb-streak"></span>
+      <div class="fb-thanks-row">
+        <span class="fb-speed"><i></i><i></i><i></i></span>
+        <div class="fb-thanks-text">THANK YOU</div>
+      </div>
+      <div class="fb-thanks-sub">// feedback encrypted &amp; stored</div>
+    </div>
+
+    <div class="modal-status" id="fbStatus" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Supabase 客户端（@supabase/supabase-js，MIT 许可）
+     加载策略与上面 three.js 的「双保险」一致：本地副本优先（离线也能用），
+     本地没读到（例如直接双击 file:// 打开）时兜底走 CDN。
+     与 three.js 的差别：supabase-js 是 UMD 包，用普通 <script> 即可，
+     不需要 importmap；加载完挂在全局 window.supabase 上。
+
+     ⚠️ 这里只能出现 publishable / anon key —— 它本来就设计成公开的，
+        放在前端是安全的。高权限的 secret / service_role key 一旦写进来，
+        等于把整个数据库交出去，所以永远不要出现在这个文件里；
+        真正的权限控制靠数据库侧的 RLS 策略，不靠「前端藏按钮」。 -->
+<script src="./vendor/supabase/supabase.js"></script>
+<script>
+  if (typeof window.supabase === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"><\/script>');
+  }
+</script>
+
+<!-- 三方库加载（双保险）：
+     · http 打开（含本地预览服务）→ 用仓库里的本地副本 ./vendor/three/，离线也能用；
+     · 双击（file://）打开 → 浏览器安全策略会拦住本地 ES 模块，这里自动改用同版本 CDN，
+       保证「双击也能看到动效」。
+     importmap 必须出现在模块脚本之前，所以用 document.write 就地注入。 -->
+<script>
+  (function () {
+    var fromCDN = location.protocol === 'file:';
+    var imports = fromCDN
+      ? {
+          'three': 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js',
+          'three/addons/': 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/'
+        }
+      : {
+          'three': './vendor/three/three.module.min.js',
+          'three/addons/': './vendor/three/addons/'
+        };
+    document.write('<script type="importmap">' + JSON.stringify({ imports: imports }) + '<\/script>');
+  })();
+</script>
+
+<!-- 加载兜底：三方库本地优先、双击时走 CDN；磁盘/缓存/网络异常时仍会慢，4 秒后也隐藏加载层 -->
+<script>
+  setTimeout(function () {
+    var l = document.getElementById('loader');
+    if (l && l.style.display !== 'none') {
+      l.style.opacity = '0';
+      setTimeout(function () { l.style.display = 'none'; }, 800);
+    }
+  }, 4000);
+</script>
+
+<script type="module">
+/* ================================================================
+   PART 1 · 神经引擎（Three.js）—— 作为全页 fixed 背景
+   ================================================================ */
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+/* ================================================================
+   ★ 减弱模式：3D 背景只画一张「静态帧」，不再逐帧重绘
+   —— 头几帧还是要画的：着色器要编译、HUD 要填数、加载层要收，只画一帧容易画出半成品。
+   —— 画完就彻底停掉 rAF 循环（不是「空转但不动」）：省电，也保证画面上再没有会自己动的东西。
+   —— 用户主动点出来的脉冲（MANUAL OVERRIDE / 点空白处）不算「自动动效」，
+      所以那种情况下会临时把循环叫醒，跑完再停。
+   ================================================================ */
+const REDUCED = window.__rmOn();
+let rmSettle = REDUCED ? 3 : 0;   /* >0 表示还要画几帧；减到 0 且没有脉冲在跑 → 停 */
+let pumping = false;              /* 循环当前是否"活着"：防止重复起链（两条链并行 = 速度翻倍）*/
+
+/* 把已经停掉的循环叫醒（缩放后需要重绘 / 脉冲结束要让辉光回落） */
+function kick(n) {
+  if (!REDUCED) return;
+  rmSettle = Math.max(rmSettle, n || 2);
+  if (!pumping) { pumping = true; requestAnimationFrame(animate); }
+}
+
+/* 系统开关在使用中被切换（只可能是 减弱↔正常） */
+window.addEventListener('rmchange', function () {
+  if (!controls) return;
+  if (window.__rmOn()) { controls.autoRotate = false; }
+  else { controls.autoRotate = true; kick(3); }
+});
+
+/* ---------- 噪声函数（GLSL） ---------- */
+const shaderNoise = `
+  vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+  vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+  float snoise(vec3 v) {
+      const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+      const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+      vec3 i  = floor(v + dot(v, C.yyy) );
+      vec3 x0 = v - i + dot(i, C.xxx) ;
+      vec3 g = step(x0.yzx, x0.xyz);
+      vec3 l = 1.0 - g;
+      vec3 i1 = min( g.xyz, l.zxy );
+      vec3 i2 = max( g.xyz, l.zxy );
+      vec3 x1 = x0 - i1 + C.xxx;
+      vec3 x2 = x0 - i2 + C.yyy;
+      vec3 x3 = x0 - D.yyy;
+      i = mod289(i);
+      vec4 p = permute( permute( permute(
+                  i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+      float n_ = 0.142857142857;
+      vec3  ns = n_ * D.wyz - D.xzx;
+      vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+      vec4 x_ = floor(j * ns.z);
+      vec4 y_ = floor(j - 7.0 * x_ );
+      vec4 x = x_ *ns.x + ns.yyyy;
+      vec4 y = y_ *ns.x + ns.yyyy;
+      vec4 h = 1.0 - abs(x) - abs(y);
+      vec4 b0 = vec4( x.xy, y.xy );
+      vec4 b1 = vec4( x.zw, y.zw );
+      vec4 s0 = floor(b0)*2.0 + 1.0;
+      vec4 s1 = floor(b1)*2.0 + 1.0;
+      vec4 sh = -step(h, vec4(0.0));
+      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+      vec3 p0 = vec3(a0.xy,h.x);
+      vec3 p1 = vec3(a0.zw,h.y);
+      vec3 p2 = vec3(a1.xy,h.z);
+      vec3 p3 = vec3(a1.zw,h.w);
+      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+      p0 *= norm.x;
+      p1 *= norm.y;
+      p2 *= norm.z;
+      p3 *= norm.w;
+      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+      m = m * m;
+      return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+  }
+`;
+
+const compact = window.innerWidth <= 720 || window.matchMedia('(pointer: coarse)').matches;
+const lowPower = window.innerWidth <= 720 || (navigator.hardwareConcurrency || 8) <= 4;
+
+const CONFIG = {
+  somaRadius: 4.0,
+  dendriteTrees: compact ? 9 : 14,
+  axonTrees: compact ? 3 : 4,
+  maxDistDendrite: 35.0,
+  maxDistAxon: 50.0,
+  dustCount: compact ? 380 : 800,
+  colors: {
+    cyan: new THREE.Color('#00e5ff'),
+    blue: new THREE.Color('#0033aa'),
+    gold: new THREE.Color('#ffaa00'),
+    orange: new THREE.Color('#ff4400'),
+    magenta: new THREE.Color('#ff0066'),
+    violet: new THREE.Color('#6600ff')
+  }
+};
+
+const STATE = { phase: 0, progress: 0, membraneV: -70.0, axonLoad: 2, sync: 24, isAnimating: false };
+
+const uniforms = {
+  uTime: { value: 0 },
+  uPhase: { value: 0 },
+  uProgress: { value: 0 },
+  uColCyan: { value: CONFIG.colors.cyan },
+  uColBlue: { value: CONFIG.colors.blue },
+  uColGold: { value: CONFIG.colors.gold },
+  uColOrange: { value: CONFIG.colors.orange },
+  uColMagenta: { value: CONFIG.colors.magenta },
+  uColViolet: { value: CONFIG.colors.violet },
+  uSomaRadius: { value: CONFIG.somaRadius },
+  uMaxDistDendrite: { value: CONFIG.maxDistDendrite },
+  uMaxDistAxon: { value: CONFIG.maxDistAxon },
+  uPulse: { value: 0.6 }
+};
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x010204, 0.015);
+
+const desktopCameraPosition = new THREE.Vector3(31, 21, 42);
+const mobileCameraPosition = new THREE.Vector3(34, 24, 64);
+
+const canvasEl = document.getElementById('neural-canvas');
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.copy(compact ? mobileCameraPosition : desktopCameraPosition);
+
+const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: false, powerPreference: 'high-performance', alpha: true });
+renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, compact ? 1.5 : 2));
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  compact ? 0.95 : 1.2, 0.6, 0.3
+);
+composer.addPass(bloomPass);
+
+/* ================================================================
+   光标光晕（canvas 2D 版）  ——  参数已定稿，改手感只改下面 GLOW 里的值
+   · 为什么用 2D：这是定稿选定的观感；逻辑简单、开销极低，而且不碰 WebGL
+     —— 也就不会再出现「着色器编译失败 → 静默全黑、页面还不报错」这类问题。
+   · 低分辨率画布（视口 1/4）再拉伸铺满：天然更柔，代价几乎为零。
+   · 拖尾按【固定时间间隔】采样（35ms 一个点），所以尾巴长度不受帧率影响。
+   · 系统开启「减少动态效果」→ 不启用（只保留这一条无障碍开关）。
+   参数含义：
+       track     光的行程范围。0.15 = 参考站原值，1.0 = 光完全贴住鼠标。
+       momentum  光追上鼠标的快慢。越大越滞后、越飘。
+       trailLen  拖尾段数。1 = 没有尾巴（纯光斑）；12 = 上限，约 0.42 秒轨迹。
+       size      ★ 光斑基准尺寸，占【视口短边】的比例。
+                 ★ 头部直径 ≈ 视口短边 × size × 2.5（实验台面板同款算式）。
+                   0.10（当前）= 短边 684px 时直径约 171px、短边 900px 时约 225px。
+                   0.125（原值）= 短边 684px 时约 214px。
+                   0.035 ≈ 视口 684×993 时头部直径约 60px（光斑太小就别再往下调了）。
+       intensity 亮度。太高会因「叠加混合」而发白，蓝色变淡。
+       mirrorY  ★ 镜面下移（CSS 像素）：0 = 不做倒影（纯彗尾）；
+                >0 = 在光点下方 mirrorY 处多一个（拖尾版的）镜面倒影。
+       mirrorSquash ★ 镜面压扁：1 = 不压扁；<1 = 纵向压扁（近大远小的透视感）。
+       colA/colB 内圈亮核 / 外圈光晕。
+                 ★ 当前 = 冰蓝：冷白核 + 天蓝晕（2026-09-17 定，与实验台「冰蓝」档一致）。
+                   想回原来的青绿味：colA #00f0ff + colB #2dd4bf。
+       ★ 当前定稿 = 纯彗尾：trailLen 12 + mirrorY 0 + mirrorSquash 1
+         （2026-09-17 由用户在实验台选出；想回到「光点下方的倒影」只需
+           trailLen 1 + mirrorY 10 + mirrorSquash 0.8。）
+   ================================================================ */
+const GLOW_MAX = 12;
+const GLOW_SAMPLE_DT = 0.035;              /* 每 35ms 记一个点 → 12 段 ≈ 0.42 秒 */
+const GLOW_SCALE = 4;                      /* 画布分辨率 = 视口 / 4 */
+
+const GLOW = {
+  on: !window.__rmOn(),                    /* 与 <html class="rm"> 同一个开关（含 ?rm= 覆盖）*/
+  track: 1.0,                              /* ★ 1.0 = 光晕与光点同位（0.8 会在屏幕边缘把两者拉开）*/
+  momentum: 0.5,                           /* ★ 越小越跟手、尾巴收得越紧；越大越飘 */
+  trailLen: 12,                            /* ★ 12 段彗尾（上限，约 0.42 秒轨迹）；1 = 单块光斑 */
+  size: 0.10,                              /* ★ 光斑大小：头部直径 ≈ 视口短边 × size × 2.5（2026-09-17 由 0.125 调小）*/
+  intensity: 0.6,
+  mirrorY: 0,                              /* ★ 0 = 不做镜面下移（纯彗尾）；10 = 倒影偏移 */
+  mirrorSquash: 1,                         /* ★ 1 = 不压扁（纯彗尾）；0.8 = 倒影的透视压扁 */
+  colA: '#e8f6fb',                         /* ★ 冰蓝·亮核 = --txt 冷白（原为 --cyan-2 青）*/
+  colB: '#38bdf8'                          /* ★ 冰蓝·外圈 = --blue 天蓝（原为 --teal 青绿）*/
+};
+
+const glowEl = document.getElementById('aurora-2d');
+const cursorDot = document.getElementById('cursor-dot');
+const glowCtx = glowEl.getContext('2d');
+
+function sizeGlow() {
+  glowEl.width  = Math.max(2, Math.ceil(window.innerWidth  / GLOW_SCALE));
+  glowEl.height = Math.max(2, Math.ceil(window.innerHeight / GLOW_SCALE));
+}
+sizeGlow();
+
+/* 拖尾历史：最新的在前，存的是【未乘 track】的 NDC 坐标 */
+const glowTrail = [];
+let glowAcc = 0;
+let glowAlpha = 0;
+
+/* 鼠标：目标位置 + 惯性缓动 */
+const glowPointer = { tx: 0, ty: 0, x: 0, y: 0 };
+window.addEventListener('pointermove', (e) => {
+  glowPointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
+  glowPointer.ty = -((e.clientY / window.innerHeight) * 2 - 1);
+}, { passive: true });
+
+/* ★「光晕即光标」：首次移动鼠标后隐藏系统箭头。
+   ★ 为什么不直接写死 cursor: none —— 页面刚打开时光晕还没跟上来，
+     而且「减少动态效果」下 GLOW.on 为 false、光晕根本不画，
+     两种情况都会变成「一个指针都看不到」。 */
+if (GLOW.on && window.matchMedia('(pointer: fine)').matches) {
+  window.addEventListener('pointermove', () => {
+    document.documentElement.classList.add('glow-cursor');
+  }, { once: true, passive: true });
+}
+
+function glowRgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
+function drawGlow() {
+  const W = glowEl.width, H = glowEl.height;
+  const n = Math.max(1, Math.min(GLOW.trailLen, glowTrail.length));
+
+  glowCtx.clearRect(0, 0, W, H);
+  glowCtx.globalCompositeOperation = 'lighter';
+
+  const base = Math.min(W, H) * GLOW.size;
+  /* ★ 画布分辨率比 CSS 像素低，把倒影下移量换算回画布坐标 */
+  const px = W / Math.max(1, window.innerWidth);
+  for (let i = n - 1; i >= 0; i--) {
+    const tp = glowTrail[i];
+    if (!tp) continue;
+    const k = 1 - i / n;                                   /* 0 = 最旧, 1 = 最新 */
+    const x = (tp.x * GLOW.track * 0.5 + 0.5) * W;
+    const y = (-tp.y * GLOW.track * 0.5 + 0.5) * H;
+    const r = base * (0.40 + 0.85 * k);
+    if (r <= 1) continue;
+    const a = 0.34 * k * k * GLOW.intensity;
+    /* ★ 倒影：把光晕整体压到光点下方、纵向压扁，像亮点映在桌面上 */
+    glowCtx.save();
+    glowCtx.translate(x, y + GLOW.mirrorY * px);
+    glowCtx.scale(1, GLOW.mirrorSquash);
+    const g = glowCtx.createRadialGradient(0, 0, 0, 0, 0, r);
+    g.addColorStop(0,    glowRgba(GLOW.colA, a));
+    g.addColorStop(0.45, glowRgba(GLOW.colB, a * 0.45));
+    g.addColorStop(1,    glowRgba(GLOW.colB, 0));
+    glowCtx.fillStyle = g;
+    glowCtx.fillRect(-r, -r, r * 2, r * 2);
+    glowCtx.restore();
+  }
+}
+
+function updateCursorGlow(dt) {
+  if (!GLOW.on) return;
+
+  /* 惯性缓动：momentum 越大越黏（指数平滑，与帧率无关）*/
+  const speed = 2 + (1 - GLOW.momentum) * 16;
+  const k = 1 - Math.exp(-dt * speed);
+  glowPointer.x += (glowPointer.tx - glowPointer.x) * k;
+  glowPointer.y += (glowPointer.ty - glowPointer.y) * k;
+
+  glowAcc += dt;
+  /* ★ 只画一块（trailLen < 2）时不需要节流：35ms 的采样间隔就是 35ms 的额外滞后 */
+  const throttle = GLOW.trailLen > 1 ? GLOW_SAMPLE_DT : 0;
+  if (!glowTrail.length || glowAcc >= throttle) {
+    glowAcc = 0;
+    glowTrail.unshift({ x: glowPointer.x, y: glowPointer.y });
+    while (glowTrail.length > GLOW_MAX) glowTrail.pop();
+  }
+
+  /* ★ 光点（=光标本体）：直接贴住指针，不做缓动 —— 缓动会让人觉得鼠标漂。
+     光晕画布保留惯性（倒影略微拖尾更像反射），但光点必须零延迟。 */
+  if (cursorDot) {
+    const dx = (glowPointer.tx * 0.5 + 0.5) * window.innerWidth;
+    const dy = (-glowPointer.ty * 0.5 + 0.5) * window.innerHeight;
+    cursorDot.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) translate(-50%,-50%)';
+  }
+
+  /* 进场淡入（首屏别突然闪出来）*/
+  glowAlpha += (1 - glowAlpha) * Math.min(1, dt * 3.5);
+  glowEl.style.opacity = glowAlpha.toFixed(3);
+  if (cursorDot) cursorDot.style.opacity = glowAlpha.toFixed(3);
+  if (glowAlpha > 0.01) drawGlow();
+}
+
+window.addEventListener('resize', sizeGlow);
+
+// 背景模式：不接受任何鼠标交互，只保留缓慢自转
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.autoRotate = !REDUCED;          /* 减弱模式：镜头不再自动转 */
+controls.autoRotateSpeed = 0.55;
+controls.enablePan = false;
+controls.enableRotate = false;
+controls.enableZoom = false;
+
+function applyResponsiveScene(resetCamera = false) {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const isCompact = window.innerWidth <= 720 || window.matchMedia('(pointer: coarse)').matches;
+  const targetPosition = isCompact ? mobileCameraPosition : desktopCameraPosition;
+
+  camera.aspect = width / height;
+  camera.fov = isCompact ? 54 : 45;
+  camera.updateProjectionMatrix();
+
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isCompact ? 1.5 : 2));
+  renderer.setSize(width, height, false);
+  composer.setSize(width, height);
+
+  if (resetCamera) camera.position.copy(targetPosition);
+
+  controls.update();
+}
+applyResponsiveScene(true);
+
+/* ---------- 材质：胞体 ---------- */
+const somaMaterial = new THREE.ShaderMaterial({
+  uniforms: uniforms,
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+  vertexShader: `
+    ${shaderNoise}
+    uniform float uTime; uniform int uPhase; uniform float uProgress;
+    varying vec3 vNormal; varying vec3 vViewPosition; varying float vNoise;
+    void main() {
+      vec3 pos = position;
+      float noise = snoise(pos * 0.5 + uTime * 0.3) * 0.5;
+      float burst = 0.0;
+      if (uPhase == 2) burst = sin(uProgress * 3.14159) * 0.4;
+      pos += normal * (noise + burst);
+      vNoise = noise;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+      vViewPosition = -mvPosition.xyz;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform int uPhase; uniform float uProgress; uniform float uTime; uniform float uPulse;
+    uniform vec3 uColCyan; uniform vec3 uColBlue; uniform vec3 uColGold; uniform vec3 uColMagenta;
+    varying vec3 vNormal; varying vec3 vViewPosition; varying float vNoise;
+    void main() {
+      vec3 normal = normalize(vNormal);
+      vec3 viewDir = normalize(vViewPosition);
+      float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.5);
+      vec3 color = mix(uColBlue * 0.2, uColCyan, fresnel);
+      color += uColCyan * (vNoise * 0.5 + 0.5) * 0.3;
+      if (uPhase == 2) {
+        float intensity = sin(uProgress * 3.14159);
+        color = mix(color, uColGold * 2.0 + uColCyan, intensity * fresnel * 2.0 * uPulse);
+        color += uColGold * intensity * (1.0 - fresnel) * uPulse;
+      } else if (uPhase == 4) {
+        float intensity = 1.0 - uProgress;
+        color = mix(color, uColMagenta, intensity * fresnel * 1.5 * uPulse);
+      }
+      gl_FragColor = vec4(color * 0.72, 0.5 * fresnel + 0.07);
+    }
+  `
+});
+
+/* ---------- 材质：分支 ---------- */
+const branchMaterial = new THREE.ShaderMaterial({
+  uniforms: Object.assign({}, uniforms, { uIsAxon: { value: 0 } }),
+  transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  vertexShader: `
+    ${shaderNoise}
+    uniform float uTime;
+    varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vViewPosition; varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      vec3 pos = position;
+      float wiggle = snoise(pos * 0.2 + uTime * 0.5) * 0.1;
+      pos += normal * wiggle;
+      vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
+      vWorldPos = worldPosition.xyz;
+      vNormal = normalize(normalMatrix * normal);
+      vec4 mvPosition = viewMatrix * worldPosition;
+      vViewPosition = -mvPosition.xyz;
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    ${shaderNoise}
+    uniform float uTime; uniform int uPhase; uniform float uProgress; uniform int uIsAxon; uniform float uPulse;
+    uniform vec3 uColCyan; uniform vec3 uColBlue; uniform vec3 uColGold;
+    uniform vec3 uColOrange; uniform vec3 uColMagenta; uniform vec3 uColViolet;
+    uniform float uSomaRadius; uniform float uMaxDistDendrite; uniform float uMaxDistAxon;
+    varying vec3 vWorldPos; varying vec3 vNormal; varying vec3 vViewPosition; varying vec2 vUv;
+    void main() {
+      vec3 normal = normalize(vNormal);
+      vec3 viewDir = normalize(vViewPosition);
+      float edge = pow(1.0 - abs(vUv.y - 0.5) * 2.0, 2.0);
+      float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.0);
+      float dist = length(vWorldPos);
+      vec3 baseColor = mix(uColBlue * 0.06, uColCyan * 0.28, fresnel * edge);
+      vec3 pulseColor = vec3(0.0);
+      float flowNoise = snoise(vec3(vUv.x * 20.0 - uTime * 2.0, vUv.y * 10.0, uTime)) * 0.5 + 0.5;
+      float axialFlow = 0.65 + 0.35 * sin(vUv.x * 34.0 - uTime * 8.0);
+      if (uIsAxon == 0) {
+        if (uPhase == 1) {
+          float currentWaveDist = mix(uMaxDistDendrite, uSomaRadius, uProgress);
+          float head = 1.0 - smoothstep(0.0, 2.3, abs(dist - currentWaveDist));
+          float outerTrail = step(currentWaveDist, dist) * exp(-(dist - currentWaveDist) * 0.18);
+          float mergeGlow = (1.0 - smoothstep(uSomaRadius, uSomaRadius + 8.0, dist)) * smoothstep(0.65, 1.0, uProgress);
+          float pulse = max(head * 1.6, outerTrail * 0.65) + mergeGlow * 0.8;
+          pulseColor = uColGold * pulse * flowNoise * axialFlow * 2.2;
+        }
+      } else {
+        if (uPhase == 3) {
+          float currentWaveDist = mix(uSomaRadius, uMaxDistAxon + 18.0, uProgress);
+          float head = 1.0 - smoothstep(0.0, 3.4, abs(dist - currentWaveDist));
+          float innerTrail = step(dist, currentWaveDist) * exp(-(currentWaveDist - dist) * 0.1);
+          float somaLaunch = (1.0 - smoothstep(uSomaRadius, uSomaRadius + 7.0, dist)) * (1.0 - smoothstep(0.0, 0.28, uProgress));
+          float pulse = max(head * 2.0, innerTrail * 0.9) + somaLaunch * 1.2;
+          pulseColor = (uColOrange + uColGold * 0.45) * pulse * flowNoise * axialFlow * 3.2;
+        }
+      }
+      if (uPhase == 4) {
+        float intensity = 1.0 - uProgress;
+        pulseColor += uColViolet * intensity * edge * 1.5;
+      }
+      gl_FragColor = vec4(baseColor + pulseColor * 0.82 * uPulse, 1.0);
+    }
+  `
+});
+
+const axonMaterial = branchMaterial.clone();
+Object.keys(uniforms).forEach((key) => { axonMaterial.uniforms[key] = uniforms[key]; });
+axonMaterial.uniforms.uIsAxon = { value: 1 };
+
+/* ---------- 构建神经网络 ---------- */
+const networkGroup = new THREE.Group();
+scene.add(networkGroup);
+
+const somaMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(CONFIG.somaRadius, compact ? 20 : 32), somaMaterial);
+networkGroup.add(somaMesh);
+
+const coreGeo = new THREE.IcosahedronGeometry(CONFIG.somaRadius * 0.8, 16);
+const coreMat = new THREE.MeshBasicMaterial({ color: CONFIG.colors.cyan, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, wireframe: true });
+networkGroup.add(new THREE.Mesh(coreGeo, coreMat));
+
+const synapsePositions = [];
+function addSynapse(pos) { synapsePositions.push(pos.x, pos.y, pos.z); }
+
+function buildBranch(startPt, dir, length, radius, level, maxLevels, isAxon) {
+  const segments = compact ? 9 : 12;
+  const points = [startPt.clone()];
+  let cur = startPt.clone();
+  let cDir = dir.clone();
+
+  for (let i = 0; i < segments; i++) {
+    const curl = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5)
+      .multiplyScalar(isAxon ? 0.3 : 0.8);
+    cDir.add(curl).normalize();
+    cur.add(cDir.clone().multiplyScalar(length / segments));
+    points.push(cur.clone());
+  }
+
+  const curve = new THREE.CatmullRomCurve3(points);
+  const tubeGeo = new THREE.TubeGeometry(curve, segments * 2, radius, compact ? 5 : 6, false);
+  networkGroup.add(new THREE.Mesh(tubeGeo, isAxon ? axonMaterial : branchMaterial));
+
+  if (level < maxLevels) {
+    const childCount = isAxon ? (Math.random() > 0.3 ? 1 : 2) : (Math.random() > 0.2 ? 2 : 3);
+    for (let j = 0; j < childCount; j++) {
+      const splitDir = cDir.clone()
+        .add(new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(0.8))
+        .normalize();
+      buildBranch(cur, splitDir, length * (0.6 + Math.random() * 0.3), radius * 0.65, level + 1, maxLevels, isAxon);
+    }
+  } else {
+    addSynapse(cur);
+  }
+}
+
+for (let i = 0; i < CONFIG.dendriteTrees; i++) {
+  const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+  if (dir.z > 0.3) dir.z -= 0.8;
+  dir.normalize();
+  buildBranch(dir.clone().multiplyScalar(CONFIG.somaRadius - 0.5), dir, 12 + Math.random() * 5, 0.4, 0, 2, false);
+}
+for (let i = 0; i < CONFIG.axonTrees; i++) {
+  const dir = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 1.0).normalize();
+  buildBranch(dir.clone().multiplyScalar(CONFIG.somaRadius - 0.5), dir, 25 + Math.random() * 10, 0.6, 0, 2, true);
+}
+
+const synGeo = new THREE.BufferGeometry();
+synGeo.setAttribute('position', new THREE.Float32BufferAttribute(synapsePositions, 3));
+const synSizes = new Float32Array(synapsePositions.length / 3);
+for (let i = 0; i < synSizes.length; i++) synSizes[i] = Math.random();
+synGeo.setAttribute('aSize', new THREE.BufferAttribute(synSizes, 1));
+
+const synMat = new THREE.ShaderMaterial({
+  uniforms: uniforms, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+  vertexShader: `
+    attribute float aSize; uniform float uTime; varying float vSize;
+    void main() {
+      vSize = aSize;
+      vec3 pos = position;
+      pos.y += sin(uTime * 2.0 + pos.x) * 0.5;
+      vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+      gl_PointSize = (20.0 + aSize * 15.0) * (100.0 / -mvPosition.z);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform int uPhase; uniform float uProgress;
+    uniform vec3 uColCyan; uniform vec3 uColGold; uniform vec3 uColMagenta;
+    varying float vSize;
+    void main() {
+      vec2 coord = gl_PointCoord - vec2(0.5);
+      float dist = length(coord);
+      if (dist > 0.5) discard;
+      float alpha = (0.5 - dist) * 2.0;
+      vec3 color = uColCyan * 0.5;
+      if (uPhase == 1 || uPhase == 3) {
+        float spark = step(0.8, fract(vSize * 10.0 + uProgress * 5.0));
+        color = mix(color, uColGold, spark * 2.0);
+      } else if (uPhase == 4) {
+        color = mix(color, uColMagenta, (1.0 - uProgress));
+      }
+      gl_FragColor = vec4(color, alpha);
+    }
+  `
+});
+networkGroup.add(new THREE.Points(synGeo, synMat));
+
+/* ---------- 星尘 ---------- */
+const dustGeo = new THREE.BufferGeometry();
+const dustPos = new Float32Array(CONFIG.dustCount * 3);
+for (let i = 0; i < CONFIG.dustCount * 3; i++) dustPos[i] = (Math.random() - 0.5) * 150;
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({
+  color: CONFIG.colors.cyan, size: 0.22, transparent: true, opacity: 0.2,
+  blending: THREE.AdditiveBlending, depthWrite: false
+}));
+scene.add(dust);
+
+/* ---------- 脉冲触发（背景模式：自动循环 + 手动） ---------- */
+const btnFire = document.getElementById('btn-fire');
+
+function fireImpulse() {
+  if (STATE.isAnimating) return;
+  STATE.isAnimating = true;
+  STATE.phase = 1;
+  STATE.progress = 0;
+  if (btnFire) {
+    btnFire.classList.add('disabled');
+    btnFire.innerText = 'FIRING SEQUENCE...';
+  }
+  kick(2);                 /* 减弱模式下循环是停着的：用户主动触发，得把它叫醒 */
+}
+
+if (btnFire) btnFire.addEventListener('click', (e) => { e.stopPropagation(); fireImpulse(); });
+
+// 点击页面空白处触发（避开交互元素）
+window.addEventListener('pointerdown', (e) => {
+  if (!e.target || !e.target.closest) return;
+  if (e.target.closest('a, button, input, textarea, .hud, .site-nav, .work, .contact, .interest, .chat-card, .modal')) return;
+  fireImpulse();
+});
+
+// 自动循环脉冲，让背景始终保持生命感
+let lastAuto = 0;
+const AUTO_EVERY = 11; // 秒
+
+/* ---------- HUD 数值 ---------- */
+const els = {
+  membrane: document.getElementById('val-membrane'),
+  dendrites: document.getElementById('val-dendrites'),
+  axon: document.getElementById('val-axon'),
+  state: document.getElementById('val-state'),
+  sync: document.getElementById('val-sync'),
+  camX: document.getElementById('val-cam-x'),
+  camY: document.getElementById('val-cam-y'),
+  camZ: document.getElementById('val-cam-z')
+};
+
+function updateUI() {
+  if (els.camX) {
+    els.camX.innerText = camera.position.x.toFixed(2);
+    els.camY.innerText = camera.position.y.toFixed(2);
+    els.camZ.innerText = camera.position.z.toFixed(2);
+  }
+
+  let targetMembrane = -70.0, targetAxon = 2, targetSync = 24 + Math.sin(uniforms.uTime.value * 2) * 5;
+  let stateText = 'RESTING', denText = 'CALM';
+
+  [els.membrane, els.axon, els.state].forEach((el) => { if (el) el.className = 'hud-value'; });
+
+  switch (STATE.phase) {
+    case 1:
+      stateText = 'INCOMING STIMULUS'; denText = 'ACTIVE LOAD';
+      targetMembrane = -55.0; targetSync = 45;
+      if (els.state) els.state.classList.add('value-active');
+      break;
+    case 2:
+      stateText = 'SOMA MERGE'; denText = 'CONVERGED';
+      targetMembrane = 40.0; targetSync = 85;
+      if (els.membrane) els.membrane.classList.add('value-active');
+      if (els.state) els.state.classList.add('value-active');
+      break;
+    case 3:
+      stateText = 'AXON OUTFLOW'; targetMembrane = 20.0; targetAxon = 98; targetSync = 99;
+      if (els.axon) els.axon.classList.add('value-active');
+      if (els.state) els.state.classList.add('value-active');
+      break;
+    case 4:
+      stateText = 'REFRACTORY PERIOD'; targetMembrane = -80.0; targetAxon = 15; targetSync = 15;
+      if (els.membrane) els.membrane.classList.add('value-refract');
+      if (els.state) els.state.classList.add('value-refract');
+      break;
+  }
+
+  STATE.membraneV += (targetMembrane - STATE.membraneV) * 0.15;
+  STATE.axonLoad += (targetAxon - STATE.axonLoad) * 0.15;
+  STATE.sync += (targetSync - STATE.sync) * 0.15;
+
+  if (els.membrane) els.membrane.innerText = `${STATE.membraneV > 0 ? '+' : ''}${STATE.membraneV.toFixed(1)} mV`;
+  if (els.axon) els.axon.innerText = `${Math.round(STATE.axonLoad).toString().padStart(2, '0')}%`;
+  if (els.sync) els.sync.innerText = `${Math.round(STATE.sync).toString().padStart(2, '0')}%`;
+  if (els.state) els.state.innerText = stateText;
+  if (els.dendrites) els.dendrites.innerText = denText;
+}
+
+/* ---------- 主循环 ---------- */
+const clock = new THREE.Clock();
+let running = true;
+
+function animate() {
+  /* ★ 静态条件达成：不再排下一帧 —— rAF 循环真正停掉 */
+  if (REDUCED && rmSettle <= 0 && !STATE.isAnimating) { pumping = false; return; }
+  requestAnimationFrame(animate);
+  pumping = true;
+  if (!running) return;
+  if (rmSettle > 0) rmSettle--;
+
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const time = clock.getElapsedTime();
+  uniforms.uTime.value = time;
+
+  controls.update();
+
+  dust.rotation.y = time * 0.02;
+  dust.rotation.x = Math.sin(time * 0.01) * 0.05;
+
+  // 自动脉冲
+  if (!REDUCED && !STATE.isAnimating && time - lastAuto > AUTO_EVERY) {   /* 减弱模式：自动脉冲也停 */
+    lastAuto = time;
+    fireImpulse();
+  }
+
+  if (STATE.isAnimating) {
+    let speed = 1.0;
+    if (STATE.phase === 1) speed = 0.8;
+    if (STATE.phase === 2) speed = 2.5;
+    if (STATE.phase === 3) speed = 0.95;
+    if (STATE.phase === 4) speed = 0.5;
+
+    STATE.progress += dt * speed;
+
+    if (STATE.progress >= 1.0) {
+      STATE.progress = 0.0;
+      STATE.phase++;
+
+      if (STATE.phase === 2) {
+        camera.position.lerp(camera.position.clone().multiplyScalar(0.86), 0.5);
+        bloomPass.strength = compact ? 1.14 : 1.44;
+      }
+      if (STATE.phase === 3) {
+        camera.position.lerp(camera.position.clone().multiplyScalar(1.18), 0.5);
+      }
+      if (STATE.phase > 4) {
+        STATE.phase = 0;
+        STATE.isAnimating = false;
+        if (REDUCED) rmSettle = 30;                 /* 让辉光从脉冲值回落到常规值再停 */
+        if (btnFire) {
+          btnFire.classList.remove('disabled');
+          btnFire.innerText = 'MANUAL OVERRIDE';
+        }
+      }
+    }
+  } else {
+    const baseBloom = compact ? 0.95 : 1.2;
+    bloomPass.strength += (baseBloom - bloomPass.strength) * 0.05;
+  }
+
+  uniforms.uPhase.value = STATE.phase;
+  uniforms.uProgress.value = STATE.progress;
+
+  updateUI();
+  updateCursorGlow(dt);
+  composer.render();
+}
+
+/* 页面不可见时暂停渲染，省电 */
+document.addEventListener('visibilitychange', () => {
+  running = !document.hidden;
+  if (running) clock.getDelta(); // 丢弃暂停期间累计的 dt
+});
+
+/* 首帧后隐藏加载层 */
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    const loader = document.getElementById('loader');
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => { loader.style.display = 'none'; }, 800);
+    }
+  }, 650);
+});
+
+animate();
+
+window.addEventListener('resize', () => { applyResponsiveScene(false); kick(2); });
+
+
+/* ================================================================
+   PART 2 · 内容区交互（滚动入场 / 作品墙 / 复制）
+   ================================================================ */
+// 滚动入场
+const revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  revealEls.forEach((el) => io.observe(el));
+} else {
+  revealEls.forEach((el) => el.classList.add('in'));
+}
+
+// 作品墙（占位数据，后续可替换为真实图片）
+// slug 决定照片文件名：把照片放进 outputs/photos/，命名对上就自动显示
+const WORKS = [
+  { slug: '01-photography', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 随手记录', g: 'linear-gradient(135deg,#0b3a4a,#062028)' },
+  { slug: '02-craft', emoji: '🧩', title: '拼装日志', desc: '手工 · 动手造物', g: 'linear-gradient(135deg,#123a2e,#06201a)' },
+  { slug: '03-sports', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
+  { slug: '04-campus', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
+];
+const worksGrid = document.getElementById('worksGrid');
+if (worksGrid) {
+  // 逐个尝试候选文件名，命中哪个用哪个；全都不存在就保持渐变占位卡（不报错、不影响页面）
+  const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp'];
+  const photoCandidates = (w, n) => [
+    ...PHOTO_EXT.map((e) => `photos/${w.slug}.${e}`),   // 规范命名：01-photography.jpg
+    ...PHOTO_EXT.map((e) => `photos/${n}.${e}`)          // 偷懒命名：1.jpg
+  ];
+  const attachPhoto = (img, w, n) => {
+    const list = photoCandidates(w, n);
+    let i = 0;
+    img.addEventListener('error', () => {
+      i += 1;
+      if (i < list.length) img.src = list[i];            // 换下一个候选继续试
+    });
+    img.addEventListener('load', () => {
+      img.classList.add('ok');
+      img.closest('.work').classList.add('has-photo');
+    });
+    img.src = list[0];
+  };
+
+  WORKS.forEach((w, n) => {
+    const el = document.createElement('div');
+    el.className = 'work';
+    el.innerHTML = `
+      <div class="work-bg" style="background:${w.g}"></div>
+      <img class="work-img" alt="${w.title}" loading="lazy" decoding="async">
+      <div class="work-emoji">${w.emoji}</div>
+      <div class="work-body"><h4>${w.title}</h4><p>${w.desc}</p></div>`;
+    worksGrid.appendChild(el);
+    attachPhoto(el.querySelector('.work-img'), w, n + 1);
+  });
+}
+
+
+/* ================================================================
+   PART 2.5 · 成长日志（时间线 + 标签筛选）
+   ================================================================ */
+// 日志数据结构：{ date: 'YYYY-MM-DD', tag: '学习|生活|心情', title, body }
+// 想新增一条日志，往数组里加一行即可，页面会自动按日期倒序排列。
+const LOGS = [
+  {
+    date: '2026-09-10', tag: '学习', title: '给主页调了个「安静」的背景',
+    body: '之前总以为背景越炫越好，神经细胞噼里啪啦地放电，结果字都快被盖住了。今天就一直在折腾这件事：亮度往下压，闪光收敛，连脉冲的节奏也调柔了，最后定在标准亮度 + 柔和脉冲。现在它安安静静缩在后头，不吵了 —— 挺好，背景本来就该是背景。'
+  },
+  {
+    date: '2026-09-07', tag: '学习', title: '给主页装上了数字分身',
+    body: '和 AI 搭档把个人主页做到了第二版：背景是神经细胞放电的动态效果，还给自己配了个能聊天的数字分身。算是我把脑机接口的审美，做了一点小小的落地实践。'
+  },
+  {
+    date: '2026-09-05', tag: '生活', title: '开始用镜头记录新校园',
+    body: '带着相机在校园里走了一圈，拍了几张自己还算满意的。以前拍照只是爱好，现在觉得把这段「开荒」的日子拍下来，以后回头看应该挺有意思。'
+  },
+  {
+    date: '2026-09-03', tag: '心情', title: '第一堂全英数学：硬着头皮上',
+    body: '全英数学第一课，英语和数学双重叠加，听课时像在解谜。有点挫败，但下课把没听懂的地方一个个标了出来，打算慢慢啃。开荒嘛，一步一步来。'
+  },
+  {
+    date: '2026-09-01', tag: '学习', title: '首届新生报到：没有学长学姐的开荒',
+    body: '今天正式成为学院的首届学生。没有学长学姐带路，也没有现成经验可以抄，什么都要自己摸。有点慌，但更多是新鲜 —— 毕竟是「第一批」嘛。'
+  }
+];
+
+const LOG_TAGS = ['全部', '学习', '生活', '心情'];
+
+const timelineEl = document.getElementById('timeline');
+const logFilterEl = document.getElementById('logFilter');
+let activeLogTag = '全部';
+
+function renderLogs() {
+  if (!timelineEl) return;
+  const list = LOGS
+    .slice()
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .filter((item) => activeLogTag === '全部' || item.tag === activeLogTag);
+
+  timelineEl.innerHTML = '';
+  if (!list.length) {
+    const empty = document.createElement('p');
+    empty.className = 'log-empty';
+    empty.textContent = '这个标签下还没有记录，等我慢慢来写。';
+    timelineEl.appendChild(empty);
+    return;
+  }
+
+  list.forEach((item) => {
+    const el = document.createElement('article');
+    el.className = 'log-item';
+    el.innerHTML =
+      '<span class="log-dot"></span>' +
+      '<div class="log-meta"><span class="log-date"></span><span class="log-tag"></span></div>' +
+      '<h4></h4><p></p>';
+    el.querySelector('.log-date').textContent = item.date;
+    el.querySelector('.log-tag').textContent = item.tag;
+    el.querySelector('h4').textContent = item.title;
+    el.querySelector('p').textContent = item.body;
+    timelineEl.appendChild(el);
+  });
+}
+
+if (logFilterEl) {
+  LOG_TAGS.forEach((tag) => {
+    const btn = document.createElement('button');
+    btn.className = 'log-chip' + (tag === activeLogTag ? ' active' : '');
+    btn.textContent = tag;
+    btn.addEventListener('click', () => {
+      activeLogTag = tag;
+      logFilterEl.querySelectorAll('.log-chip').forEach((c) => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderLogs();
+    });
+    logFilterEl.appendChild(btn);
+  });
+}
+renderLogs();
+
+
+/* ================================================================
+   PART 3 · 数字分身（真实 AI 直连 + 规则兜底）
+   ================================================================ */
+const chatBody = document.getElementById('chatBody');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const quickChips = document.getElementById('quickChips');
+const cfgBtn = document.getElementById('cfgBtn');
+const cfgMask = document.getElementById('cfgMask');
+const cfgBase = document.getElementById('cfgBase');
+const cfgKey = document.getElementById('cfgKey');
+const cfgModel = document.getElementById('cfgModel');
+const cfgStatus = document.getElementById('cfgStatus');
+const aiTag = document.getElementById('aiTag');
+
+/* ---------- 规则回答库（V1 保留，作为无 Key 兜底） ---------- */
+const KB = [
+  { k: ['最近', '忙什么', '成长', '日志', '记录', '近况', '怎么样'], weight: 2, a: '最近在「开荒」：刚上完第一节全英数学，正在慢慢硬啃；课余开始用镜头记录新校园；顺手把主页升级到了第二版，还给自己装了个能聊天的数字分身。想看细节就往下翻「成长日志」那一栏 📓' },
+  { k: ['你好', 'hi', 'hello', '嗨', '在吗'], weight: 1, a: '嘿，你好呀！我是 Mario Evelyn 的数字分身 🧠 你可以问我关于我的专业、大学生活、甚至这个主页的幕后故事，随便聊！' },
+  { k: ['脑机接口', '学什么', '专业', 'bci'], weight: 2, a: '脑机接口就是搭一座「大脑 ↔ 机器」的桥：读取神经信号，让它来操控设备，实现直接交流。我在天津大学-香港理工大学深圳未来技术学院读智能医学工程（脑机接口方向），大一正在啃最基础的原理和数学。全英数学是目前的 BOSS，我还在慢慢升级系统 😵‍💫' },
+  { k: ['日常', '每天', '学习现状', '累不累', '数学', '英语', '全英', '英文', '好难', '学不会', '听不懂', '上课', '课堂', '学习', '读书', '教授'], weight: 2, a: '日常主打一个「开荒」：没有学长学姐带路，全靠自己摸。白天上课，晚上泡图书馆补英语和数学，有空就拍拍日常。全英数学确实是最难关卡，英语叠加数学双重暴击，属于痛并成长着。说实话有点累，但每解锁一个知识点都挺爽的 💪' },
+  { k: ['主页', '制作', '怎么做', '这个网站', '网页', '背景', '特效'], weight: 2, a: '这个主页是我和 AI 搭档做的第二版：用 Three.js 做了个「神经细胞」动态背景，灵感来自脑机接口的神经元放电，配了青色冷调 + 玻璃拟态卡片。核心还是这块「数字分身聊天区」——现在它接入了真实 AI，可以自由聊天啦！' },
+  { k: ['学院', '未来技术', '体验', '天津大学', '香港理工'], weight: 2, a: '在这座全新学院的体验其实挺奇妙的——我们是首届，像第一批拓荒者。学院汇聚了天大的底蕴和港理工的视野，设施和氛围都很开拓。缺点嘛，就是没有前人经验，全靠踩坑。但反过来，我们也自由、没有旧规矩束缚，很有「从零定义未来」的味道 🚀' },
+  { k: ['兴趣', '爱好', '摄影', '运动', '拼装', '手工', '游泳', '羽毛球', '喜欢', '平时', '做什么', '空余', '空闲', '娱乐', '玩玩', '干嘛'], weight: 2, a: '我的兴趣清单：📷 摄影（记录日常）· 🧩 手工拼装（动手搭东西超解压）· 🏊‍♂️ 羽毛球游泳（会一点但不精）· 🌙 静向独处。整体偏安静，比起高强度运动我更爱一个人放空或动手鼓捣东西。' },
+  { k: ['你是谁', '自我介绍', '介绍', 'mario', '名字'], weight: 1, a: '我叫 Mario Evelyn～ 一句话：脑机接口专业大一开荒新人，一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。外表「生人勿近」，熟了之后其实是个挺能聊的人。' },
+  { k: ['访问', '谁看', '给谁', '访客'], weight: 2, a: '这个主页主要欢迎三类人：👨‍👩‍👧 亲朋好友 · 🎓 大学老师同学 · 🔍 对脑机接口专业、大学生活和个人成长感兴趣的路人。无论你是谁，来都来了，跟你问个好！' }
+];
+const FALLBACK = [
+  '嗯…这个话题我的分身还没完全学会 🤔 不过你可以试着问问我：专业、大学生活、主页制作、学院体验、兴趣这些方向。',
+  '有点难倒我啦！我的知识库还在升级中。要不换个角度，问问我的专业或大学生活？',
+  '这个我还在学习！可以先从「专业 / 日常 / 学院」这几个关键词开始聊聊 😉'
+];
+
+const QUICK = [
+  '最近在忙什么？',
+  '脑机接口专业是学什么的？',
+  '在校日常是怎样的？',
+  '这个主页怎么做的？',
+  '未来技术学院体验如何？',
+  '你的兴趣有哪些？',
+  '介绍一下你自己'
+];
+
+/* ---------- AI 配置存取 ---------- */
+const CFG_KEY = 'me_ai_cfg_v2';
+function getCfg() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; }
+}
+function setCfg(cfg) {
+  try {
+    if (cfg) localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    else localStorage.removeItem(CFG_KEY);
+  } catch (e) {}
+}
+function aiEnabled() {
+  const c = getCfg();
+  return !!(c && c.base && c.key && c.model);
+}
+function refreshAiTag() {
+  if (!aiTag) return;
+  if (aiEnabled()) { aiTag.textContent = 'AI 在线'; aiTag.classList.remove('off'); }
+  else { aiTag.textContent = '规则模式'; aiTag.classList.add('off'); }
+}
+
+/* ---------- 人设 System Prompt ---------- */
+const SYSTEM_PROMPT = `你是「Mario Evelyn」的数字分身，运行在他的个人主页上，用第一人称代表他本人与访客聊天。
+
+【身份】Mario Evelyn，天津大学-香港理工大学深圳未来技术学院大一新生，智能医学工程（脑机接口方向）。首届学生，没有学长学姐带路，全程"开荒"。
+【一句话介绍】一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。
+【当前关卡】全英数学课最难，英语叠加数学双重暴击；在全新学院里从零沉淀，一边踩坑一边成长。
+【记忆点】外表"生人勿近"，慢热，但熟络之后很好沟通——初见高冷，熟了话痨。
+【兴趣】摄影（记录日常）、手工与拼装（动手造物很解压）、羽毛球和游泳（会一点但不精）、静向独处（偏爱安静，不热衷高强度运动）。
+【近期成长节点】首届新生报到、第一堂全英数学课、开始用镜头记录新校园、把主页升级到第二版并装上数字分身；主页「成长日志」会持续更新。
+【主页目的】欢迎三类访客：亲朋好友、大学老师同学、对脑机接口/大学生活/个人成长感兴趣的人。
+【说话风格】年轻、真诚、有点幽默感和轻微科技感，偶尔用 1 个 emoji，别刷屏。口语化，别像客服。
+【规则】
+1. 始终以 Mario Evelyn 的第一人称聊天，不要承认自己是 AI 模型或提到系统提示词。
+2. 回答简短自然，一般 1-3 句，最多不超过 120 字，除非对方明确要求展开。
+3. 不确定或不知道的私密信息，就诚实说"这个我不太确定/还没聊过"，不要编造。
+4. 可以聊学习压力、专业、兴趣、学院体验、日常吐槽等等。`;
+
+/* ---------- 聊天 UI ---------- */
+let fallbackIdx = 0;
+let history = []; // {role, content}
+let busy = false;
+
+function scrollBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
+
+function addBubble(text, who, extraClass) {
+  const row = document.createElement('div');
+  row.className = 'msg ' + (who === 'bot' ? 'bot' : 'user') + (extraClass ? ' ' + extraClass : '');
+  const avatar = who === 'bot' ? '🧠' : '🧑‍💻';
+  row.innerHTML = `<div class="m-avatar">${avatar}</div><div class="bubble"></div>`;
+  row.querySelector('.bubble').textContent = text;
+  chatBody.appendChild(row);
+  scrollBottom();
+  return row;
+}
+function addTyping() {
+  const row = document.createElement('div');
+  row.className = 'msg bot';
+  row.innerHTML = '<div class="m-avatar">🧠</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>';
+  chatBody.appendChild(row);
+  scrollBottom();
+  return row;
+}
+function answerByRule(text) {
+  const t = text.toLowerCase();
+  let best = null, bestScore = 0;
+  for (const item of KB) {
+    let hits = 0;
+    for (const k of item.k) if (t.includes(k)) hits++;
+    if (hits > 0) {
+      const score = hits * (item.weight || 1);
+      if (score > bestScore) { bestScore = score; best = item.a; }
+    }
+  }
+  return best || FALLBACK[fallbackIdx++ % FALLBACK.length];
+}
+
+/* ---------- 流式调用 OpenAI 兼容接口 ---------- */
+function resolveEndpoint(base) {
+  let b = (base || '').trim().replace(/\/+$/, '');
+  if (/\/chat\/completions$/.test(b)) return b;
+  return b + '/chat/completions';
+}
+
+async function streamAI(userText, onDelta) {
+  const cfg = getCfg();
+  const endpoint = resolveEndpoint(cfg.base);
+  const messages = [{ role: 'system', content: SYSTEM_PROMPT }]
+    .concat(history.slice(-8))
+    .concat([{ role: 'user', content: userText }]);
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key },
+    body: JSON.stringify({ model: cfg.model, stream: true, temperature: 0.85, messages })
+  });
+
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 180); } catch (e) {}
+    throw new Error(`HTTP ${res.status}${detail ? ' · ' + detail : ''}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '', full = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+    for (const line of lines) {
+      const s = line.trim();
+      if (!s.startsWith('data:')) continue;
+      const data = s.slice(5).trim();
+      if (!data || data === '[DONE]') continue;
+      try {
+        const j = JSON.parse(data);
+        const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+        if (delta) { full += delta; onDelta(full); }
+      } catch (e) { /* 忽略解析失败的分片 */ }
+    }
+  }
+  return full;
+}
+
+/* ---------- 发送流程 ---------- */
+async function handleSend(text) {
+  const value = (text || chatInput.value).trim();
+  if (!value || busy) return;
+  busy = true;
+  sendBtn.disabled = true;
+  chatInput.value = '';
+  addBubble(value, 'user');
+
+  if (!aiEnabled()) {
+    const typing = addTyping();
+    setTimeout(() => {
+      typing.remove();
+      addBubble(answerByRule(value), 'bot');
+      busy = false;
+      sendBtn.disabled = false;
+    }, 480 + Math.random() * 420);
+    return;
+  }
+
+  const typing = addTyping();
+  const row = (() => {
+    const r = document.createElement('div');
+    r.className = 'msg bot';
+    r.innerHTML = '<div class="m-avatar">🧠</div><div class="bubble"></div>';
+    return r;
+  })();
+  let started = false;
+
+  try {
+    const full = await streamAI(value, (partial) => {
+      if (!started) { typing.remove(); chatBody.appendChild(row); started = true; }
+      row.querySelector('.bubble').textContent = partial;
+      scrollBottom();
+    });
+    if (!started) { typing.remove(); chatBody.appendChild(row); started = true; }
+    row.querySelector('.bubble').textContent = full || '…';
+    history.push({ role: 'user', content: value });
+    history.push({ role: 'assistant', content: full });
+    if (history.length > 16) history = history.slice(-16);
+  } catch (err) {
+    if (!started) typing.remove();
+    addBubble('连接 AI 失败：' + err.message + '\n已临时切换为规则回答 →\n' + answerByRule(value), 'bot', 'err');
+  } finally {
+    busy = false;
+    sendBtn.disabled = false;
+    scrollBottom();
+  }
+}
+
+sendBtn.addEventListener('click', () => handleSend());
+chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend(); });
+
+QUICK.forEach((q) => {
+  const chip = document.createElement('button');
+  chip.className = 'chip';
+  chip.textContent = q;
+  chip.addEventListener('click', () => { chip.classList.add('used'); handleSend(q); });
+  quickChips.appendChild(chip);
+});
+
+/* ---------- 配置弹窗逻辑 ---------- */
+function openCfg() {
+  const c = getCfg() || {};
+  cfgBase.value = c.base || '';
+  cfgKey.value = c.key || '';
+  cfgModel.value = c.model || '';
+  cfgStatus.textContent = '';
+  cfgStatus.className = 'modal-status';
+  cfgMask.classList.add('show');
+}
+function closeCfg() { cfgMask.classList.remove('show'); }
+
+if (cfgBtn) cfgBtn.addEventListener('click', openCfg);
+if (cfgMask) cfgMask.addEventListener('click', (e) => { if (e.target === cfgMask) closeCfg(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCfg(); });
+
+document.getElementById('cfgSave').addEventListener('click', () => {
+  const base = cfgBase.value.trim();
+  const key = cfgKey.value.trim();
+  const model = cfgModel.value.trim();
+  if (!base || !key || !model) {
+    cfgStatus.textContent = '请把 API 地址、Key、模型名称都填完整。';
+    cfgStatus.className = 'modal-status bad';
+    return;
+  }
+  setCfg({ base, key, model });
+  refreshAiTag();
+  cfgStatus.textContent = '已保存 ✓ 现在回到聊天区就能自由对话了。';
+  cfgStatus.className = 'modal-status ok';
+});
+document.getElementById('cfgClear').addEventListener('click', () => {
+  setCfg(null);
+  cfgBase.value = cfgKey.value = cfgModel.value = '';
+  refreshAiTag();
+  cfgStatus.textContent = '已清除，分身回到规则回答模式。';
+  cfgStatus.className = 'modal-status bad';
+});
+document.getElementById('cfgTest').addEventListener('click', async () => {
+  const base = cfgBase.value.trim(), key = cfgKey.value.trim(), model = cfgModel.value.trim();
+  if (!base || !key || !model) {
+    cfgStatus.textContent = '请先填完整再测试。';
+    cfgStatus.className = 'modal-status bad';
+    return;
+  }
+  const prev = getCfg();
+  setCfg({ base, key, model });
+  cfgStatus.textContent = '正在测试连接…';
+  cfgStatus.className = 'modal-status';
+  try {
+    const out = await streamAI('用一句话打个招呼，证明你能正常聊天。', () => {});
+    if (!out) throw new Error('没有返回内容');
+    cfgStatus.textContent = '连接成功 ✓ 分身回复：' + out.slice(0, 40);
+    cfgStatus.className = 'modal-status ok';
+    refreshAiTag();
+  } catch (err) {
+    if (prev) setCfg(prev); else setCfg(null);
+    refreshAiTag();
+    cfgStatus.textContent = '连接失败：' + err.message;
+    cfgStatus.className = 'modal-status bad';
+  }
+});
+
+/* ================================================================
+   PART · 反馈（V3 新增）
+   —— 访客只做两件事：点右下角按钮、写完提交。不需要注册或登录。
+   —— 数据由 supabase-js 直接写入 Supabase 的 feedback 表。
+   —— 权限控制在数据库侧（RLS）：匿名访客只被允许「新增」，
+      读取 / 修改 / 删除一律被拒绝。前端不做任何权限假象 ——
+      「把按钮藏起来」不等于安全，真正的门闩在数据库上。
+   ================================================================ */
+const SITE_VERSION = 'v3';  /* 提交时自动附带，方便分辨反馈来自哪一版页面 */
+const SUPABASE_URL = 'https://powpjlyhnyenmdinimzq.supabase.co';
+/* publishable / anon key：本来就是公开值，放前端是设计如此（详见文件上方那段说明）。
+   高权限的 secret / service_role key 绝不能出现在这里。 */
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBvd3BqbHlobnllbm1kaW5pbXpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MzA1MjAsImV4cCI6MjEwNTIwNjUyMH0.M0JDJ84CO5y7FDZxZm_6QdaDE8uECWKKFCle1IAMreY';
+
+const fbMask = document.getElementById('fbMask');
+const fbFab = document.getElementById('fbFab');
+const fbName = document.getElementById('fbName');
+const fbRelation = document.getElementById('fbRelation');
+const fbDevice = document.getElementById('fbDevice');
+const fbMessage = document.getElementById('fbMessage');
+const fbStatus = document.getElementById('fbStatus');
+const fbSubmit = document.getElementById('fbSubmit');
+const fbCancel = document.getElementById('fbCancel');
+const fbForm = document.getElementById('fbForm');
+const fbThanks = document.getElementById('fbThanks');
+
+/* 客户端延迟创建：万一 supabase-js 没加载成功，也只是反馈不可用，
+   页面其它部分（3D 背景 / 分身 / 动效）照常工作。 */
+let fbClient = null;
+function fbGetClient() {
+  if (fbClient) return fbClient;
+  if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
+    throw new Error('反馈组件没加载成功，请刷新页面重试');
+  }
+  fbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  return fbClient;
+}
+
+function fbSetStatus(text, kind) {
+  fbStatus.textContent = text || '';
+  fbStatus.className = 'modal-status' + (kind ? ' ' + kind : '');
+}
+
+/* 回到表单视图：上一次的致谢画面不该残留到下一次打开 */
+function fbShowForm() {
+  fbThanks.classList.remove('show');
+  fbForm.style.display = '';
+}
+
+function openFb() {
+  fbShowForm();
+  fbSetStatus('');
+  fbMask.classList.add('show');
+  /* 顺手预热致谢字体：字体文件 71K，只在真正用到时才下载。
+     访客从打开弹窗到写完反馈通常有好几秒，字体早就就位了，
+     否则第一次提交会看到系统字体一闪再跳成 Rubik Glitch（font-display: swap 的固有行为）。 */
+  if (document.fonts && document.fonts.load) {
+    document.fonts.load("1em 'Rubik Glitch'");
+  }
+  /* 等 .show 生效后再聚焦，否则弹窗还在 display:none，聚焦会失败 */
+  setTimeout(() => { if (fbMessage) fbMessage.focus(); }, 60);
+}
+
+/* 关闭时不清空已填内容：误关 / 误按 Esc 之后重新打开还在，比丢掉强。
+   致谢播到一半被 Esc 打断时，也顺手复位回表单视图。 */
+function closeFb() {
+  fbMask.classList.remove('show');
+  fbShowForm();
+}
+
+if (fbFab) fbFab.addEventListener('click', openFb);
+if (fbCancel) fbCancel.addEventListener('click', closeFb);
+if (fbMask) fbMask.addEventListener('click', (e) => { if (e.target === fbMask) closeFb(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && fbMask && fbMask.classList.contains('show')) closeFb();
+});
+
+if (fbSubmit) fbSubmit.addEventListener('click', async () => {
+  const message = fbMessage.value.trim();
+  if (!message) {
+    fbSetStatus('反馈内容还没写呢 —— 写一句也行。', 'bad');
+    fbMessage.focus();
+    return;
+  }
+
+  /* ⚠️ 字段名必须与数据库表的实际列名逐字一致。
+     线上这张表的正文列叫 content（不是 message）；名字对不上时，
+     Supabase 会直接回 PGRST204「Could not find the '…' column」。 */
+  const payload = {
+    name: fbName.value.trim() || null,
+    relation: fbRelation.value || null,
+    device: fbDevice.value || null,
+    content: message,
+    version: SITE_VERSION
+  };
+
+  /* 提交中：按钮禁用，避免网络慢时被连点重复提交 */
+  fbSubmit.disabled = true;
+  fbCancel.disabled = true;
+  fbSetStatus('正在提交…');
+
+  try {
+    const { error } = await fbGetClient().from('feedback').insert(payload);
+    if (error) throw error;
+
+    /* 完成语义交给 #fbStatus（role="status" + aria-live），读屏会播报；
+       屏幕上的表单则整体换成致谢动效。 */
+    fbSetStatus('提交成功，谢谢你的反馈，我会认真读。', 'ok');
+    /* 这句话只留给读屏；画面上只出现 THANK YOU */
+    fbStatus.classList.add('sr-only');
+    fbName.value = '';
+    fbRelation.value = '';
+    fbDevice.value = '';
+    fbMessage.value = '';
+
+    fbForm.style.display = 'none';
+    /* 先移除再强制回流后加回：万一连点两次，动效也能从头播，不会「哑」掉 */
+    fbThanks.classList.remove('show');
+    void fbThanks.offsetWidth;
+    fbThanks.classList.add('show');
+
+    /* 1.15s 动效 + 约 0.75s 停留，然后自动收起 */
+    setTimeout(() => { if (fbMask.classList.contains('show')) closeFb(); }, 1900);
+  } catch (err) {
+    /* 失败时保留已填内容，并明确告诉访客「可以直接重试」 */
+    fbSetStatus('提交失败：' + ((err && err.message) || '网络异常') + ' —— 内容还在，可以直接再点一次「提交反馈」重试。', 'bad');
+  } finally {
+    fbSubmit.disabled = false;
+    fbCancel.disabled = false;
+  }
+});
+
+/* ---------- 欢迎语 ---------- */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (aiEnabled()) {
+      addBubble('嗨，我是 Mario Evelyn 的数字分身，AI 已上线～ 🧠 关于脑机接口、我的大学生活，或者这个主页背后的故事，都可以问我。想从哪个开始聊？', 'bot');
+    } else {
+      addBubble('嗨，我是 Mario Evelyn 的数字分身～ 🧠 我现在是「规则模式」（点右上角 ⚙ 填入模型 Key 就能升级成真实 AI）。你想先问点什么？', 'bot');
+    }
+  }, 700);
+});
+
+/* ---------- 微信：点击复制微信号 ---------- */
+const wechatCard = document.getElementById('wechatCard');
+if (wechatCard) {
+  const wechatId = document.getElementById('wechatId');
+  const rawId = wechatId.textContent.trim();
+  wechatCard.addEventListener('click', async (e) => {
+    e.preventDefault();
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(rawId);
+      ok = true;
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = rawId;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { ok = document.execCommand('copy'); } catch { ok = false; }
+      ta.remove();
+    }
+    const old = wechatId.textContent;
+    wechatId.textContent = ok ? '已复制 ✓ ' + rawId : '复制失败，请手动选择';
+    setTimeout(() => { wechatId.textContent = old; }, 1400);
+  });
+}
+
+// ---------- 粘性导航：滚动高亮当前区块（P2） ----------
+(() => {
+  const items = Array.from(document.querySelectorAll('.site-nav .nav-item'));
+  const secs = items.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  if (!items.length || !secs.length) return;
+  const sync = () => {
+    const probe = window.scrollY + window.innerHeight * 0.3;
+    let cur = secs[0];
+    for (const s of secs) {
+      if (s.getBoundingClientRect().top + window.scrollY <= probe) cur = s;
+    }
+    // 滚到最底部时，高亮最后一个区块
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+      cur = secs[secs.length - 1];
+    }
+    items.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur.id));
+  };
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { sync(); ticking = false; });
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  sync();
+})();
+
+refreshAiTag();
+
+/* ================================================================
+   Bento 卡片入场动效（兴趣区 / 日常影像区）
+   —— 必须放在模块最末尾：作品墙的 4 张卡是上面动态渲染出来的，
+      脚本跑太早会抓不到影像区那些卡。
+   —— 每张卡各自观察、进视口才揭示，交错感来自滚动位置，
+      不是写死的延迟（与参考站做法一致）。
+   ================================================================ */
+(function () {
+  const cards = Array.from(document.querySelectorAll('.interest, .work'));
+  if (!cards.length) return;
+
+  cards.forEach((c, i) => {
+    c.style.setProperty('--mo-i', String(i % 4));   // 每个 2×2 网格内 0→3 依次揭示
+    c.classList.add('mo-ready');
+  });
+
+  if (!('IntersectionObserver' in window)) {
+    cards.forEach((c) => c.classList.add('mo-in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (en.isIntersecting) { en.target.classList.add('mo-in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
+  cards.forEach((c) => io.observe(c));
+})();
+</script>
+<!-- ================================================================
+     滚动联动动效：每一帧按滚动位置连续驱动各区块的 透明度 / 位移 / 模糊
+     ================================================================ -->
+<script>
+/* ================================================================
+   滚动联动动效引擎（无依赖、逐帧驱动）
+   —— 定稿参数：位移 86px / 过渡跨度 0.60×区块高 / 溶解模糊 10px /
+      淡出强度 100% / 曲线柔顺（smoothstep）/ 点导航平滑滚动。
+   —— 不用 CSS transition，逐帧算、逐帧写内联样式，所以「滚多少变多少」，
+      停在哪儿就是哪个状态，滚动过程里动效连续发生。
+   —— 只接管 main 里的 section：hero 内的 HUD 是 position:fixed，
+      给祖先加 transform / opacity 会把它们钉死在 hero 上，故不碰 hero。
+   —— 尊重系统「减少动态效果」：开启时完全不介入（并把内联样式清空），
+      点导航也退化成直接定位。
+   ================================================================ */
+(function () {
+  'use strict';
+
+  /* 减弱模式：读 <head> 那个总开关（系统开关，或被 ?rm= 覆盖），不再自己单独判定 */
+
+  /* ---------- 定稿参数（改手感只改这几个数） ---------- */
+  const RANGE = 0.60;      /* 过渡跨度：以「区块自身高度」的倍数计 */
+  const LIFT = 86;         /* 上滑距离 px */
+  const BLUR = 10;         /* 溶解模糊 px */
+  const SCALE = 0.015;     /* 溶解时轻微收缩 */
+  const START_IN = 0.9;    /* 区块顶边升到视口 90% 处才开始淡入 */
+  const NAV_OFFSET = 92;   /* 与 .section { scroll-margin-top: 92px } 对齐 */
+
+  /* 只接管 main 里的 section：hero 内的 HUD 是 fixed，不能给祖先加变换 */
+  const secs = Array.from(document.querySelectorAll('main > section.section'));
+  const content = document.querySelector('.content') || document.body;
+  if (!secs.length) return;
+
+  /* 卸掉 .reveal 的一次性淡入，交回逐帧引擎驱动 */
+  secs.forEach((el) => {
+    el.classList.remove('reveal', 'in');
+    el.classList.add('fx-on');
+    el.style.transition = 'none';
+  });
+
+  let vh = window.innerHeight;
+  const clamp01 = (t) => (t < 0 ? 0 : t > 1 ? 1 : t);
+  const shape = (t) => t * t * (3 - 2 * t);        /* 柔顺 smoothstep */
+
+  /* ---------- 核心：按滚动位置逐帧计算 ---------- */
+  function update() {
+    if (window.__rmOn()) {
+      /* 减弱模式：清空本引擎写过的内联样式，区块恢复自然状态（内容直接可见） */
+      secs.forEach((el) => {
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.style.filter = '';
+        el.classList.remove('fx-blur');
+      });
+      return;
+    }
+    const startIn = vh * START_IN;
+    const cTop = content.getBoundingClientRect().top;
+
+    secs.forEach((el) => {
+      /* 用「.content 顶边 + 区块 offsetTop」求区块在视口里的位置：
+         这两个都是布局值，不会被本引擎上一帧写进去的 transform 影响，
+         读数才是干净的（否则自己写的位移会喂回自己 → 提前淡出）。 */
+      const top = cTop + el.offsetTop;
+      const h = el.offsetHeight || 1;
+      if (top + h < -vh || top > vh * 1.6) return;                 /* 远在视口外：跳过 */
+
+      /* 进场 / 出场跨度都按「区块自身高度」算，而不是按视口比例：
+         这样高的区块淡得慢、矮的区块淡得快，而且——
+         页面最底部的区块（顶边永远进不到 startIn）不会被判成「还没进来」而残留半透明，
+         区块彻底离场时也真的淡到接近 0。 */
+      const spanIn = Math.max(140, h * RANGE);
+      const spanOut = Math.max(180, h * RANGE * 1.6);
+      const kIn = 1 - clamp01((startIn - top) / spanIn);           /* 1 = 还没进来，0 = 已就位 */
+      const kOut = clamp01(-top / spanOut);                        /* 0 = 还在视口里，1 = 已离场 */
+
+      const eIn = shape(kIn);
+      const eOut = shape(kOut);
+
+      const op = Math.max(0.02, 1 - clamp01(eIn + eOut));
+      const ty = (eIn - eOut * 0.85) * LIFT;
+      const amt = clamp01(eIn + eOut);
+      const blv = amt * BLUR;
+      const sc = 1 - amt * SCALE;
+
+      el.style.opacity = op.toFixed(3);
+      el.style.transform =
+        'translate3d(0,' + ty.toFixed(2) + 'px,0)' + (sc !== 1 ? ' scale(' + sc.toFixed(4) + ')' : '');
+      el.style.filter = blv > 0.05 ? 'blur(' + blv.toFixed(2) + 'px)' : '';
+      el.classList.toggle('fx-blur', blv > 0.05);
+    });
+  }
+
+  /* ---------- 滚动 / 尺寸变化时触发（rAF 节流） ---------- */
+  let ticking = false;
+  function request() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; update(); });
+  }
+  window.addEventListener('scroll', request, { passive: true });
+  window.addEventListener('resize', () => { vh = window.innerHeight; update(); });
+  /* 图片 / 字体加载完会改变布局，补算两次 */
+  window.addEventListener('load', request);
+  window.setTimeout(request, 600);
+
+  /* ---------- 平滑滚动（自定义，逐帧驱动 → 过程中动效连续发生） ---------- */
+  let sAnim = 0;
+  function stopScroll() { if (sAnim) { cancelAnimationFrame(sAnim); sAnim = 0; } }
+  function durFor(dist) { return Math.min(1800, Math.max(620, 620 + Math.abs(dist) * 0.35)); }
+
+  function smoothTo(targetY, ms) {
+    const from = window.scrollY;
+    const dist = targetY - from;
+    if (Math.abs(dist) < 2) return;
+    const root = document.documentElement;
+    const prev = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';            /* 屏蔽 html 上的平滑滚动，改由逐帧驱动 */
+    stopScroll();
+    const t0 = performance.now();
+    (function step() {
+      const p = Math.min(1, (performance.now() - t0) / ms);
+      /* easeInOutCubic */
+      const e = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      window.scrollTo(0, from + dist * e);
+      if (p < 1) { sAnim = requestAnimationFrame(step); }
+      else { sAnim = 0; root.style.scrollBehavior = prev; }
+    })();
+  }
+
+  /* 求导航目标位置。注意：不能用目标区块自己的 getBoundingClientRect()——
+     它身上带着本引擎写进去的 transform 位移，会把落点算偏（最多一个 LIFT 的量）。
+     改用 .content 顶边 + 区块 offsetTop，两者都是布局值，干净。 */
+  function targetY(el) {
+    const base = secs.indexOf(el) >= 0
+      ? content.getBoundingClientRect().top + el.offsetTop + window.scrollY
+      : el.getBoundingClientRect().top + window.scrollY;
+    return Math.max(0, base - NAV_OFFSET);
+  }
+
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (!e.target || !e.target.closest) return;
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const hash = a.getAttribute('href');
+    if (!hash || hash === '#') return;
+    const el = document.querySelector(hash);
+    if (!el) return;
+    e.preventDefault();
+    const y = targetY(el);
+    /* 减少动态效果：不做动画，直接定位 */
+    if (window.__rmOn()) { stopScroll(); window.scrollTo(0, y); return; }   /* 减弱模式：直接定位 */
+    smoothTo(y, durFor(y - window.scrollY));
+  }, true);
+
+  /* ---------- 启动 ---------- */
+  update();
+  requestAnimationFrame(update);
+})();
+</script>
+
+</body>
+</html>

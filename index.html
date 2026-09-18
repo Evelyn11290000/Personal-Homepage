@@ -533,6 +533,61 @@
     .album-lb .lb-fig { animation: none; }
   }
 
+  /* ---------- 开荒记 · 视频稿弹窗（只有 04 开荒记卡会用到） ---------- */
+  /* 布局：左边视频、右边新闻稿；窄屏改成上下堆叠 + 整窗滚动 */
+  .story-lb {
+    position: fixed; inset: 0; z-index: 96; display: none;
+    align-items: center; justify-content: center; padding: 30px 16px 18px;
+    background: rgba(2, 6, 10, 0.94);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .story-lb.on { display: flex; }
+  .story-panel {
+    display: flex; gap: 22px; width: 100%; max-width: min(96vw, 1180px);
+    max-height: 88vh; animation: lbIn 0.28s var(--ease);
+  }
+  .story-media { flex: 1 1 54%; display: flex; align-items: center; min-width: 0; }
+  .story-video {
+    width: 100%; max-height: 84vh; object-fit: contain;
+    aspect-ratio: 896 / 532;                  /* 元数据还没到就先按原片比例占位，免得视频区塌成一条线 */
+    border-radius: var(--r-panel); border: 1px solid var(--line-2);
+    background: #000; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+  .story-body {
+    flex: 1 1 46%; min-width: 0; overflow-y: auto; text-align: left;
+    padding-right: 8px;                       /* 给滚动条留一点位置 */
+  }
+  .story-tag {
+    display: inline-block; font-size: var(--fs-cap); color: var(--cyan-2);
+    border: 1px solid var(--line-2); border-radius: var(--r-pill);
+    padding: 2px 10px; margin-bottom: 10px;
+  }
+  .story-kicker { font-size: var(--fs-cap); color: var(--txt-dim); letter-spacing: 0.04em; margin-bottom: 6px; }
+  .story-title { font-size: var(--fs-ui); color: var(--txt); margin: 0 0 8px; }
+  .story-sub { font-size: var(--fs-sm); color: var(--cyan-2); line-height: var(--lh-body); margin: 0 0 16px; }
+  .story-blocks p { font-size: var(--fs-sm); color: var(--txt-dim); line-height: var(--lh-body); margin: 0 0 12px; }
+  .story-h { font-size: var(--fs-sm); color: var(--txt); margin: 20px 0 10px; }
+  .story-q { margin: 0 0 14px; padding-left: 12px; border-left: 2px solid var(--line-2); }
+  .story-q b { display: block; font-size: var(--fs-cap); color: var(--cyan-2); margin-bottom: 6px; }
+  .story-q p { font-size: var(--fs-sm); color: var(--txt-dim); line-height: var(--lh-body); margin: 0; }
+  .story-note { font-size: var(--fs-cap); color: var(--txt-dim); opacity: 0.72; margin: 16px 0 0; }
+  .story-close {
+    position: absolute; top: 14px; right: 16px; z-index: 2;
+    width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+    background: rgba(4, 10, 14, 0.72); border: 1px solid var(--line-2); color: var(--txt-dim);
+    font-size: 16px; font-family: inherit; transition: all 0.18s;
+  }
+  .story-close:hover { color: var(--cyan-2); border-color: var(--cyan-2); }
+  @media (max-width: 860px) {
+    .story-lb { align-items: flex-start; padding: 54px 12px 16px; overflow-y: auto; }
+    .story-panel { flex-direction: column; gap: 14px; max-height: none; }
+    .story-media, .story-body { flex: 0 0 auto; overflow: visible; padding-right: 0; }
+    .story-video { max-height: 46vh; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .story-panel { animation: none; }
+  }
+
   /* ---------- 成长日志 · 时间线 ---------- */
   .log-intro { font-size: var(--fs-sm); color: var(--txt-dim); margin-bottom: 16px; }
   .log-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
@@ -2323,11 +2378,33 @@ const PHOTO_ALBUM = [
   { src: 'shot-14.jpg', title: '运动会那天', desc: '跑旗那天心潮澎湃。' }
 ];
 
+// 开荒记 · 企业研学（2026-08-26）：视频 + 公众号新闻稿（草稿）
+// —— 视频是公众号排版预览的录屏（已裁掉开头 3 秒编辑器界面，2.7 MB，无音轨）
+// —— 文字来自站主第一次写的新闻稿；**两位同学的姓名在公开页面上已隐去，只留专业**
+// —— 稿件尚未在学院公众号发布，所以标了「草稿」；正式发布后可去掉 tag 与 note
+const CAMPUS_STORY = {
+  video: 'campus-employment-trip.mp4',
+  poster: 'campus-employment-trip-poster.jpg',
+  tag: '公众号排版草稿 · 待发布',
+  kicker: '2026-08-26 · 天津大学 2026 年「祖国需要 天大志愿」就业行',
+  title: '就业行 · 探访大疆、迈瑞',
+  sub: '天津大学香港理工大学深圳未来技术学院新生企业研学，明晰成长航向',
+  blocks: [
+    { type: 'p', text: '为帮助 2026 级本科新生拓宽行业认知、明确职业方向，8 月 26 日，天津大学香港理工大学深圳未来技术学院组织新生赴大疆创新、迈瑞医疗开展企业研学，学院辅导员及 2026 级本科全体学生参与本次活动。' },
+    { type: 'p', text: '新生们分成两组，先后参观了两家企业的展厅。在工作人员的讲解下，大家看到了各企业最具代表性的产品，也听了不少研发迭代背后的故事 —— 一个功能从想法到落地，中间要经历多轮打磨。无人机、智能硬件、医疗器械，这些原本只出现在新闻里的东西，这次都实实在在摆在了眼前。' },
+    { type: 'p', text: '参观途中，大家也抓住机会和企业人员面对面交流：这个行业到底需要什么样的人？我们正在学的智能医学工程、计算机知识，以后能用在哪里？科研这条路又该怎么走？回来之后，两位同学写下了自己的感受。' },
+    { type: 'h', text: '学生感悟' },
+    { type: 'q', who: '计算机科学与技术专业同学', text: '去之前我对大疆和迈瑞的印象基本都来自网上的产品介绍，真正走进去之后感觉完全不一样。展厅里陈列的一代代产品，能明显感觉到这些企业是在踏踏实实做研发，不是在包装概念。在大疆，触动我的不是无人机本身，而是它背后的系统：传感器实时感知、算法快速判断、执行机构立刻响应。工作人员的分享也让我意识到，成长在 AI 新时代，我们不仅专业知识要扎实，还得沉得下心，敢于探索，敢去琢磨别人没做过的问题。作为计算机专业的学生，这次参观让我第一次比较具体地看到了以后可能走的路。接下来几年，我想先把基础打牢，也希望将来能有机会进科创行业，用学到的东西做出点真正有用的产品。' },
+    { type: 'q', who: '智能医学工程专业同学', text: '作为智医的学生，这次走进迈瑞和大疆，我一直在想一个问题：我们专业学的东西，以后到底会变成什么？迈瑞参访过程中，看到监护仪、超声设备从研发到量产的完整流程，我发现课本上的概念和真实产品离得并不远。“信号处理”“医学影像”这些专业名词不再空洞，拥有了真实的应用场景。各项技术与算法紧密结合，推动医疗诊断和治疗走向更精准、更高效。这次就业行，让我认识到，智能医学不只是冰冷的电路和代码，而应服务于生命需求。大学四年，我将认真学习专业知识，积极参加项目实践，希望未来能帮助脑机接口技术走向成熟。' }
+  ],
+  note: '本文为公众号排版草稿，学院公众号尚未发布；两位同学的姓名在公开展示时已隐去。'
+};
+
 const WORKS = [
   { slug: '01-photography', cover: 'covers/01-photography.jpg', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 点开翻看', g: 'linear-gradient(135deg,#0b3a4a,#062028)', album: PHOTO_ALBUM },
   { slug: '02-craft', cover: 'covers/02-craft.jpg', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', album: CRAFT_ALBUM },
   { slug: '03-sports', cover: 'covers/03-sports.jpg', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
-  { slug: '04-campus', cover: 'covers/04-campus.jpg', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
+  { slug: '04-campus', cover: 'covers/04-campus.jpg', emoji: '🎓', title: '开荒记', desc: '大学 · 点开看看', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)', story: CAMPUS_STORY }
 ];
 
 /* ================================================================
@@ -2471,7 +2548,7 @@ if (worksGrid) {
       <div class="work-bg" style="background:${w.g}"></div>
       <img class="work-img" alt="${w.title}" loading="lazy" decoding="async">
       <div class="work-emoji">${w.emoji}</div>
-      ${w.album ? `<div class="work-count">${w.album.length} 张</div>` : ''}
+      ${w.album ? `<div class="work-count">${w.album.length} 张</div>` : (w.story ? '<div class="work-count">▶ 视频</div>' : '')}
       <div class="work-body"><h4>${w.title}</h4><p>${w.desc}</p></div>`;
     worksGrid.appendChild(el);
     attachPhoto(el.querySelector('.work-img'), w, n + 1);
@@ -2485,9 +2562,103 @@ if (worksGrid) {
       el.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openAlbum(w.album, `${w.title}相册`, 0); }
       });
+    } else if (w.story) {
+      // 挂视频稿的卡（开荒记）：同样点得进去，但打开的是视频 + 新闻稿弹窗
+      el.classList.add('has-album');
+      el.tabIndex = 0;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', `${w.title}：点开看视频与报道`);
+      el.addEventListener('click', () => openStory(w.story));
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openStory(w.story); }
+      });
     }
   });
 }
+
+
+/* ================================================================
+   开荒记 · 视频稿弹窗（只有 04 开荒记卡会打开它）
+   —— 左边视频、右边新闻稿；不自动播放（preload=metadata + poster，省流量）
+   —— 关掉时视频暂停并回到开头，下次点开从头看
+   —— 素材：photos/campus-employment-trip.mp4 / -poster.jpg
+   ================================================================ */
+let storyLb = null;
+
+function storyBlocksHtml(blocks) {
+  return blocks.map((b) => {
+    if (b.type === 'h') return `<h5 class="story-h">${b.text}</h5>`;
+    if (b.type === 'q') return `<blockquote class="story-q"><b>${b.who}</b><p>${b.text}</p></blockquote>`;
+    return `<p>${b.text}</p>`;
+  }).join('');
+}
+
+function openStory(s) {
+  if (!storyLb || !s) return;
+  const v = storyLb.querySelector('.story-video');
+  const src = `photos/${s.video}`;
+  if (v && v.getAttribute('src') !== src) {
+    v.setAttribute('poster', `photos/${s.poster}`);
+    v.setAttribute('src', src);
+  }
+  storyLb.querySelector('.story-tag').textContent = s.tag;
+  storyLb.querySelector('.story-kicker').textContent = s.kicker;
+  storyLb.querySelector('.story-title').textContent = s.title;
+  storyLb.querySelector('.story-sub').textContent = s.sub;
+  storyLb.querySelector('.story-blocks').innerHTML = storyBlocksHtml(s.blocks);
+  storyLb.querySelector('.story-note').textContent = s.note;
+  const body = storyLb.querySelector('.story-body');
+  if (body) body.scrollTop = 0;                       // 每次都从稿子开头看
+  storyLb.classList.add('on');
+  storyLb.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  const btn = storyLb.querySelector('.story-close');
+  if (btn) btn.focus({ preventScroll: true });
+}
+
+function closeStory() {
+  if (!storyLb) return;
+  const v = storyLb.querySelector('.story-video');
+  if (v) {
+    try { v.pause(); v.currentTime = 0; } catch (e) { /* 关闭弹窗而已，忽略 */ }
+  }
+  storyLb.classList.remove('on');
+  storyLb.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+(function buildStory() {
+  const wrap = document.createElement('div');
+  wrap.className = 'story-lb';
+  wrap.id = 'storyLb';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-modal', 'true');
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.innerHTML = `
+    <button class="story-close" type="button" aria-label="关闭">✕</button>
+    <div class="story-panel">
+      <div class="story-media">
+        <video class="story-video" controls playsinline preload="metadata" aria-label="就业行 · 探访大疆、迈瑞：视频"></video>
+      </div>
+      <div class="story-body">
+        <span class="story-tag"></span>
+        <div class="story-kicker"></div>
+        <h4 class="story-title"></h4>
+        <p class="story-sub"></p>
+        <div class="story-blocks"></div>
+        <p class="story-note"></p>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+
+  wrap.querySelector('.story-close').addEventListener('click', closeStory);
+  wrap.addEventListener('click', (ev) => { if (ev.target === wrap) closeStory(); });
+  document.addEventListener('keydown', (ev) => {
+    if (storyLb && storyLb.classList.contains('on') && ev.key === 'Escape') closeStory();
+  });
+
+  storyLb = wrap;
+})();
 
 
 /* ================================================================

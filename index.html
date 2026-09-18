@@ -2291,8 +2291,8 @@ if ('IntersectionObserver' in window) {
 // 作品墙（占位数据，后续可替换为真实图片）
 // slug 决定照片文件名：把照片放进 outputs/photos/，命名对上就自动显示
 //
-// 相册：cover 是卡面封面图，album 是点进去能左右翻的作品集（照片都放 outputs/photos/）
-// 想加一张作品 → 往 CRAFT_ALBUM 里再加一行；想换封面 → 改 cover 的文件名
+// 相册：album 是点进去能左右翻的作品集（照片都放 outputs/photos/），多张卡各挂一个
+// 想加一张作品 → 往对应相册数组里再加一行；想换卡面封面 → 换 photos/<卡片slug>.jpg 这个文件
 const CRAFT_ALBUM = [
   { src: 'craft-01.jpg', title: '宇航员', desc: '给宇航员配了个玻璃罩 —— 看着像标本，其实随时准备起飞。' },
   { src: 'craft-02.jpg', title: '月宫', desc: '月亮、小红灯笼、一棵开花的树：把中秋的想象一块块搭出来。' },
@@ -2303,26 +2303,46 @@ const CRAFT_ALBUM = [
   { src: 'craft-07.jpg', title: '逢考必过', desc: '放大镜、红指印，还有一句题在纸上的大实话。' }
 ];
 
+// 摄影相册：14 张校园里的日常（照片同样放 outputs/photos/）
+const PHOTO_ALBUM = [
+  { src: 'shot-01.jpg', title: '举相机的那个瞬间', desc: '当摄影师的你总是格外美丽。' },
+  { src: 'shot-02.jpg', title: '发球前', desc: '球拿在手上、拍举在身前 —— 这一拍还没开始。' },
+  { src: 'shot-03.jpg', title: '旧篮球', desc: '学的篮球也是展示上了。' },
+  { src: 'shot-04.jpg', title: '开场前', desc: '拍子举好了，就等第一颗球过来。' },
+  { src: 'shot-05.jpg', title: '举过头顶', desc: '进不进另说，姿势先摆满。' },
+  { src: 'shot-06.jpg', title: '一群人里的那一个', desc: '爱笑的小花运气不会差。' },
+  { src: 'shot-07.jpg', title: '看台上', desc: '比赛间隙的十分钟，坐着比上场还舒服。' },
+  { src: 'shot-08.jpg', title: '开花的树', desc: '那天的花和你都很美。' },
+  { src: 'shot-09.jpg', title: '黄衣服', desc: '记录一件亮眼的球服。' },
+  { src: 'shot-10.jpg', title: '操场上的动作', desc: '同一个口令下去，全校的姿势都不太一样。' },
+  { src: 'shot-11.jpg', title: '再来一遍', desc: '连拍好几张，才有一张能看。' },
+  { src: 'shot-12.jpg', title: '笑着的侧脸', desc: '连拍里最自然的一张，嘴角没收住。' },
+  { src: 'shot-13.jpg', title: '抱着球抬头', desc: '球拿着、人笑着，篮筐就在后头。' },
+  { src: 'shot-14.jpg', title: '运动会那天', desc: '跑旗那天心潮澎湃。' }
+];
+
 const WORKS = [
-  { slug: '01-photography', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 随手记录', g: 'linear-gradient(135deg,#0b3a4a,#062028)' },
+  { slug: '01-photography', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 点开翻看', g: 'linear-gradient(135deg,#0b3a4a,#062028)', album: PHOTO_ALBUM },
   { slug: '02-craft', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', album: CRAFT_ALBUM },
   { slug: '03-sports', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
   { slug: '04-campus', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
 ];
 
 /* ================================================================
-   拼装相册 · 灯箱
-   —— 点「拼装日志」卡进来：左右按钮 / ←→ 键 / 手机滑动都能翻
+   作品相册 · 灯箱（拼装日志 / 镜头里的日常 共用）
+   —— 哪张卡挂了 album 数据就点得进来：左右按钮 / ←→ 键 / 手机滑动都能翻
    —— 点背景或 ✕ 关闭，Esc 也行；关掉之后页面其它地方不受影响
+   —— 多个相册共用这一个灯箱：打开时按当前相册把缩略图条重铺一遍
    ================================================================ */
 let albumLb = null;
 let albumIdx = 0;
+let albumCur = null;                                 // 当前打开的是哪个相册
 
 function albumShow(i) {
-  if (!albumLb) return;
-  const n = CRAFT_ALBUM.length;
+  if (!albumLb || !albumCur) return;
+  const n = albumCur.length;
   albumIdx = ((i % n) + n) % n;                      // 首尾循环
-  const it = CRAFT_ALBUM[albumIdx];
+  const it = albumCur[albumIdx];
   const img = albumLb.querySelector('.lb-img');
   img.src = `photos/${it.src}`;
   img.alt = `${it.title} —— ${it.desc}`;
@@ -2334,15 +2354,32 @@ function albumShow(i) {
   if (thumbs[albumIdx] && thumbs[albumIdx].scrollIntoView) {
     thumbs[albumIdx].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
   }
-  const nx = CRAFT_ALBUM[(albumIdx + 1) % n];
+  const nx = albumCur[(albumIdx + 1) % n];
   new Image().src = `photos/${nx.src}`;               // 先悄悄把下一张加载好
 }
 function albumStep(d) {
   if (!albumLb) return;
   albumShow(albumIdx + d);
 }
-function openAlbum(i) {
+function albumSetList(list, label) {
+  albumCur = list;
+  albumLb.setAttribute('aria-label', label);
+  const strip = albumLb.querySelector('.lb-strip');
+  strip.innerHTML = '';                              // 换相册就把缩略图条重铺一遍
+  strip.setAttribute('aria-label', `${label} · 缩略图`);
+  list.forEach((it, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lb-thumb';
+    b.setAttribute('aria-label', `第 ${i + 1} 张：${it.title}`);
+    b.innerHTML = `<img src="photos/${it.src.replace(/\.jpg$/i, '-thumb.jpg')}" alt="" loading="lazy" decoding="async">`;
+    b.addEventListener('click', () => albumShow(i));
+    strip.appendChild(b);
+  });
+}
+function openAlbum(list, label, i) {
   if (!albumLb) return;
+  albumSetList(list, label);
   albumShow(i || 0);
   albumLb.classList.add('on');
   albumLb.setAttribute('aria-hidden', 'false');
@@ -2358,13 +2395,11 @@ function closeAlbum() {
 }
 
 (function buildAlbum() {
-  if (!CRAFT_ALBUM.length) return;
   const wrap = document.createElement('div');
   wrap.className = 'album-lb';
   wrap.id = 'albumLb';
   wrap.setAttribute('role', 'dialog');
   wrap.setAttribute('aria-modal', 'true');
-  wrap.setAttribute('aria-label', '拼装日志相册');
   wrap.setAttribute('aria-hidden', 'true');
   wrap.innerHTML = `
     <button class="lb-close" type="button" aria-label="关闭相册">✕</button>
@@ -2379,17 +2414,6 @@ function closeAlbum() {
     </figure>
     <div class="lb-strip" aria-label="作品缩略图"></div>`;
   document.body.appendChild(wrap);
-
-  const strip = wrap.querySelector('.lb-strip');
-  CRAFT_ALBUM.forEach((it, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'lb-thumb';
-    b.setAttribute('aria-label', `第 ${i + 1} 张：${it.title}`);
-    b.innerHTML = `<img src="photos/${it.src.replace(/\.jpg$/i, '-thumb.jpg')}" alt="" loading="lazy" decoding="async">`;
-    b.addEventListener('click', () => albumShow(i));
-    strip.appendChild(b);
-  });
 
   wrap.querySelector('.lb-close').addEventListener('click', closeAlbum);
   wrap.querySelector('.lb-prev').addEventListener('click', () => albumStep(-1));
@@ -2455,9 +2479,9 @@ if (worksGrid) {
       el.tabIndex = 0;
       el.setAttribute('role', 'button');
       el.setAttribute('aria-label', `${w.title}：点开看 ${w.album.length} 张作品`);
-      el.addEventListener('click', () => openAlbum(0));
+      el.addEventListener('click', () => openAlbum(w.album, `${w.title}相册`, 0));
       el.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openAlbum(0); }
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openAlbum(w.album, `${w.title}相册`, 0); }
       });
     }
   });

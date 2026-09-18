@@ -905,11 +905,18 @@
    —— ?rm=1 / ?rm=0：自动化取证用的强制开关（在没开系统开关的机器上也能验两种表现），
       普通访问不会带这个参数，不影响线上行为。
    —— 结果统一落到 <html class="rm">：CSS 与两处 JS（3D 背景 / 滚动引擎）都读它。
+   —— ?settle=0 / ?settle=0.5 / ?settle=1：停手保留亮度的取证开关（同上，普通访问不会带）；
+      不写 = 按「原生箭头是否被藏」自动取默认（桌面 0.7 / 触摸 0）。
    ================================================================ */
 (function () {
   var q = new URLSearchParams(location.search).get('rm');
   var forced = (q === '1') ? true : (q === '0') ? false : null;
   var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  /* 停手保留亮度的取值：null = 用自动默认档 */
+  var sv = new URLSearchParams(location.search).get('settle');
+  var sN = (sv === null) ? NaN : parseFloat(sv);
+  window.__settleArg = isFinite(sN) ? Math.max(0, Math.min(1, sN)) : null;
 
   window.__rmOn = function () { return document.documentElement.classList.contains('rm'); };
 
@@ -1430,7 +1437,7 @@ composer.addPass(bloomPass);
        colA/colB 内圈亮核 / 外圈光晕。
                  ★ 当前 = 冰蓝：冷白核 + 天蓝晕（2026-09-17 定，与实验台「冰蓝」档一致）。
                    想回原来的青绿味：colA #00f0ff + colB #2dd4bf。
-       ★ 当前定稿 = 纯彗尾：trailLen 12 + mirrorY 0 + mirrorSquash 1
+        ★ 当前定稿 = 纯彗尾：trailLen 24（桌面）/ 12（触摸·窄屏）+ mirrorY 0 + mirrorSquash 1
          （2026-09-17 由用户在实验台选出；想回到「光点下方的倒影」只需
            trailLen 1 + mirrorY 10 + mirrorSquash 0.8。）
    ================================================================ */
@@ -1439,9 +1446,15 @@ const GLOW_SAMPLE_DT = 0.035;              /* 每 35ms 记一个点 → 40 段 �
 const GLOW_SCALE = 4;                      /* 画布分辨率 = 视口 / 4 */
 
 /* ★ 2026-09-18 拖尾增强：触摸设备 / 窄屏 自动简化 —— 手机沿用从前的轻量观感
-   （12 段、不拉丝、不撒尘、停手即收），不为炫技去吃手机的电量与性能；
+   （12 段、不拉丝、不撒尘），不为炫技去吃手机的电量与性能；
    桌面才用完整的增强效果。（与页面里 compact / isCompact 同一套判定方式）*/
 const GLOW_COMPACT = window.innerWidth <= 720 || window.matchMedia('(pointer: coarse)').matches;
+
+/* ★ 2026-09-18 停手保留：桌面把原生箭头藏起来了（html.glow-cursor → cursor:none），
+   所以光晕停手后【不能归零】—— 归零就等于「指针整支消失」，用户根本找不到鼠标。
+   只要系统箭头会被藏起来（pointer: fine），就留住一点微光（GLOW.settle）；
+   触摸端没有「指针消失」这回事，仍照旧收干净。 */
+const GLOW_CURSORLESS = window.matchMedia('(pointer: fine)').matches;
 
 const GLOW = {
   on: !window.__rmOn(),                    /* 与 <html class="rm"> 同一个开关（含 ?rm= 覆盖）*/
@@ -1461,7 +1474,13 @@ const GLOW = {
   sparkDensity: GLOW_COMPACT ? 0 : 0.8,    /* 星尘密度：每个采样点生成火花的期望个数（0 = 不撒）*/
   sparkSize: 1.2,                          /* 星尘大小倍数 */
   sparkLife: 0.9,                          /* 星尘寿命（秒）：出生到完全消失 */
-  afterglow: GLOW_COMPACT ? 0 : 1.8        /* 停手余晖：静止后尾巴散尽的总时长（秒，约）；0 = 立刻收掉 */
+  afterglow: GLOW_COMPACT ? 0 : 1.8,       /* 停手余晖：从满亮衰减到 settle 的时长（秒，约）；0 = 立刻到 settle */
+  /* ★ 2026-09-18 停手保留亮度：静止后**指针位置不空着** —— 尾巴照旧散尽，
+     但指针处留一块 settle 倍亮度的微光。0 = 不画微光（旧行为 / 触摸端）；
+     0.7 = 只暗三成（微微减弱）；1 = 与移动中一样亮。
+     为什么桌面必须有：原生箭头被 cursor:none 藏了，光晕归零＝指针消失。
+     可用 ?settle=0~1 强制覆盖（自动化取证 / 手动比对用）。*/
+  settle: (typeof window.__settleArg === 'number') ? window.__settleArg : (GLOW_CURSORLESS ? 0.7 : 0)
 };
 
 const glowEl = document.getElementById('aurora-2d');
@@ -1482,7 +1501,7 @@ let glowAlpha = 0;
 /* ★ 2026-09-18 拖尾增强的运行状态 */
 let glowSpeed = 0;                         /* 平滑后的指针速度（px/s），决定拉丝强度 */
 let glowDir = 0;                           /* 最近一次有效运动方向（画布坐标弧度），拉丝兜底方向 */
-let tailFade = 0;                          /* 尾巴整体 0~1：移动 → 1，停手 → 按 afterglow 衰减到 0 */
+let tailFade = 0;                          /* 尾巴整体 0~1：移动 → 1，停手 → 按 afterglow 散尽归 0（指针处的微光另由 settle 维持）*/
 let lastRawX = null, lastRawY = null;      /* 上一帧【未缓动】的指针像素位置（算速度用）*/
 const sparks = [];                         /* 星尘：{x,y,vx,vy,age,life,r}，画布坐标 */
 const SPARK_MAX = 90;                      /* 星尘数量上限，防长尾 + 高速时爆量 */
@@ -1606,6 +1625,31 @@ function drawGlow() {
     glowCtx.arc(s.x, s.y, r, 0, Math.PI * 2);
     glowCtx.fill();
   }
+
+  /* ★ 2026-09-18「停手微光」：尾巴照旧散尽，但【指针位置】必须留一块微光。
+     —— 为什么必须留：桌面把原生箭头藏了（html.glow-cursor → cursor:none），
+        光晕一归零就等于「指针整支消失」，用户会找不到鼠标。
+     —— 怎么留：与 tailFade 反向交叉淡入 —— 还在动时 tailFade=1 这块是 0 倍（不画，
+        不会和尾巴头部叠加变亮）；停稳后 tailFade→0 恰好是 settle 倍
+        （0.7 = 只暗三成，仍是「微微减弱」而不是消失）。
+     —— 为什么不用「尾巴整体停在 settle」：那样最近 24 个采样点会全部凝固成一道
+        静止的鬼影留在轨迹上，看着像 bug；分开管，轨迹干净、指针有光。
+     —— 位置取【缓动后】的指针：甩完急停时缓动位置可能落后原始位置几百像素，
+        微光要贴在指针真正停下的地方，不能落在算法轨迹上。
+     —— 半径与配色跟尾巴头部（k=1 那段）完全一致 → 与移动中的观感无缝衔接。*/
+  if (GLOW.settle > 0 && tailFade < 1) {
+    const kk = GLOW.settle * (1 - tailFade);
+    const r = base * 1.25;
+    const x = (glowPointer.x * GLOW.track * 0.5 + 0.5) * W;
+    const y = (-glowPointer.y * GLOW.track * 0.5 + 0.5) * H;
+    const a = 0.34 * GLOW.intensity * kk;
+    const g2 = glowCtx.createRadialGradient(x, y, 0, x, y, r);
+    g2.addColorStop(0,    glowRgba(GLOW.colA, a));
+    g2.addColorStop(0.45, glowRgba(GLOW.colB, a * 0.45));
+    g2.addColorStop(1,    glowRgba(GLOW.colB, 0));
+    glowCtx.fillStyle = g2;
+    glowCtx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
 }
 
 function updateCursorGlow(dt) {
@@ -1628,9 +1672,11 @@ function updateCursorGlow(dt) {
   }
   lastRawX = rawX; lastRawY = rawY;
 
-  /* ★ 停手余晖：移动 → tailFade 迅速到 1；停手 → 在 afterglow 秒内散尽。
+  /* ★ 停手余晖：移动 → tailFade 迅速到 1；停手 → 在 afterglow 秒内散尽（照旧归 0）。
      afterglow 是「从满亮到基本看不见」的总时长，指数衰减的时间常数取其 1/3
-     （3τ 后残余约 5%，所以 1.8s 就是约 1.8s 后看不到尾巴）*/
+     （3τ 后残余约 5%，所以 1.8s 就是约 1.8s 后看不到尾巴）。
+     ★ 注意：尾巴归 0 ≠ 光晕归 0 —— 指针位置那块「停手微光」由 GLOW.settle 单独负责
+       （见 drawGlow 末尾），两条线各管一段，互不干扰。*/
   const moving = glowSpeed > MOVE_EPS;
   const tau = moving ? 0.06 : Math.max(0.05, GLOW.afterglow / 3);
   tailFade += ((moving ? 1 : 0) - tailFade) * Math.min(1, dt / tau);
@@ -1669,8 +1715,10 @@ function updateCursorGlow(dt) {
   glowEl.style.opacity = glowAlpha.toFixed(3);
   if (cursorDot) cursorDot.style.opacity = glowAlpha.toFixed(3);
   if (glowAlpha <= 0.01) return;
-  if (moving || tailFade > 0.02 || sparks.length) drawGlow();
-  else glowCtx.clearRect(0, 0, glowEl.width, glowEl.height);   /* 余晖散尽 → 抹掉残影 */
+  /* settle > 0 时即使停手也要逐帧重画 —— 指针位置上那块微光全靠它维持；
+     settle = 0（触摸端）才在余晖散尽后走到 else 清空。 */
+  if (moving || tailFade > 0.02 || sparks.length || GLOW.settle > 0) drawGlow();
+  else glowCtx.clearRect(0, 0, glowEl.width, glowEl.height);
 }
 
 window.addEventListener('resize', sizeGlow);
@@ -2781,6 +2829,7 @@ window.__trailDebug = function () {
     sparks: sparks.length, alpha: +glowAlpha.toFixed(3),
     sx: +(1 + (GLOW.stretch - 1) * Math.min(1, glowSpeed / Math.max(1, GLOW.stretchRef))).toFixed(3),
     stretch: GLOW.stretch, sparkDensity: GLOW.sparkDensity, afterglow: GLOW.afterglow,
+    settle: GLOW.settle, cursorless: GLOW_CURSORLESS,
     compact: GLOW_COMPACT
   };
 };

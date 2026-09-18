@@ -442,6 +442,96 @@
     content: ""; position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(to top, rgba(2, 6, 10, 0.92) 12%, rgba(2, 6, 10, 0.18) 60%, transparent);
   }
+  /* 有相册的卡：右上角张数角标 + 标题后的箭头，暗示「点得进去」 */
+  .work .work-count {
+    position: absolute; top: 13px; right: 14px; z-index: 3;
+    font-size: var(--fs-cap); color: #032430; font-weight: 600; letter-spacing: 0.02em;
+    padding: 3px 10px; border-radius: var(--r-pill);
+    background: linear-gradient(120deg, var(--cyan-2), var(--teal));
+    box-shadow: 0 6px 18px rgba(0, 240, 255, 0.22);
+  }
+  .work.has-album .work-body h4::after { content: " ›"; color: var(--cyan-2); }
+  .work.has-album:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--cyan-2), 0 20px 46px rgba(0, 240, 255, 0.14);
+  }
+
+  /* ---------- 拼装相册 · 灯箱 ---------- */
+  .album-lb {
+    position: fixed; inset: 0; z-index: 95; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    padding: 26px 16px 14px;
+    background: rgba(2, 6, 10, 0.94);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .album-lb.on { display: flex; }
+  .album-lb .lb-fig {
+    margin: 0; width: 100%; max-width: min(94vw, 1040px);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    animation: lbIn 0.28s var(--ease);
+  }
+  @keyframes lbIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .album-lb .lb-img {
+    max-width: 100%; max-height: 64vh; object-fit: contain;
+    border-radius: var(--r-panel); border: 1px solid var(--line-2);
+    background: rgba(6, 14, 20, 0.6);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+  .album-lb .lb-meta { text-align: center; max-width: 660px; }
+  .album-lb .lb-head { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .album-lb .lb-idx {
+    font-size: var(--fs-cap); color: var(--cyan-2); letter-spacing: 0.1em;
+  }
+  .album-lb .lb-title { font-size: var(--fs-ui); margin: 0; }
+  .album-lb .lb-desc { font-size: var(--fs-sm); color: var(--txt-dim); line-height: var(--lh-body); margin-top: 4px; }
+  .album-lb .lb-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+    width: 46px; height: 46px; border-radius: 50%; padding: 0;
+    display: grid; place-items: center; cursor: pointer;
+    font-size: 22px; line-height: 1; font-family: inherit; color: var(--txt);
+    background: rgba(6, 14, 20, 0.72); border: 1px solid var(--line);
+    transition: border-color 0.18s, color 0.18s, transform 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .album-lb .lb-nav:hover { border-color: var(--line-2); color: var(--cyan-2); }
+  .album-lb .lb-nav:active { transform: translateY(-50%) scale(0.92); }
+  .album-lb .lb-prev { left: 14px; }
+  .album-lb .lb-next { right: 14px; }
+  .album-lb .lb-close {
+    position: absolute; top: 16px; right: 18px; z-index: 3;
+    width: 38px; height: 38px; border-radius: 50%; padding: 0;
+    display: grid; place-items: center; cursor: pointer;
+    font-size: 15px; line-height: 1; font-family: inherit; color: var(--txt);
+    background: rgba(6, 14, 20, 0.72); border: 1px solid var(--line);
+    transition: border-color 0.18s, color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .album-lb .lb-close:hover { border-color: var(--line-2); color: var(--cyan-2); }
+  .album-lb .lb-strip {
+    display: flex; gap: 8px; max-width: min(94vw, 1040px);
+    overflow-x: auto; padding: 4px 2px 6px;
+  }
+  .album-lb .lb-thumb {
+    flex: 0 0 auto; width: 66px; height: 50px; padding: 0; cursor: pointer;
+    border-radius: 8px; overflow: hidden; background: none;
+    border: 1px solid var(--line); opacity: 0.55;
+    transition: opacity 0.18s, border-color 0.18s, box-shadow 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .album-lb .lb-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .album-lb .lb-thumb:hover { opacity: 0.85; }
+  .album-lb .lb-thumb.on {
+    opacity: 1; border-color: var(--cyan-2);
+    box-shadow: 0 0 0 1px var(--cyan-2), 0 8px 20px rgba(0, 240, 255, 0.18);
+  }
+  @media (max-width: 640px) {
+    .album-lb .lb-img { max-height: 50vh; }
+    .album-lb .lb-nav { width: 38px; height: 38px; font-size: 18px; }
+    .album-lb .lb-thumb { width: 54px; height: 42px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .album-lb .lb-fig { animation: none; }
+  }
 
   /* ---------- 成长日志 · 时间线 ---------- */
   .log-intro { font-size: var(--fs-sm); color: var(--txt-dim); margin-bottom: 16px; }
@@ -2200,17 +2290,137 @@ if ('IntersectionObserver' in window) {
 
 // 作品墙（占位数据，后续可替换为真实图片）
 // slug 决定照片文件名：把照片放进 outputs/photos/，命名对上就自动显示
+//
+// 相册：cover 是卡面封面图，album 是点进去能左右翻的作品集（照片都放 outputs/photos/）
+// 想加一张作品 → 往 CRAFT_ALBUM 里再加一行；想换封面 → 改 cover 的文件名
+const CRAFT_ALBUM = [
+  { src: 'craft-01.jpg', title: '宇航员', desc: '给宇航员配了个玻璃罩 —— 看着像标本，其实随时准备起飞。' },
+  { src: 'craft-02.jpg', title: '月宫', desc: '月亮、小红灯笼、一棵开花的树：把中秋的想象一块块搭出来。' },
+  { src: 'craft-03.jpg', title: '祈年殿', desc: '一句话就能说完的样子，花掉我最多时间 —— 三层圆顶最难伺候。' },
+  { src: 'craft-04.jpg', title: '一桌子老朋友', desc: '把它们全叫上桌，再点一支蜡烛 —— 这就是我的作品墙。' },
+  { src: 'craft-05.jpg', title: '孙悟空', desc: '金箍棒握得稳稳的，虎皮裙是一块一块对上去的。' },
+  { src: 'craft-06.jpg', title: '哆啦A梦和它的新朋友', desc: '圆鼻子的和长角的排排坐，谁也不跟谁客气。' },
+  { src: 'craft-07.jpg', title: '逢考必过', desc: '放大镜、红指印，还有一句题在纸上的大实话。' }
+];
+
 const WORKS = [
   { slug: '01-photography', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 随手记录', g: 'linear-gradient(135deg,#0b3a4a,#062028)' },
-  { slug: '02-craft', emoji: '🧩', title: '拼装日志', desc: '手工 · 动手造物', g: 'linear-gradient(135deg,#123a2e,#06201a)' },
+  { slug: '02-craft', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', cover: 'craft-04.jpg', album: CRAFT_ALBUM },
   { slug: '03-sports', emoji: '🏸', title: '羽毛球 & 游泳', desc: '运动 · 技能解锁中', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
   { slug: '04-campus', emoji: '🎓', title: '开荒记', desc: '大学 · 首届新生', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)' }
 ];
+
+/* ================================================================
+   拼装相册 · 灯箱
+   —— 点「拼装日志」卡进来：左右按钮 / ←→ 键 / 手机滑动都能翻
+   —— 点背景或 ✕ 关闭，Esc 也行；关掉之后页面其它地方不受影响
+   ================================================================ */
+let albumLb = null;
+let albumIdx = 0;
+
+function albumShow(i) {
+  if (!albumLb) return;
+  const n = CRAFT_ALBUM.length;
+  albumIdx = ((i % n) + n) % n;                      // 首尾循环
+  const it = CRAFT_ALBUM[albumIdx];
+  const img = albumLb.querySelector('.lb-img');
+  img.src = `photos/${it.src}`;
+  img.alt = `${it.title} —— ${it.desc}`;
+  albumLb.querySelector('.lb-idx').textContent = `${albumIdx + 1} / ${n}`;
+  albumLb.querySelector('.lb-title').textContent = it.title;
+  albumLb.querySelector('.lb-desc').textContent = it.desc;
+  const thumbs = albumLb.querySelectorAll('.lb-thumb');
+  thumbs.forEach((b, k) => b.classList.toggle('on', k === albumIdx));
+  if (thumbs[albumIdx] && thumbs[albumIdx].scrollIntoView) {
+    thumbs[albumIdx].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  }
+  const nx = CRAFT_ALBUM[(albumIdx + 1) % n];
+  new Image().src = `photos/${nx.src}`;               // 先悄悄把下一张加载好
+}
+function albumStep(d) {
+  if (!albumLb) return;
+  albumShow(albumIdx + d);
+}
+function openAlbum(i) {
+  if (!albumLb) return;
+  albumShow(i || 0);
+  albumLb.classList.add('on');
+  albumLb.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';            // 开着相册时别让背后页面跟着滚
+  const btn = albumLb.querySelector('.lb-close');
+  if (btn) btn.focus({ preventScroll: true });
+}
+function closeAlbum() {
+  if (!albumLb) return;
+  albumLb.classList.remove('on');
+  albumLb.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+(function buildAlbum() {
+  if (!CRAFT_ALBUM.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'album-lb';
+  wrap.id = 'albumLb';
+  wrap.setAttribute('role', 'dialog');
+  wrap.setAttribute('aria-modal', 'true');
+  wrap.setAttribute('aria-label', '拼装日志相册');
+  wrap.setAttribute('aria-hidden', 'true');
+  wrap.innerHTML = `
+    <button class="lb-close" type="button" aria-label="关闭相册">✕</button>
+    <button class="lb-nav lb-prev" type="button" aria-label="上一张">‹</button>
+    <button class="lb-nav lb-next" type="button" aria-label="下一张">›</button>
+    <figure class="lb-fig">
+      <img class="lb-img" alt="" decoding="async">
+      <figcaption class="lb-meta">
+        <div class="lb-head"><span class="lb-idx"></span><h4 class="lb-title"></h4></div>
+        <p class="lb-desc"></p>
+      </figcaption>
+    </figure>
+    <div class="lb-strip" aria-label="作品缩略图"></div>`;
+  document.body.appendChild(wrap);
+
+  const strip = wrap.querySelector('.lb-strip');
+  CRAFT_ALBUM.forEach((it, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lb-thumb';
+    b.setAttribute('aria-label', `第 ${i + 1} 张：${it.title}`);
+    b.innerHTML = `<img src="photos/${it.src.replace(/\.jpg$/i, '-thumb.jpg')}" alt="" loading="lazy" decoding="async">`;
+    b.addEventListener('click', () => albumShow(i));
+    strip.appendChild(b);
+  });
+
+  wrap.querySelector('.lb-close').addEventListener('click', closeAlbum);
+  wrap.querySelector('.lb-prev').addEventListener('click', () => albumStep(-1));
+  wrap.querySelector('.lb-next').addEventListener('click', () => albumStep(1));
+  wrap.addEventListener('click', (ev) => { if (ev.target === wrap) closeAlbum(); });
+
+  let tx = 0, ty = 0;
+  wrap.addEventListener('touchstart', (ev) => {
+    tx = ev.touches[0].clientX; ty = ev.touches[0].clientY;
+  }, { passive: true });
+  wrap.addEventListener('touchend', (ev) => {
+    const dx = ev.changedTouches[0].clientX - tx;
+    const dy = ev.changedTouches[0].clientY - ty;
+    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy)) albumStep(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  document.addEventListener('keydown', (ev) => {
+    if (!wrap.classList.contains('on')) return;
+    if (ev.key === 'Escape') closeAlbum();
+    else if (ev.key === 'ArrowLeft') albumStep(-1);
+    else if (ev.key === 'ArrowRight') albumStep(1);
+  });
+
+  albumLb = wrap;
+})();
 const worksGrid = document.getElementById('worksGrid');
 if (worksGrid) {
   // 逐个尝试候选文件名，命中哪个用哪个；全都不存在就保持渐变占位卡（不报错、不影响页面）
   const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp'];
   const photoCandidates = (w, n) => [
+    ...(w.cover ? [`photos/${w.cover}`] : []),           // 相册封面：craft-04.jpg
     ...PHOTO_EXT.map((e) => `photos/${w.slug}.${e}`),   // 规范命名：01-photography.jpg
     ...PHOTO_EXT.map((e) => `photos/${n}.${e}`)          // 偷懒命名：1.jpg
   ];
@@ -2235,9 +2445,21 @@ if (worksGrid) {
       <div class="work-bg" style="background:${w.g}"></div>
       <img class="work-img" alt="${w.title}" loading="lazy" decoding="async">
       <div class="work-emoji">${w.emoji}</div>
+      ${w.album ? `<div class="work-count">${w.album.length} 张</div>` : ''}
       <div class="work-body"><h4>${w.title}</h4><p>${w.desc}</p></div>`;
     worksGrid.appendChild(el);
     attachPhoto(el.querySelector('.work-img'), w, n + 1);
+    if (w.album) {
+      // 有作品集的卡：鼠标点和键盘回车都能进来
+      el.classList.add('has-album');
+      el.tabIndex = 0;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', `${w.title}：点开看 ${w.album.length} 张作品`);
+      el.addEventListener('click', () => openAlbum(0));
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openAlbum(0); }
+      });
+    }
   });
 }
 

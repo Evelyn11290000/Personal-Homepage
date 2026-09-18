@@ -1435,21 +1435,34 @@ composer.addPass(bloomPass);
          （2026-09-17 由用户在实验台选出；想回到「光点下方的倒影」只需
            trailLen 1 + mirrorY 10 + mirrorSquash 0.8。）
    ================================================================ */
-const GLOW_MAX = 12;
-const GLOW_SAMPLE_DT = 0.035;              /* 每 35ms 记一个点 → 12 段 ≈ 0.42 秒 */
+const GLOW_MAX = 40;
+const GLOW_SAMPLE_DT = 0.035;              /* 每 35ms 记一个点 → 40 段 ≈ 1.4 秒（尾长上限）*/
 const GLOW_SCALE = 4;                      /* 画布分辨率 = 视口 / 4 */
+
+/* ★ 2026-09-18 拖尾增强：触摸设备 / 窄屏 自动简化 —— 手机沿用从前的轻量观感
+   （12 段、不拉丝、不撒尘、停手即收），不为炫技去吃手机的电量与性能；
+   桌面才用完整的增强效果。（与页面里 compact / isCompact 同一套判定方式）*/
+const GLOW_COMPACT = window.innerWidth <= 720 || window.matchMedia('(pointer: coarse)').matches;
 
 const GLOW = {
   on: !window.__rmOn(),                    /* 与 <html class="rm"> 同一个开关（含 ?rm= 覆盖）*/
   track: 1.0,                              /* ★ 1.0 = 光晕与光点同位（0.8 会在屏幕边缘把两者拉开）*/
   momentum: 0.5,                           /* ★ 越小越跟手、尾巴收得越紧；越大越飘 */
-  trailLen: 12,                            /* ★ 12 段彗尾（上限，约 0.42 秒轨迹）；1 = 单块光斑 */
+  trailLen: GLOW_COMPACT ? 12 : 24,        /* ★ 彗尾段数（上限，约 0.84 秒轨迹）；1 = 单块光斑 */
   size: 0.10,                              /* ★ 光斑大小：头部直径 ≈ 视口短边 × size × 2.5（2026-09-17 由 0.125 调小）*/
   intensity: 0.6,
   mirrorY: 0,                              /* ★ 0 = 不做镜面下移（纯彗尾）；10 = 倒影偏移 */
   mirrorSquash: 1,                         /* ★ 1 = 不压扁（纯彗尾）；0.8 = 倒影的透视压扁 */
   colA: '#e8f6fb',                         /* ★ 冰蓝·亮核 = --txt 冷白（原为 --cyan-2 青）*/
-  colB: '#38bdf8'                          /* ★ 冰蓝·外圈 = --blue 天蓝（原为 --teal 青绿）*/
+  colB: '#38bdf8',                         /* ★ 冰蓝·外圈 = --blue 天蓝（原为 --teal 青绿）*/
+  /* ===== 2026-09-18 拖尾增强（实验台选定值）：更长 / 快甩拉丝 / 星尘火花 / 停手余晖 =====
+     约定：拉丝只在【甩】的那一下出现，慢移依旧是圆斑 —— 冷冽、不抢注意力。 */
+  stretch: GLOW_COMPACT ? 1 : 2.2,         /* 满速时光斑沿运动方向拉长的倍数（1 = 不拉丝）*/
+  stretchRef: 1800,                        /* 拉丝参考速度 px/s：指针达到它时接近满拉伸 */
+  sparkDensity: GLOW_COMPACT ? 0 : 0.8,    /* 星尘密度：每个采样点生成火花的期望个数（0 = 不撒）*/
+  sparkSize: 1.2,                          /* 星尘大小倍数 */
+  sparkLife: 0.9,                          /* 星尘寿命（秒）：出生到完全消失 */
+  afterglow: GLOW_COMPACT ? 0 : 1.8        /* 停手余晖：静止后尾巴散尽的总时长（秒，约）；0 = 立刻收掉 */
 };
 
 const glowEl = document.getElementById('aurora-2d');
@@ -1466,6 +1479,42 @@ sizeGlow();
 const glowTrail = [];
 let glowAcc = 0;
 let glowAlpha = 0;
+
+/* ★ 2026-09-18 拖尾增强的运行状态 */
+let glowSpeed = 0;                         /* 平滑后的指针速度（px/s），决定拉丝强度 */
+let glowDir = 0;                           /* 最近一次有效运动方向（画布坐标弧度），拉丝兜底方向 */
+let tailFade = 0;                          /* 尾巴整体 0~1：移动 → 1，停手 → 按 afterglow 衰减到 0 */
+let lastRawX = null, lastRawY = null;      /* 上一帧【未缓动】的指针像素位置（算速度用）*/
+const sparks = [];                         /* 星尘：{x,y,vx,vy,age,life,r}，画布坐标 */
+const SPARK_MAX = 90;                      /* 星尘数量上限，防长尾 + 高速时爆量 */
+const MOVE_EPS = 60;                       /* 低于这个速度（px/s）视为「停手」*/
+
+/* 在最新采样点周围撒星尘（密度/大小/寿命都由 GLOW 控制）*/
+function spawnSparks() {
+  if (GLOW.sparkDensity <= 0 || !glowTrail.length) return;
+  const W = glowEl.width, H = glowEl.height;
+  const base = Math.min(W, H) * GLOW.size;
+  const tp = glowTrail[0];
+  const x = (tp.x * GLOW.track * 0.5 + 0.5) * W;
+  const y = (-tp.y * GLOW.track * 0.5 + 0.5) * H;
+  const want = GLOW.sparkDensity * 1.6;
+  let cnt = Math.floor(want);
+  if (Math.random() < want - cnt) cnt += 1;
+  for (let i = 0; i < cnt; i++) {
+    const a0 = Math.random() * Math.PI * 2;
+    const r0 = (0.12 + Math.random() * 0.42) * base;
+    sparks.push({
+      x: x + Math.cos(a0) * r0,
+      y: y + Math.sin(a0) * r0,
+      vx: (Math.random() - 0.5) * 26,
+      vy: (Math.random() - 0.5) * 26 - 10,   /* 略微上浮（画布 y 向下，故为负）*/
+      age: 0,
+      life: GLOW.sparkLife * (0.55 + Math.random() * 0.9),
+      r: base * (0.05 + Math.random() * 0.075)
+    });
+  }
+  while (sparks.length > SPARK_MAX) sparks.shift();
+}
 
 /* 鼠标：目标位置 + 惯性缓动 */
 const glowPointer = { tx: 0, ty: 0, x: 0, y: 0 };
@@ -1499,6 +1548,13 @@ function drawGlow() {
   const base = Math.min(W, H) * GLOW.size;
   /* ★ 画布分辨率比 CSS 像素低，把倒影下移量换算回画布坐标 */
   const px = W / Math.max(1, window.innerWidth);
+
+  /* ★ 拉丝：静止 = 圆斑（1.00）；越快越接近 GLOW.stretch。
+     纵轴按 1/√sx 收缩 → 拉长的同时略微变细，面积不会暴涨（冷冽、不糊成一片）*/
+  const spd = Math.min(1, glowSpeed / Math.max(1, GLOW.stretchRef));
+  const sx = 1 + (GLOW.stretch - 1) * spd;
+  const sy = 1 / Math.sqrt(sx);
+
   for (let i = n - 1; i >= 0; i--) {
     const tp = glowTrail[i];
     if (!tp) continue;
@@ -1507,11 +1563,24 @@ function drawGlow() {
     const y = (-tp.y * GLOW.track * 0.5 + 0.5) * H;
     const r = base * (0.40 + 0.85 * k);
     if (r <= 1) continue;
-    const a = 0.34 * k * k * GLOW.intensity;
+    const a = 0.34 * k * k * GLOW.intensity * tailFade;
+
+    /* ★ 该段的运动方向：用「再旧一点的点 → 当前点」定向；
+       两点几乎重合（静止 / 抖一下）时退回全局方向，避免角度乱跳 */
+    let ang = glowDir;
+    const prev = glowTrail[i + 1];
+    if (prev) {
+      const dxs = (tp.x - prev.x) * 0.5 * W;
+      const dys = -(tp.y - prev.y) * 0.5 * H;
+      if (dxs * dxs + dys * dys > 1e-6) ang = Math.atan2(dys, dxs);
+    }
+
     /* ★ 倒影：把光晕整体压到光点下方、纵向压扁，像亮点映在桌面上 */
     glowCtx.save();
     glowCtx.translate(x, y + GLOW.mirrorY * px);
     glowCtx.scale(1, GLOW.mirrorSquash);
+    glowCtx.rotate(ang);
+    glowCtx.scale(sx, sy);
     const g = glowCtx.createRadialGradient(0, 0, 0, 0, 0, r);
     g.addColorStop(0,    glowRgba(GLOW.colA, a));
     g.addColorStop(0.45, glowRgba(GLOW.colB, a * 0.45));
@@ -1519,6 +1588,24 @@ function drawGlow() {
     glowCtx.fillStyle = g;
     glowCtx.fillRect(-r, -r, r * 2, r * 2);
     glowCtx.restore();
+  }
+
+  /* ★ 星尘火花：尾巴沿途撒下的碎光，随寿命平方淡出；同色系、低亮度（不刺眼）*/
+  for (let i = 0; i < sparks.length; i++) {
+    const s = sparks[i];
+    const kk = 1 - s.age / s.life;
+    if (kk <= 0) continue;
+    const a = 0.30 * kk * kk * GLOW.intensity * tailFade;
+    const r = s.r * (0.5 + 0.5 * kk) * GLOW.sparkSize;
+    if (r < 0.7) continue;
+    const g = glowCtx.createRadialGradient(s.x, s.y, 0, s.x, s.y, r);
+    g.addColorStop(0,   glowRgba(GLOW.colA, a));
+    g.addColorStop(0.5, glowRgba(GLOW.colB, a * 0.5));
+    g.addColorStop(1,   glowRgba(GLOW.colB, 0));
+    glowCtx.fillStyle = g;
+    glowCtx.beginPath();
+    glowCtx.arc(s.x, s.y, r, 0, Math.PI * 2);
+    glowCtx.fill();
   }
 }
 
@@ -1531,17 +1618,47 @@ function updateCursorGlow(dt) {
   glowPointer.x += (glowPointer.tx - glowPointer.x) * k;
   glowPointer.y += (glowPointer.ty - glowPointer.y) * k;
 
+  /* ★ 指针真实速度：用【未经缓动的原始指针】算 —— 缓动会把速度抹平，
+     而拉丝要的就是「甩」的那一下。方向也在这里顺手记下。*/
+  const rawX = (glowPointer.tx * 0.5 + 0.5) * window.innerWidth;
+  const rawY = (-glowPointer.ty * 0.5 + 0.5) * window.innerHeight;
+  if (lastRawX !== null && dt > 0) {
+    const dx = rawX - lastRawX, dy = rawY - lastRawY;
+    glowSpeed += (Math.sqrt(dx * dx + dy * dy) / dt - glowSpeed) * Math.min(1, dt * 10);
+    if (dx * dx + dy * dy > 4) glowDir = Math.atan2(dy, dx);
+  }
+  lastRawX = rawX; lastRawY = rawY;
+
+  /* ★ 停手余晖：移动 → tailFade 迅速到 1；停手 → 在 afterglow 秒内散尽。
+     afterglow 是「从满亮到基本看不见」的总时长，指数衰减的时间常数取其 1/3
+     （3τ 后残余约 5%，所以 1.8s 就是约 1.8s 后看不到尾巴）*/
+  const moving = glowSpeed > MOVE_EPS;
+  const tau = moving ? 0.06 : Math.max(0.05, GLOW.afterglow / 3);
+  tailFade += ((moving ? 1 : 0) - tailFade) * Math.min(1, dt / tau);
+
   glowAcc += dt;
   /* ★ 只画一块（trailLen < 2）时不需要节流：35ms 的采样间隔就是 35ms 的额外滞后 */
   const throttle = GLOW.trailLen > 1 ? GLOW_SAMPLE_DT : 0;
-  if (!glowTrail.length || glowAcc >= throttle) {
+  /* ★ 只在【移动中】记点：停手后不再往同一点堆样本，尾巴就停在停手那一刻的形状 */
+  if (moving && (!glowTrail.length || glowAcc >= throttle)) {
     glowAcc = 0;
     glowTrail.unshift({ x: glowPointer.x, y: glowPointer.y });
     while (glowTrail.length > GLOW_MAX) glowTrail.pop();
+    spawnSparks();
+  }
+
+  /* ★ 星尘老化 + 轻微飘散 */
+  for (let i = sparks.length - 1; i >= 0; i--) {
+    const s = sparks[i];
+    s.age += dt;
+    s.x += s.vx * dt;
+    s.y += s.vy * dt;
+    if (s.age >= s.life) sparks.splice(i, 1);
   }
 
   /* ★ 光点（=光标本体）：直接贴住指针，不做缓动 —— 缓动会让人觉得鼠标漂。
-     光晕画布保留惯性（倒影略微拖尾更像反射），但光点必须零延迟。 */
+     光晕画布保留惯性（倒影略微拖尾更像反射），但光点必须零延迟。
+     ★ 余晖只作用于尾巴：光点是光标本体，任何时候都不淡出。 */
   if (cursorDot) {
     const dx = (glowPointer.tx * 0.5 + 0.5) * window.innerWidth;
     const dy = (-glowPointer.ty * 0.5 + 0.5) * window.innerHeight;
@@ -1552,7 +1669,9 @@ function updateCursorGlow(dt) {
   glowAlpha += (1 - glowAlpha) * Math.min(1, dt * 3.5);
   glowEl.style.opacity = glowAlpha.toFixed(3);
   if (cursorDot) cursorDot.style.opacity = glowAlpha.toFixed(3);
-  if (glowAlpha > 0.01) drawGlow();
+  if (glowAlpha <= 0.01) return;
+  if (moving || tailFade > 0.02 || sparks.length) drawGlow();
+  else glowCtx.clearRect(0, 0, glowEl.width, glowEl.height);   /* 余晖散尽 → 抹掉残影 */
 }
 
 window.addEventListener('resize', sizeGlow);
@@ -2650,6 +2769,23 @@ refreshAiTag();
   }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
   cards.forEach((c) => io.observe(c));
 })();
+
+/* ================================================================
+   ★ 拖尾调试口（只读，2026-09-18 落回时加）
+   给无头回归校验读运行时状态用：只返回数值，不改任何东西，
+   也不影响渲染。删掉这个函数不影响页面任何功能。
+   ================================================================ */
+window.__trailDebug = function () {
+  return {
+    trailLen: GLOW.trailLen, trail: glowTrail.length, max: GLOW_MAX,
+    speed: Math.round(glowSpeed), tailFade: +tailFade.toFixed(3),
+    sparks: sparks.length, alpha: +glowAlpha.toFixed(3),
+    sx: +(1 + (GLOW.stretch - 1) * Math.min(1, glowSpeed / Math.max(1, GLOW.stretchRef))).toFixed(3),
+    stretch: GLOW.stretch, sparkDensity: GLOW.sparkDensity, afterglow: GLOW.afterglow,
+    compact: GLOW_COMPACT
+  };
+};
+
 </script>
 <!-- ================================================================
      滚动联动动效：每一帧按滚动位置连续驱动各区块的 透明度 / 位移 / 模糊

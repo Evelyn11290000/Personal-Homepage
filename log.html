@@ -103,7 +103,7 @@
   /* 背景压暗层：让 3D 神经背景更暗、不抢戏（想更暗就调大这个 alpha） */
   .bg-dim {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
-    background: rgba(1, 3, 6, 0.34);
+    background: rgba(1, 3, 6, 0.45);
   }
   /* 背景没加载出来时的保底渐变 */
   .bg-fallback {
@@ -1292,7 +1292,7 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  compact ? 0.95 : 1.2, 0.6, 0.3
+  compact ? 0.75 : 0.95, 0.6, 0.45
 );
 composer.addPass(bloomPass);
 
@@ -1986,7 +1986,7 @@ function animate() {
 
       if (STATE.phase === 2) {
         camera.position.lerp(camera.position.clone().multiplyScalar(0.86), 0.5);
-        bloomPass.strength = compact ? 1.14 : 1.44;
+        bloomPass.strength = compact ? 0.85 : 1.05;
       }
       if (STATE.phase === 3) {
         camera.position.lerp(camera.position.clone().multiplyScalar(1.18), 0.5);
@@ -2002,7 +2002,7 @@ function animate() {
       }
     }
   } else {
-    const baseBloom = compact ? 0.95 : 1.2;
+    const baseBloom = compact ? 0.75 : 0.95;
     bloomPass.strength += (baseBloom - bloomPass.strength) * 0.05;
   }
 

@@ -1067,6 +1067,146 @@
     .fb-thanks.show .fb-speed { animation: none; opacity: 1; }
     .fb-thanks.show .fb-streak { display: none; }
   }
+
+  /* ============================================================
+     V4 改进区（2026-09-24）
+     对应外部评审反馈：首屏信息效率 / 项目板块 / 隐私加固 /
+     移动端阅读体验 / 触达尺寸。
+     全部复用既有 token，不改动上面任何一条既有规则。
+     ============================================================ */
+
+  /* ---------- 首屏：事实型说明 + 分层 CTA ---------- */
+  /* 反馈 P0：访客要在 10 秒内看懂「你是谁、研究什么、可以看什么」。
+     事实行用正文色（比趣味文案更亮），趣味文案保留但降为次级。 */
+  .hero-fact {
+    margin: 18px auto 0; max-width: 640px;
+    color: var(--txt); font-size: var(--fs-body); line-height: 1.75;
+  }
+  .hero-fact + .tagline { margin-top: 12px; }
+  /* 次级操作：无底色文字链，用来把「聊天入口」明显降级 */
+  .btn-link {
+    color: var(--cyan-2); background: transparent; border-color: transparent;
+    padding: 12px 10px;
+    text-decoration: underline; text-underline-offset: 4px;
+    text-decoration-color: rgba(0, 240, 255, 0.45);
+  }
+  .btn-link:hover { color: #fff; text-decoration-color: var(--cyan-2); transform: translateY(-1px); }
+
+  /* ---------- 项目与作品 ---------- */
+  .proj-intro { color: var(--txt-dim); font-size: var(--fs-body); margin-bottom: var(--sp-gap); }
+  .proj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .proj-card {
+    display: flex; flex-direction: column;
+    padding: 18px; border-radius: var(--r-panel);
+    background: rgba(3, 8, 12, 0.72); border: 1px solid var(--line);
+    transition: transform 0.25s var(--ease), border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  }
+  .proj-card:hover {
+    transform: translateY(-4px); border-color: var(--line-2);
+    background: rgba(8, 20, 28, 0.72); box-shadow: 0 16px 40px rgba(0, 240, 255, 0.1);
+  }
+  .proj-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .proj-no { font-size: 10.5px; letter-spacing: 1.6px; color: var(--txt-faint); font-variant-numeric: tabular-nums; }
+  .proj-state {
+    font-size: var(--fs-tag); letter-spacing: 0.5px; padding: 3px 9px; border-radius: var(--r-pill);
+    color: var(--teal); background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(45, 212, 191, 0.3); white-space: nowrap;
+  }
+  .proj-card h3 { font-size: var(--fs-h3); margin-bottom: 8px; }
+  .proj-desc { color: var(--txt-dim); font-size: var(--fs-sm); line-height: 1.7; margin-bottom: 12px; }
+  .proj-meta { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+  .proj-meta li { font-size: var(--fs-cap); color: var(--txt-dim); line-height: 1.6; }
+  .proj-meta b { color: var(--blue); font-weight: 500; }
+  .proj-links { margin-top: auto; font-size: var(--fs-sm); }
+  .proj-links a { color: var(--cyan-2); text-decoration: none; }
+  .proj-links a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .proj-nolink { color: var(--txt-faint); font-size: var(--fs-cap); }
+
+  /* ---------- 微信二维码弹层 ---------- */
+  .qr-modal { width: min(360px, 100%); text-align: center; }
+  .qr-modal h3 { justify-content: center; }
+  .qr-box { display: grid; place-items: center; margin: 4px auto 0; }
+  .qr-box img { width: 100%; max-width: 300px; height: auto; display: block; border-radius: var(--r-md); }
+  .qr-fallback {
+    padding: 34px 18px; width: 100%;
+    font-size: var(--fs-sm); color: var(--txt-faint);
+    border: 1px dashed var(--line-2); border-radius: var(--r-md);
+  }
+
+  /* ---------- 返回顶部 ---------- */
+  /* 桌面位于反馈按钮正上方；粗指针设备在下面的断点里再抬高，避开底部导航 */
+  .to-top {
+    position: fixed; z-index: 9990;
+    right: 22px; bottom: 84px;
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer; font-family: inherit;
+    color: var(--txt);
+    background: linear-gradient(160deg, rgba(14, 26, 34, 0.92), rgba(6, 14, 20, 0.92));
+    border: 1px solid rgba(0, 240, 255, 0.34);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 0 22px rgba(0, 240, 255, 0.16);
+    opacity: 0; visibility: hidden; transform: translateY(8px);
+    transition: opacity 0.25s var(--ease), transform 0.25s var(--ease), visibility 0.25s, border-color 0.25s;
+  }
+  .to-top.show { opacity: 1; visibility: visible; transform: none; }
+  .to-top:hover { border-color: rgba(0, 240, 255, 0.62); }
+  .to-top:active { transform: scale(0.94); }
+  .to-top svg { width: 18px; height: 18px; }
+
+  /* ---------- 移动端当前章节提示 ---------- */
+  /* 默认只在手机上显示（display:none 在桌面端彻底不占位、不响应） */
+  .chapter-tip {
+    display: none;
+    position: fixed; z-index: 9989;
+    left: 50%; bottom: 72px; transform: translate(-50%, 6px);
+    padding: 6px 14px; border-radius: var(--r-pill);
+    font-size: var(--fs-cap); letter-spacing: 0.6px; color: var(--cyan-2);
+    background: rgba(6, 14, 20, 0.86); border: 1px solid rgba(0, 240, 255, 0.28);
+    backdrop-filter: blur(10px); pointer-events: none; white-space: nowrap;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+  }
+  .chapter-tip.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+
+  /* ---------- 联系方式：GitHub 改为不可点区块 ---------- */
+  .contact:not(a) { cursor: default; }
+  .contact:not(a):hover { transform: none; }
+
+  /* ---------- 禁用态：补上「看得见的暗」 ---------- */
+  /* 原规则已有 grayscale，这里再加透明度；hover 只对可点状态生效 */
+  .chat-input button:disabled { opacity: 0.45; }
+  .chat-input button:not(:disabled):hover { filter: brightness(1.1); }
+
+  /* ---------- 触达尺寸 ≥44px（粗指针设备） ---------- */
+  /* 桌面鼠标不需要 44px，手机上才放宽，避免影响桌面观感 */
+  @media (pointer: coarse) {
+    .nav-item { min-height: 44px; }
+    .icon-btn { width: 44px; height: 44px; }
+    .chip { min-height: 44px; display: inline-flex; align-items: center; }
+    .contact { min-height: 44px; }
+    .btn { min-height: 44px; }
+    .album-lb .lb-nav { width: 44px; height: 44px; }
+  }
+
+  /* ---------- V4 断点：项目卡列数 / 悬浮元素避让 ---------- */
+  @media (max-width: 860px) {
+    .proj-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .chapter-tip { display: block; }
+    /* 底部依次是：导航胶囊(14px) → 章节提示(72px) → 反馈按钮(64px，靠右) → 返回顶部(122px，靠右) */
+    .to-top { right: 14px; bottom: 122px; }
+    .proj-grid { grid-template-columns: 1fr; }
+  }
+  /* 360px 极限宽度：收紧首屏字号与按钮内边距，防长标题溢出 */
+  @media (max-width: 380px) {
+    :root { --fs-hero: clamp(28px, 8.6vw, 52px); }
+    .hero { padding: 124px 14px 88px; }
+    .hero-cta { gap: 9px; }
+    .btn { padding: 11px 15px; font-size: var(--fs-cap); }
+    .site-nav { padding: 4px 5px; }
+    .nav-item { padding: 7px 7px; }
+    .proj-card { padding: 15px; }
+  }
 </style>
 <script>
 /* ================================================================
@@ -1125,6 +1265,7 @@
 <!-- ============ 粘性导航 · 顶部悬浮胶囊（P2） ============ -->
 <nav class="site-nav" id="siteNav" aria-label="页面区块导航">
   <a class="nav-item" href="#about"><span class="nav-dot"></span><span class="nav-label">关于我</span></a>
+  <a class="nav-item" href="#projects"><span class="nav-dot"></span><span class="nav-label">项目</span></a>
   <a class="nav-item" href="#log"><span class="nav-dot"></span><span class="nav-label">日志</span></a>
   <a class="nav-item" href="#chat"><span class="nav-dot"></span><span class="nav-label">分身</span></a>
   <a class="nav-item" href="#interests"><span class="nav-dot"></span><span class="nav-label">兴趣</span></a>
@@ -1162,11 +1303,13 @@
         <img class="avatar" src="头像.jpg" alt="Mario Evelyn 头像" />
       </div>
       <h1 class="name">Mario Evelyn</h1>
-      <div class="badge">🧠 脑机接口专业大一 · 开荒新人 <span>· 数字分身在线</span></div>
+      <div class="badge">🧠 脑机接口方向大一本科生 · 开荒中 <span>· 数字分身在线</span></div>
+      <p class="hero-fact">记录从零探索脑机接口、课程学习与日常创作的过程。<br />这里能看到我的成长日志、项目与作品，还有日常影像。</p>
       <p class="tagline">一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。</p>
       <div class="hero-cta">
-        <a class="btn btn-primary" href="#log">📓 看我的成长日志</a>
-        <a class="btn btn-ghost" href="#chat">💬 和我的分身聊聊</a>
+        <a class="btn btn-primary" href="#log">📓 阅读成长日志</a>
+        <a class="btn btn-primary" href="#projects">🧩 查看项目与作品</a>
+        <a class="btn btn-link" href="#chat">💬 和我的分身聊聊</a>
         <a class="btn btn-ghost" href="#about">↓ 认识我一下</a>
       </div>
     </div>
@@ -1183,7 +1326,7 @@
         <div class="about-grid">
           <div class="about-item">
             <h3><span>🎓</span> 现在的我</h3>
-            <p>首届新生体验卡加载中✨ 天津大学-香港理工大学深圳未来技术学院。<br />脑机接口方向打怪升级，无学长学姐带路，全程开荒模式。</p>
+            <p>天津大学-香港理工大学深圳未来技术学院本科生，关注脑机接口与人机交互。<br />作为首届学生，正在把陌生领域一点点变成熟悉的路径。</p>
           </div>
           <div class="about-item">
             <h3><span>⚔️</span> 当前关卡</h3>
@@ -1191,7 +1334,57 @@
           </div>
         </div>
         <div class="trait">
-          <b>一个比较有记忆点的特点：</b>外表「生人勿近」，慢热但熟络之后很好沟通 —— 初见高冷，熟了话痨。
+          <b>想认识的人：</b>愿意交流脑机接口入门、学习方法、校园创作和有趣的技术实践。初见时通常比较安静，熟悉之后很愿意讨论最近踩过的坑。
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 项目与作品（V4 新增） ============
+         反馈要求：访客要能快速判断「可合作的能力边界」。
+         因此每张卡固定五件事：编号分类 / 状态 / 一句话问题定义 /
+         方法工具 / 本人负责与进展 / 入口链接。 -->
+    <section class="section reveal" id="projects">
+      <div class="card">
+        <div class="section-title"><span class="st-index">02</span> Projects · 项目与作品</div>
+        <p class="proj-intro">还在开荒，先把手上真正在做的事摆出来 —— 学习轨迹本身就是作品。</p>
+        <div class="proj-grid">
+
+          <article class="proj-card">
+            <div class="proj-top"><span class="proj-no">01 / WEB</span><span class="proj-state">进行中</span></div>
+            <h3>数字分身个人主页</h3>
+            <p class="proj-desc">将脑机接口的神经信号意象转成可阅读的个人主页，持续打磨内容层级、动效与移动端体验。</p>
+            <ul class="proj-meta">
+              <li><b>方法 / 工具</b>：HTML、CSS、JavaScript、Three.js</li>
+              <li><b>我负责</b>：内容结构、视觉与动效实现、移动端适配与隐私加固</li>
+              <li><b>下一步</b>：继续修移动端细节，把项目与日志写得更完整</li>
+            </ul>
+            <div class="proj-links"><span class="proj-nolink">源码暂不公开 · 隐私保护</span></div>
+          </article>
+
+          <article class="proj-card">
+            <div class="proj-top"><span class="proj-no">02 / NOTES</span><span class="proj-state">进行中</span></div>
+            <h3>脑机接口入门笔记</h3>
+            <p class="proj-desc">围绕信号采集、预处理、特征与分类建立阅读框架，把课程与公开资料沉淀为可回看的学习记录。</p>
+            <ul class="proj-meta">
+              <li><b>方法 / 工具</b>：BCI、信号处理、结构化笔记</li>
+              <li><b>我负责</b>：资料筛选、框架搭建、笔记整理</li>
+              <li><b>下一步</b>：补齐预处理与特征提取章节</li>
+            </ul>
+            <div class="proj-links"><a href="#log">从成长日志开始阅读 →</a></div>
+          </article>
+
+          <article class="proj-card">
+            <div class="proj-top"><span class="proj-no">03 / VISUAL</span><span class="proj-state">持续记录</span></div>
+            <h3>新校园影像计划</h3>
+            <p class="proj-desc">用镜头记录首届新生的校园日常，也练习把陌生环境、光线和情绪转化成具体的画面。</p>
+            <ul class="proj-meta">
+              <li><b>方法 / 工具</b>：摄影、视觉记录</li>
+              <li><b>我负责</b>：拍摄与选片（公开照片会先做隐私处理）</li>
+              <li><b>下一步</b>：按学期整理成系列，挑更安全的画面公开</li>
+            </ul>
+            <div class="proj-links"><a href="#works">查看日常影像 →</a></div>
+          </article>
+
         </div>
       </div>
     </section>
@@ -1199,7 +1392,7 @@
     <!-- ============ 成长日志 ============ -->
     <section class="section reveal" id="log">
       <div class="card">
-        <div class="section-title"><span class="st-index">02</span> Growth Log · 成长日志</div>
+        <div class="section-title"><span class="st-index">03</span> Growth Log · 成长日志</div>
         <p class="log-intro">把「开荒」的每一步记在这里 —— 学习、生活、心情，慢慢写，慢慢长。先摆几条在这儿，想看全部的去<a class="log-inline-link" href="log.html">完整日志</a>。</p>
         <div class="timeline" id="timeline"></div>
         <div class="log-more" id="logMore"></div>
@@ -1223,7 +1416,7 @@
         <div class="chat-quick" id="quickChips"></div>
         <div class="chat-input">
           <input id="chatInput" type="text" placeholder="随便聊聊，问我点什么…" autocomplete="off" />
-          <button id="sendBtn">发送</button>
+          <button id="sendBtn" disabled>发送</button>
         </div>
       </div>
     </section>
@@ -1231,7 +1424,7 @@
     <!-- ============ 兴趣 ============ -->
     <section class="section reveal" id="interests">
       <div class="card">
-        <div class="section-title"><span class="st-index">03</span> Interests · 兴趣</div>
+        <div class="section-title"><span class="st-index">04</span> Interests · 兴趣</div>
         <div class="interest-grid">
           <div class="interest"><div class="ic">📷</div><div><h4>摄影</h4><p>习惯用镜头记录日常瞬间</p></div></div>
           <div class="interest"><div class="ic">🧩</div><div><h4>手工 &amp; 拼装</h4><p>沉迷各类拼装造物，享受动手搭建的过程</p></div></div>
@@ -1244,7 +1437,7 @@
     <!-- ============ 作品 / 相册 ============ -->
     <section class="section reveal" id="works">
       <div class="card">
-        <div class="section-title"><span class="st-index">04</span> Gallery · 日常影像</div>
+        <div class="section-title"><span class="st-index">05</span> Gallery · 日常影像</div>
         <div class="works-grid" id="worksGrid"></div>
       </div>
     </section>
@@ -1252,17 +1445,20 @@
     <!-- ============ 联系方式 ============ -->
     <section class="section reveal" id="contact">
       <div class="card">
-        <div class="section-title"><span class="st-index">05</span> Contact · 联系我</div>
+        <div class="section-title"><span class="st-index">06</span> Contact · 联系我</div>
         <div class="contact-grid">
-          <a class="contact" href="mailto:evelyn_11290000@163.com">
-            <div class="ci"><img src="icons/mail.png" alt="邮箱" width="40" height="40"></div><div><h4>邮箱</h4><p>evelyn_11290000@163.com</p></div>
+          <!-- V4：不再明文展示微信号，点击后才显示二维码 -->
+          <a class="contact" href="#" id="wechatCard" title="点击查看微信二维码">
+            <div class="ci"><img src="icons/wechat.png" alt="微信" width="40" height="40"></div><div><h4>微信</h4><p>点击查看二维码</p></div>
           </a>
-          <a class="contact" href="#" id="wechatCard" title="点击复制微信号">
-            <div class="ci"><img src="icons/wechat.png" alt="微信" width="40" height="40"></div><div><h4>微信</h4><p id="wechatId">LYL-10101010</p></div>
+          <!-- V4：邮箱做反采集，源码里不出现完整地址，点击才复制 -->
+          <a class="contact" href="#" id="mailCard" title="点击复制邮箱">
+            <div class="ci"><img src="icons/mail.png" alt="邮箱" width="40" height="40"></div><div><h4>邮箱</h4><p id="mailText">点击复制邮箱</p></div>
           </a>
-          <a class="contact" href="https://github.com/Evelyn11290000/Personal-Homepage" target="_blank" rel="noopener noreferrer">
+          <!-- V4：按反馈「GitHub 不要公开」，去掉可点击外链，仅保留昵称文字 -->
+          <div class="contact" title="GitHub 暂不公开链接">
             <div class="ci"><img src="icons/github.png" alt="GitHub" width="40" height="40"></div><div><h4>GitHub</h4><p>@Evelyn11290000</p></div>
-          </a>
+          </div>
         </div>
       </div>
     </section>
@@ -1302,6 +1498,36 @@
     <div class="modal-status" id="cfgStatus"></div>
   </div>
 </div>
+
+<!-- ============ 微信二维码弹窗（V4 新增） ============
+     反馈 P0：微信号不直接公开。改为「点击后才显示二维码」，
+     并且二维码只在用户主动点击时才出现在 DOM 里（见文末 JS），
+     静态源码中不存在任何微信号或二维码地址。 -->
+<div class="modal-mask" id="qrMask">
+  <div class="modal qr-modal">
+    <h3>💬 扫码加我微信</h3>
+    <p class="modal-desc">仅用于个人交流，请勿转载或用于营销推广。</p>
+    <div class="qr-box" id="qrBox">
+      <img src="icons/wechat-qr.jpg" alt="微信二维码" id="qrImg" />
+      <div class="qr-fallback" id="qrFallback" hidden>二维码暂未就位 · 可先用邮箱联系</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="qrClose" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 返回顶部（V4 新增）============
+     移动端底部有导航胶囊、右下角有反馈按钮，所以它在粗指针设备上会被抬高（见 CSS）。 -->
+<button class="to-top" id="toTop" type="button" aria-label="返回顶部" title="返回顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+  </svg>
+</button>
+
+<!-- ============ 移动端当前章节提示（V4 新增）============
+     文案由导航高亮逻辑（滚动同步区块）写入，桌面端不显示。 -->
+<div class="chapter-tip" id="chapterTip" aria-hidden="true"></div>
 
 <!-- ============ 反馈入口（右下角悬浮按钮）============
      放在页面正文之外、独立于 #page 容器：它是常驻入口，不参与滚动动效。 -->
@@ -2740,6 +2966,14 @@ renderLogs();
 const chatBody = document.getElementById('chatBody');
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('sendBtn');
+
+/* V4：空白输入不能发送，按钮同步变暗（反馈 P1「数字分身需明确边界」）
+   三种禁用来源统一走这一个函数：空内容 / 正在回复 / 元素不存在。 */
+function syncSendState() {
+  if (!sendBtn || !chatInput) return;
+  sendBtn.disabled = !!busy || !chatInput.value.trim();
+}
+if (chatInput) chatInput.addEventListener('input', syncSendState);
 const quickChips = document.getElementById('quickChips');
 const cfgBtn = document.getElementById('cfgBtn');
 const cfgMask = document.getElementById('cfgMask');
@@ -2819,6 +3053,7 @@ const SYSTEM_PROMPT = `你是「Mario Evelyn」的数字分身，运行在他的
 let fallbackIdx = 0;
 let history = []; // {role, content}
 let busy = false;
+syncSendState();   // V4：初始即按「输入框为空」置为禁用态
 
 function scrollBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
 
@@ -2909,7 +3144,7 @@ async function handleSend(text) {
   const value = (text || chatInput.value).trim();
   if (!value || busy) return;
   busy = true;
-  sendBtn.disabled = true;
+  syncSendState();
   chatInput.value = '';
   addBubble(value, 'user');
 
@@ -2919,7 +3154,7 @@ async function handleSend(text) {
       typing.remove();
       addBubble(answerByRule(value), 'bot');
       busy = false;
-      sendBtn.disabled = false;
+      syncSendState();
     }, 480 + Math.random() * 420);
     return;
   }
@@ -2949,7 +3184,7 @@ async function handleSend(text) {
     addBubble('连接 AI 失败：' + err.message + '\n已临时切换为规则回答 →\n' + answerByRule(value), 'bot', 'err');
   } finally {
     busy = false;
-    sendBtn.disabled = false;
+    syncSendState();
     scrollBottom();
   }
 }
@@ -3170,20 +3405,56 @@ window.addEventListener('load', () => {
   }, 700);
 });
 
-/* ---------- 微信：点击复制微信号 ---------- */
+/* ---------- V4 隐私：微信改为「点击后才显示二维码」 ----------
+   页面源码中不再存在任何微信号；二维码图只在弹层里出现。 ---------- */
 const wechatCard = document.getElementById('wechatCard');
+const qrMask = document.getElementById('qrMask');
+const qrImg = document.getElementById('qrImg');
+const qrFallback = document.getElementById('qrFallback');
+
+if (qrImg) {
+  // 若图片在脚本执行前就已失败，error 事件不会再冒出来，这里补一次判定
+  if (qrImg.complete && qrImg.naturalWidth === 0) {
+    qrImg.hidden = true;
+    if (qrFallback) qrFallback.hidden = false;
+  }
+  qrImg.addEventListener('error', () => {
+    qrImg.hidden = true;
+    if (qrFallback) qrFallback.hidden = false;
+  });
+}
+const closeQr = () => { if (qrMask) qrMask.classList.remove('show'); };
 if (wechatCard) {
-  const wechatId = document.getElementById('wechatId');
-  const rawId = wechatId.textContent.trim();
-  wechatCard.addEventListener('click', async (e) => {
+  wechatCard.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (qrMask) qrMask.classList.add('show');
+  });
+}
+const qrClose = document.getElementById('qrClose');
+if (qrClose) qrClose.addEventListener('click', closeQr);
+if (qrMask) {
+  qrMask.addEventListener('click', (e) => { if (e.target === qrMask) closeQr(); });
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeQr(); });
+
+/* ---------- V4 隐私：邮箱反采集 ----------
+   完整地址在运行时由 u + '@' + d 拼出，静态源码里搜不到完整邮箱；
+   点击只复制到剪贴板，不把地址写回 DOM 明文。 ---------- */
+const mailCard = document.getElementById('mailCard');
+if (mailCard) {
+  const MAIL_USER = 'evelyn_11290000';
+  const MAIL_DOMAIN = '163.com';
+  const fullMail = MAIL_USER + '@' + MAIL_DOMAIN;
+  const mailText = document.getElementById('mailText');
+  mailCard.addEventListener('click', async (e) => {
     e.preventDefault();
     let ok = false;
     try {
-      await navigator.clipboard.writeText(rawId);
+      await navigator.clipboard.writeText(fullMail);
       ok = true;
     } catch {
       const ta = document.createElement('textarea');
-      ta.value = rawId;
+      ta.value = fullMail;
       ta.style.position = 'fixed';
       ta.style.opacity = '0';
       document.body.appendChild(ta);
@@ -3191,17 +3462,21 @@ if (wechatCard) {
       try { ok = document.execCommand('copy'); } catch { ok = false; }
       ta.remove();
     }
-    const old = wechatId.textContent;
-    wechatId.textContent = ok ? '已复制 ✓ ' + rawId : '复制失败，请手动选择';
-    setTimeout(() => { wechatId.textContent = old; }, 1400);
+    const old = mailText.textContent;
+    mailText.textContent = ok ? '已复制 ✓' : '复制失败，请手动输入';
+    setTimeout(() => { mailText.textContent = old; }, 1500);
   });
 }
 
 // ---------- 粘性导航：滚动高亮当前区块（P2） ----------
+// V4 追加：同一次滚动同步里顺手更新「移动端章节提示」与「返回顶部」的显隐，
+// 共用同一个 rAF 节流，不额外增加滚动监听。
 (() => {
   const items = Array.from(document.querySelectorAll('.site-nav .nav-item'));
   const secs = items.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
   if (!items.length || !secs.length) return;
+  const chapterTip = document.getElementById('chapterTip');
+  const toTop = document.getElementById('toTop');
   const sync = () => {
     const probe = window.scrollY + window.innerHeight * 0.3;
     let cur = secs[0];
@@ -3212,7 +3487,24 @@ if (wechatCard) {
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
       cur = secs[secs.length - 1];
     }
-    items.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur.id));
+    let activeLabel = '';
+    items.forEach(a => {
+      const on = a.getAttribute('href') === '#' + cur.id;
+      a.classList.toggle('active', on);
+      if (on) {
+        const label = a.querySelector('.nav-label');
+        activeLabel = label ? label.textContent.trim() : '';
+      }
+    });
+
+    // 移动端章节提示：只在页面上方有内容时出现，避免刚进首屏就压住 HUD
+    if (chapterTip) {
+      const show = window.scrollY > 120 && activeLabel;
+      if (show) chapterTip.textContent = activeLabel;
+      chapterTip.classList.toggle('show', !!show);
+    }
+    // 返回顶部：滚过一屏后再出现
+    if (toTop) toTop.classList.toggle('show', window.scrollY > 600);
   };
   let ticking = false;
   const onScroll = () => {
@@ -3223,6 +3515,13 @@ if (wechatCard) {
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
   sync();
+
+  // 返回顶部：点击平滑回顶（减弱模式由全局 html.rm 规则接管滚动行为）
+  if (toTop) {
+    toTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 })();
 
 refreshAiTag();

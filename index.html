@@ -597,7 +597,8 @@
   html.fx-off .fx-toggle .fx-dot { background: var(--txt-faint); box-shadow: none; }
 
   /* ---------- 特效关：真的降负载（不是只藏个按钮） ---------- */
-  html.fx-off #aurora-2d, html.fx-off #cursor-dot, html.fx-off #orb-2d { display: none !important; }
+  html.fx-off #aurora-2d, html.fx-off #cursor-dot, html.fx-off #orb-2d,
+  html.fx-off #earth-orb { display: none !important; }
   html.fx-off.glow-cursor, html.fx-off.glow-cursor *:not(input):not(textarea) { cursor: auto; }
   html.fx-off .avatar-wrap::before { animation: none; }
   html.fx-off .badge, html.fx-off .site-nav, html.fx-off .fx-toggle,
@@ -832,6 +833,36 @@
     border: 1px solid rgba(0, 240, 255, 0.2); font-size: var(--fs-body);
   }
   .trait b { color: var(--cyan-2); }
+
+  /* ---------- 地球（2026-10-08，01「关于我」卡片内的次级块） ----------
+     实体贴图路线，照搬参考站 travel 页：three.js SphereGeometry + NASA 白天贴图
+     + tintEarth 调色 + BackSide 菲涅尔大气。这里会多建一个 WebGL 上下文
+     （首页已有主渲染器 + 合成器），因此只在滚到本区块可见时渲染且限 30fps，
+     特效关 / 减弱模式只渲一帧静态图。 */
+  .earth-stage { display: flex; align-items: center; justify-content: center; margin-top: var(--sp-gap); }
+  .earth-orb {
+    position: relative;
+    width: 260px; height: 260px; border-radius: 50%;
+    pointer-events: auto; touch-action: pan-y; cursor: grab;
+  }
+  .earth-orb canvas { position: relative; z-index: 1; display: block; width: 100%; height: 100%; }
+  /* 球外环境辉光：大气边缘由 three.js 的菲涅尔壳负责，这里只垫一层极淡青光 */
+  .earth-orb::before {
+    content: ""; position: absolute; inset: -16%; border-radius: 50%; z-index: 0;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(0, 240, 255, 0.07) 0%,
+      rgba(0, 240, 255, 0.05) 55%,
+      rgba(0, 240, 255, 0) 78%);
+    pointer-events: none;
+  }
+  .earth-cap {
+    margin: 10px 0 0; text-align: center;
+    font-size: var(--fs-cap); color: var(--txt-dim); letter-spacing: 0.02em;
+  }
+  @media (max-width: 760px) {
+    .earth-orb { width: 200px; height: 200px; }
+  }
+
 
   /* 兴趣 */
   /* grid-auto-rows: 1fr 保证两行等高：否则窄窗口下文字换行会让上下两行高度不同，
@@ -1553,6 +1584,12 @@
     text-decoration-color: rgba(0, 240, 255, 0.45);
   }
   .btn-link:hover { color: #fff; text-decoration-color: var(--cyan-2); transform: translateY(-1px); }
+  /* 2026-10-08 反馈：聊天降为次级后，用一行小字告诉访客「聊了能得到什么」 */
+  .chat-note {
+    margin: 14px auto 0; max-width: 640px;
+    color: var(--txt-dim); font-size: var(--fs-cap); line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
 
   /* ---------- 项目与作品 ---------- */
   .proj-intro { color: var(--txt-dim); font-size: var(--fs-body); margin-bottom: var(--sp-gap); }
@@ -1664,6 +1701,7 @@
     :root { --fs-hero: clamp(28px, 8.6vw, 52px); }
     .hero { padding: 124px 14px 88px; }
     .hero-cta { gap: 9px; }
+    .chat-note { font-size: 11px; padding: 0 8px; }
     .btn { padding: 11px 15px; font-size: var(--fs-cap); }
     .site-nav { padding: 4px 5px; }
     .nav-item { padding: 7px 7px; }
@@ -1774,7 +1812,7 @@
       </div>
       <h1 class="name">Mario Evelyn</h1>
       <div class="badge">🧠 脑机接口方向大一本科生 · 开荒中 <span>· 数字分身在线</span></div>
-      <p class="hero-fact">记录从零探索脑机接口、课程学习与日常创作的过程。<br />这里能看到我的成长日志、项目与作品，还有日常影像。</p>
+      <p class="hero-fact">天津大学-香港理工大学深圳未来技术学院 · 脑机接口与人机交互方向本科生。<br />这里记录我从零探索的过程：成长日志、项目与作品、日常影像。</p>
       <p class="tagline">一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。</p>
       <div class="hero-cta">
         <a class="btn btn-primary" href="#log">📓 阅读成长日志</a>
@@ -1782,6 +1820,8 @@
         <a class="btn btn-link" href="#chat">💬 和我的分身聊聊</a>
         <a class="btn btn-ghost" id="ptOpen" href="#about">↓ 认识我一下</a>
       </div>
+      <!-- ★ 2026-10-08 反馈：聊天已降为次级操作（.btn-link），补一行小字说明「聊了能得到什么」 -->
+      <p class="chat-note">分身可以回答：我在学什么 · 最近在忙什么 · 为什么选脑机接口</p>
     </div>
 
     <div class="hero-hint">Click anywhere to trigger impulse · 点击空白处触发脉冲</div>
@@ -1806,6 +1846,11 @@
         <div class="trait">
           <b>想认识的人：</b>愿意交流脑机接口入门、学习方法、校园创作和有趣的技术实践。初见时通常比较安静，熟悉之后很愿意讨论最近踩过的坑。
         </div>
+        <!-- ★ 2026-10-08 实体地球（three.js 贴图路线，照搬参考站）：01 文案下方居中，不单独占卡片 -->
+        <div class="earth-stage">
+          <div class="earth-orb" id="earth-orb" title="大连 · 天津 · 深圳"><canvas id="earth-canvas"></canvas></div>
+        </div>
+        <p class="earth-cap">大连 · 天津 · 深圳 —— 滚到这里依次点亮　|　按住可拖动旋转，双击回正</p>
       </div>
     </section>
 
@@ -2679,6 +2724,7 @@
 <!-- 成长日志数据：首页和 log.html 共用同一份（以后加日志只改 log-data.js） -->
 <script src="./log-data.js"></script>
 
+<script src="./vendor/earth/earth-texture.js"></script>
 <script type="module">
 /* ================================================================
    PART 1 · 神经引擎（Three.js）—— 作为全页 fixed 背景
@@ -3744,6 +3790,349 @@ function updateUI() {
   if (els.dendrites) els.dendrites.innerText = denText;
 }
 
+/* ================================================================
+   ★ 2026-10-08 关于我 · 实体地球（three.js 贴图路线；球体/相机/光照照搬参考站 travel 页）
+   球与光：SphereGeometry(2,64,64) + NASA 白天贴图 + BackSide 菲涅尔大气球，
+     环境光 2.80 / 主光 0.82 / 边缘光 0.22（three r160 物理光照，参数原样照搬参考站）。
+   配色：2026-10-08 用户选定「冰蓝霓虹」——不用参考站的自然色，改 earthNeonMap() 双色渐变映射
+     （海洋 #050b23→#1d3aa8 / 陆地 #063a4a→#22e0ff / 冰雪 #d8fbff），大气光 #22e0ff。
+   本段只把参考站的「13 座照片标记」换成 大连 / 天津 / 深圳 三点微光（无标签）。
+   贴图：vendor/earth/earth-texture.js（window.__EARTH_TEXTURE_DATA，1024×512 / 61 KB）
+        为什么用 data URI：file:// 下把本地图片画进 canvas 读像素会被判跨域污染，
+        earthNeonMap 的 getImageData 会抛 SecurityError —— 照搬参考站的解法。
+        兜底：./vendor/earth/day-1024.jpg（HTTP 下可用）。
+   相机：机位对准东亚（北纬 25.5 / 东经 119），三城一进页面就在正面。
+   进场：滚到可视区 → 地球由暗到亮（smoothstep 1.05s）→ 依次点亮 大连 → 天津 → 深圳。
+   性能：只在本区块可见时渲染，且限 30fps；特效关 / 减弱模式只渲一帧静态。
+   可调参数（URL）：?geoR=尺寸px  ?geoSway=摆动幅度(度)  ?geoKey=主光  ?geoGamma=对比  ?geoGain=亮度  ?geoDim=海洋压暗  ?geoAtmo=大气强度
+   ================================================================ */
+const E_CITY = [[38.91, 121.61], [39.13, 117.20], [22.54, 114.06]];
+const EQ = new URLSearchParams(location.search);
+const eqnum = function (k, def) { const v = parseFloat(EQ.get(k)); return Number.isFinite(v) ? v : def; };
+const E_COMPACT = innerWidth <= 760 || matchMedia('(pointer: coarse)').matches;
+const E_SIZE = Math.max(140, Math.min(420, eqnum('geoR', E_COMPACT ? 200 : 260)));
+const E_R = 2, E_DIST = 6.0;                    /* 球半径照搬参考站；距离 6 → 球占视野 ≈ 86% */
+const E_SWAY = Math.max(0, Math.min(80, eqnum('geoSway', 26)));
+const E_KEY = eqnum('geoKey', 0.82);
+/* 霓虹配色（2026-10-08 用户选定「冰蓝霓虹」）：按像素明度在「暗色 → 亮色」之间插值，
+   保留真实地形起伏（大陆轮廓 / 山脉 / 沙漠），只把颜色整体换成霓虹色系 */
+const E_NEON = {
+  oceanDark:   [5, 11, 35],     /* #050b23 海洋暗部 */
+  oceanBright: [29, 58, 168],   /* #1d3aa8 海洋亮部 */
+  landDark:    [6, 58, 74],     /* #063a4a 陆地暗部 */
+  landBright:  [34, 224, 255],  /* #22e0ff 陆地亮部（= 站点主色） */
+  snow:        [216, 251, 255]  /* #d8fbff 冰雪高光 */
+};
+const E_GAMMA = Math.max(0.30, Math.min(3.00, eqnum('geoGamma', 1.00)));
+const E_GAIN = Math.max(0.30, Math.min(3.00, eqnum('geoGain', 1.15)));
+const E_ODIM = Math.max(0.10, Math.min(2.00, eqnum('geoDim', 0.85)));
+const E_ATMO = Math.max(0.00, Math.min(2.00, eqnum('geoAtmo', 0.85)));
+const E_IGNITE = [1.00, 1.40, 1.80], E_FACING_MIN = 0.12;
+
+const earthWrap = document.getElementById('earth-orb');
+const earthCv = document.getElementById('earth-canvas');
+
+let earthRd = null, earthScene = null, earthCam = null, earthGroup = null;
+let earthAmb = null, earthKeyL = null, earthRim = null, earthAtmo = null;
+let earthMarks = [], earthReady = false, earthFailed = false, earthVis = false;
+let earthDone = false, earthAnim = 0, earthT = 0, earthAcc = 0, earthStaticDone = false;
+let earthYawUser = 0, earthPitchUser = 0, earthDrag = null;
+
+/* 经纬度 → 三维坐标（与 SphereGeometry 的 uv 约定一致，照搬参考站）
+   phi=(90-lat)°，theta=(lng+180)°；x=-r·sinφ·cosθ, y=r·cosφ, z=r·sinφ·sinθ */
+function earthVec3(lat, lng, r) {
+  const phi = (90 - lat) * Math.PI / 180, theta = (lng + 180) * Math.PI / 180;
+  return new THREE.Vector3(
+    -r * Math.sin(phi) * Math.cos(theta),
+    r * Math.cos(phi),
+    r * Math.sin(phi) * Math.sin(theta)
+  );
+}
+
+/* 精灵贴图：城市微光（径向渐变）/ 点亮扩散环（空心圈） */
+function earthGlowTex(isRing) {
+  const S = 128, c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d');
+  if (isRing) {
+    g.strokeStyle = 'rgba(255,214,120,0.95)';
+    g.lineWidth = S * 0.05;
+    g.beginPath(); g.arc(S / 2, S / 2, S * 0.40, 0, Math.PI * 2); g.stroke();
+  } else {
+    const grd = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    grd.addColorStop(0.00, 'rgba(255,246,216,1)');
+    grd.addColorStop(0.18, 'rgba(255,214,120,0.85)');
+    grd.addColorStop(0.48, 'rgba(0,240,255,0.28)');
+    grd.addColorStop(1.00, 'rgba(0,240,255,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, S, S);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2, delta = max - min;
+  let h = 0, s = 0;
+  if (delta !== 0) {
+    s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+    if (max === r) h = (g - b) / delta + (g < b ? 6 : 0);
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+    h *= 60;
+  }
+  return [h, s, l];
+}
+
+/* 霓虹双色映射：按像素明度在「暗色 → 亮色」之间取色，海洋/陆地/冰雪各一套。
+   真实地形（大陆轮廓、山脉、沙漠、冰雪）全部保留，只是换成霓虹色系。 */
+function earthNeonMap(img) {
+  const c = document.createElement('canvas');
+  c.width = img.width; c.height = img.height;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0);
+  const imgData = ctx.getImageData(0, 0, c.width, c.height);
+  const d = imgData.data;
+  const N = E_NEON;
+  for (let i = 0; i < d.length; i += 4) {
+    const r = d[i], g = d[i + 1], b = d[i + 2];
+    /* 明度 → 0..1，用 gain / gamma 调对比 */
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    let t = lum * E_GAIN;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    t = Math.pow(t, E_GAMMA);
+    if (b > r + 6 && b >= g) {
+      /* 海洋：蓝色分量最强且明显高于红色（陆地/沙漠/冰雪不满足）→ 压成深空底 */
+      const tt = Math.min(1, t * E_ODIM);
+      d[i] = N.oceanDark[0] + (N.oceanBright[0] - N.oceanDark[0]) * tt;
+      d[i + 1] = N.oceanDark[1] + (N.oceanBright[1] - N.oceanDark[1]) * tt;
+      d[i + 2] = N.oceanDark[2] + (N.oceanBright[2] - N.oceanDark[2]) * tt;
+    } else {
+      const hsl = rgbToHsl(r, g, b);
+      if (hsl[2] > 0.86 && hsl[1] < 0.18) {
+        /* 冰雪：最高明度像素当高光，留亮不发白 */
+        const f = 0.72 + 0.28 * t;
+        d[i] = N.snow[0] * f; d[i + 1] = N.snow[1] * f; d[i + 2] = N.snow[2] * f;
+      } else {
+        /* 陆地：暗青 → 霓虹青 */
+        d[i] = N.landDark[0] + (N.landBright[0] - N.landDark[0]) * t;
+        d[i + 1] = N.landDark[1] + (N.landBright[1] - N.landDark[1]) * t;
+        d[i + 2] = N.landDark[2] + (N.landBright[2] - N.landDark[2]) * t;
+      }
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+  return c;
+}
+function earthFail(msg) {
+  earthFailed = true;
+  if (earthWrap) earthWrap.style.display = 'none';   /* 拿不到贴图就整块藏掉，不留破图 */
+  if (window.console && console.warn) console.warn('[earth] ' + msg);
+}
+
+function earthSize() {
+  if (!earthRd || !earthWrap) return;
+  earthWrap.style.width = E_SIZE + 'px';
+  earthWrap.style.height = E_SIZE + 'px';
+  earthRd.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  earthRd.setSize(E_SIZE, E_SIZE, false);
+  earthCam.aspect = 1;
+  earthCam.updateProjectionMatrix();
+}
+
+/* 一帧：由暗到亮 → 三城依次点亮 → 常亮微脉动 */
+function earthRender() {
+  const k = Math.min(1, earthAnim / 1.05), e = k * k * (3 - 2 * k);   /* smoothstep */
+  earthAmb.intensity = 2.80 * (0.05 + 0.95 * e);
+  earthKeyL.intensity = E_KEY * e;
+  earthRim.intensity = 0.22 * e;
+  earthAtmo.material.uniforms.uIntensity.value = E_ATMO * e;
+
+  earthGroup.rotation.y = Math.sin(earthT * 0.22) * (E_SWAY * Math.PI / 180) * 0.5 + earthYawUser;
+  earthGroup.rotation.x = earthPitchUser;
+
+  const camDir = earthCam.position.clone().normalize();
+  const v3 = new THREE.Vector3();
+  for (let i = 0; i < earthMarks.length; i++) {
+    const m = earthMarks[i];
+    const facing = m.node.getWorldPosition(v3).normalize().dot(camDir);  /* 背面的城市不画 */
+    const k2 = Math.min(1, Math.max(0, (earthAnim - E_IGNITE[i]) / 0.45));
+    const pulse = 0.5 + 0.5 * Math.sin(earthT * 2.1 + i * 1.1);
+    const show = facing > E_FACING_MIN && k2 > 0;
+
+    m.glow.visible = show;
+    if (show) {
+      const dep = 0.62 + 0.38 * Math.max(0, facing);
+      m.glow.scale.setScalar((0.40 + 0.10 * pulse) * dep * k2);
+      m.glow.material.opacity = 0.58 * k2 * (0.45 + 0.55 * pulse);
+    }
+
+    const ring = (earthAnim - E_IGNITE[i]) / 0.9;                        /* 点亮瞬间的扩散环 */
+    const ringOn = show && !earthDone && ring > 0 && ring < 1;
+    m.ring.visible = ringOn;
+    if (ringOn) {
+      m.ring.scale.setScalar(0.45 + 2.1 * ring);
+      m.ring.material.opacity = (1 - ring) * 0.7;
+    }
+  }
+  earthRd.render(earthScene, earthCam);
+}
+
+function earthStatic() {                    /* 特效关 / 减弱模式：只渲一帧全亮的静态图 */
+  if (earthStaticDone) return;
+  earthStaticDone = true;
+  earthAnim = 99; earthDone = true; earthT = 3.2;
+  earthRender();
+}
+
+function earthWatch() {
+  if (!('IntersectionObserver' in window)) { earthVis = true; return; }
+  earthVis = false;
+  const io2 = new IntersectionObserver(function (es) {
+    earthVis = es[es.length - 1].isIntersecting;
+  }, { rootMargin: '80px' });
+  io2.observe(earthWrap);
+}
+
+function updateEarth(dt) {
+  if (!earthReady || earthFailed || !earthRd || !earthWrap) return;
+  if (!earthVis || document.hidden) return;
+  if (window.__fxOff || window.__rmOn()) { earthStatic(); return; }
+  earthT += dt;
+  if (!earthDone) {
+    earthAnim += dt;
+    if (earthAnim > 2.7) { earthDone = true; earthAnim = 99; }   /* 点完全亮就定住，只留微脉动 */
+  }
+  earthAcc += dt;
+  if (earthAcc < 1 / 30) return;                                 /* 这个地球 30fps 就够，省电 */
+  earthAcc = 0;
+  earthRender();
+}
+
+function earthInit() {
+  if (!earthWrap || !earthCv) return;
+  try {
+    earthRd = new THREE.WebGLRenderer({ canvas: earthCv, antialias: true, alpha: true });
+  } catch (err) {
+    earthFail('WebGL 上下文创建失败：' + err);
+    return;
+  }
+  earthRd.outputColorSpace = THREE.SRGBColorSpace;
+
+  earthScene = new THREE.Scene();
+  earthCam = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+  earthCam.position.copy(earthVec3(25.5, 119.0, E_DIST));   /* 东亚：三城都在正面 */
+  earthCam.lookAt(0, 0, 0);
+
+  /* 光照强度照搬参考站：海洋贴图明度≈0.87，需有效光照≈1.0；
+     three r160 物理光照会除以 π，所以 ambient(2.80) + key(0.82)×平均NdotL(≈0.5) ≈ 3.21 → /π ≈ 1.02 */
+  earthAmb = new THREE.AmbientLight(0xffffff, 2.80);
+  earthScene.add(earthAmb);
+  earthKeyL = new THREE.DirectionalLight(0xffffff, E_KEY);
+  earthKeyL.position.set(5, 2.5, 5);
+  earthScene.add(earthKeyL);
+  earthRim = new THREE.DirectionalLight(0xd7e9f8, 0.22);
+  earthRim.position.set(-5, 1.5, -4);
+  earthScene.add(earthRim);
+
+  earthGroup = new THREE.Group();
+  earthScene.add(earthGroup);
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.92, metalness: 0 });
+  earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(E_R, 64, 64), mat));
+
+  /* 大气微光：BackSide 菲涅尔壳（照搬参考站 *1.1 + uPower 2.8） */
+  earthAtmo = new THREE.Mesh(
+    new THREE.SphereGeometry(E_R * 1.1, 64, 64),
+    new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: new THREE.Color(0x22e0ff) }, uIntensity: { value: 0 }, uPower: { value: 2.8 } },
+      vertexShader: [
+        'varying vec3 vN; varying vec3 vP;',
+        'void main() {',
+        '  vN = normalize(normalMatrix * normal);',
+        '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+        '  vP = mv.xyz;',
+        '  gl_Position = projectionMatrix * mv;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform vec3 uColor; uniform float uIntensity; uniform float uPower;',
+        'varying vec3 vN; varying vec3 vP;',
+        'void main() {',
+        '  float fres = pow(1.0 - abs(dot(vN, normalize(-vP))), uPower);',
+        '  gl_FragColor = vec4(uColor, fres * uIntensity);',
+        '}'
+      ].join('\n'),
+      side: THREE.BackSide, transparent: true, depthWrite: false
+    })
+  );
+  earthScene.add(earthAtmo);
+
+  /* 三座城市：贴在地表经纬度上的微光 + 点亮扩散环（无标签） */
+  const glowTex = earthGlowTex(false), ringTex = earthGlowTex(true);
+  for (let i = 0; i < E_CITY.length; i++) {
+    const node = new THREE.Object3D();
+    node.position.copy(earthVec3(E_CITY[i][0], E_CITY[i][1], E_R * 1.006));
+    earthGroup.add(node);
+    const mk = function (tex) {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: tex, transparent: true, depthWrite: false,
+        blending: THREE.AdditiveBlending, opacity: 0
+      }));
+      sp.visible = false;
+      node.add(sp);
+      return sp;
+    };
+    earthMarks.push({ node: node, glow: mk(glowTex), ring: mk(ringTex) });
+  }
+
+  /* 贴图：优先 data URI（照搬参考站，file:// 下也不污染 canvas），兜底同目录 jpg */
+  const src = window.__EARTH_TEXTURE_DATA || './vendor/earth/day-1024.jpg';
+  new THREE.TextureLoader().load(src, function (tex) {
+    let map = tex;
+    try {
+      map = new THREE.CanvasTexture(earthNeonMap(tex.image));
+    } catch (err) {                      /* file:// 且拿不到像素：退化成未配色贴图 */
+      map = tex;
+    }
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.anisotropy = earthRd.capabilities.getMaxAnisotropy();
+    mat.map = map;
+    mat.needsUpdate = true;
+    earthReady = true;
+    earthSize();
+    earthWatch();
+    if (window.__fxOff || window.__rmOn()) earthStatic();
+  }, undefined, function () { earthFail('贴图加载失败：' + src); });
+
+  /* 拖动旋转（双击回正）——只给精确指针，触屏以页面滚动优先 */
+  if (window.matchMedia('(pointer: fine)').matches) {
+    earthWrap.addEventListener('pointerdown', function (e) {
+      earthDrag = { x: e.clientX, y: e.clientY, yaw: earthYawUser, pitch: earthPitchUser };
+      try { earthWrap.setPointerCapture(e.pointerId); } catch (err) {}
+      earthWrap.style.cursor = 'grabbing';
+    });
+    earthWrap.addEventListener('pointermove', function (e) {
+      if (!earthDrag) return;
+      earthYawUser = earthDrag.yaw + (e.clientX - earthDrag.x) * 0.006;
+      earthPitchUser = Math.max(-0.45, Math.min(0.45, earthDrag.pitch + (e.clientY - earthDrag.y) * 0.006));
+    });
+    const eUp = function () { earthDrag = null; earthWrap.style.cursor = 'grab'; };
+    earthWrap.addEventListener('pointerup', eUp);
+    earthWrap.addEventListener('pointercancel', eUp);
+    earthWrap.addEventListener('dblclick', function () { earthYawUser = 0; earthPitchUser = 0; });
+  }
+
+  window.addEventListener('resize', function () {
+    if (!earthReady) return;
+    earthSize();
+    earthRender();
+  });
+}
+
+earthInit();
+
 /* ---------- 主循环 ---------- */
 const clock = new THREE.Clock();
 let running = true;
@@ -3812,6 +4201,7 @@ function animate() {
   updateUI();
   updateCursorGlow(dt);
   updateOrb(dt);   /* ★ 2026-10-08 玻璃球：跟随 + 点击换形态 */
+  updateEarth(dt); /* ★ 2026-10-08 关于我装饰：实体地球（依次点亮） */
   /* ★ 2026-10-08 特效关：不再重绘 3D 背景（画面停在最后一帧）—— 最省的一档 */
   if (!window.__fxOff) composer.render();
 }

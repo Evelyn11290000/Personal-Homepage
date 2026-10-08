@@ -929,6 +929,58 @@
      ============================================================ */
   main > .section:first-child { padding-top: clamp(104px, 13vh, 148px); }
   .log-count { font-size: var(--fs-sm); color: var(--txt-faint); margin-top: 10px; }
+
+  /* ---------- 到达 / 离开过渡（2026-10-08，与首页同一套视觉）----------
+     从首页点「完整日志」过来时，首页先铺上「接入中」，本页接着把它收掉，
+     做到「同一段过渡跨页连续」。直接访问本页时它也是一次进场。 ---------- */
+  #warp {
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    display: grid; place-items: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.34s ease, visibility 0.34s;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0, 240, 255, 0.10), transparent 62%),
+      rgba(1, 3, 6, 0.9);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+  #warp.on { opacity: 1; visibility: visible; pointer-events: auto; }
+  #warp.arrive { transition: opacity 0.42s ease, visibility 0.42s; }
+  #warp .wp-grid {
+    position: absolute; inset: -10%;
+    background-image:
+      linear-gradient(rgba(0, 240, 255, 0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.10) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 18%, transparent 66%);
+    mask-image: radial-gradient(circle at 50% 50%, #000 18%, transparent 66%);
+    opacity: 0.55;
+  }
+  #warp .wp-rings {
+    position: absolute; width: min(64vmin, 460px); height: min(64vmin, 460px);
+    animation: wpSpin 16s linear infinite;
+  }
+  #warp .wp-rB { animation-duration: 23s; animation-direction: reverse; }
+  #warp .wp-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed rgba(0, 240, 255, 0.42); }
+  #warp .wp-ring.r2 { inset: 12%; border-style: solid; border-color: rgba(45, 212, 191, 0.34); }
+  #warp .wp-core {
+    position: relative; width: 84px; height: 84px; border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, rgba(45, 212, 191, 0.95) 26%, rgba(45, 212, 191, 0) 70%);
+    opacity: 0.95; animation: wpPulse 1.5s ease-in-out infinite;
+  }
+  #warp .wp-label {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, 78px);
+    font-size: 11px; letter-spacing: 3px; color: var(--teal); white-space: nowrap;
+  }
+  #warp .wp-sub {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, 102px);
+    font-size: 10px; letter-spacing: 1.5px; color: var(--txt-dim); white-space: nowrap;
+  }
+  @keyframes wpSpin { to { transform: rotate(360deg); } }
+  @keyframes wpPulse {
+    0%, 100% { filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.5)); }
+    50% { filter: drop-shadow(0 0 34px rgba(0, 240, 255, 0.9)); }
+  }
+  html.rm #warp { display: none; }
 </style>
 <script>
 /* ================================================================
@@ -967,6 +1019,16 @@
 </script>
 </head>
 <body>
+
+<!-- 到达过渡：默认就是铺开的（CSS 里 .on），JS 负责收掉它 -->
+<div id="warp" class="arrive on" aria-hidden="true">
+  <div class="wp-grid"></div>
+  <div class="wp-rings"><i class="wp-ring r1"></i></div>
+  <div class="wp-rings wp-rB"><i class="wp-ring r2"></i></div>
+  <div class="wp-core"></div>
+  <div class="wp-label">已接入</div>
+  <div class="wp-sub">CONNECTED · 日志已加载</div>
+</div>
 
 <!-- 背景层 -->
 <div class="bg-fallback"></div>
@@ -2524,6 +2586,61 @@ window.__trailDebug = function () {
   /* ---------- 启动 ---------- */
   update();
   requestAnimationFrame(update);
+})();
+</script>
+
+<script>
+/* 到达 / 离开过渡（与首页同一套视觉，这里只留 log.html 需要的那部分） */
+(function () {
+  'use strict';
+  var docEl = document.documentElement;
+  var veil = document.getElementById('warp');
+  var COARSE = window.matchMedia('(pointer: coarse)').matches;
+  var FX_OFF = false;
+  try { FX_OFF = localStorage.getItem('me-fx-off') === '1'; } catch (e) { FX_OFF = false; }
+  window.__fxOff = FX_OFF;
+  if (FX_OFF) docEl.classList.add('fx-off');
+  function rmOn() { return !!(window.__rmOn && window.__rmOn()); }
+  function warpOn() { return !rmOn() && !FX_OFF && !COARSE && window.innerWidth > 720; }
+
+  /* 到达：帘子已经在 CSS 里默认铺开，这里只负责把它和加载层一起收掉 */
+  if (veil) {
+    if (!warpOn()) {
+      veil.style.display = 'none';
+    } else {
+      setTimeout(function () {
+        veil.classList.remove('on');
+        var l = document.getElementById('loader');
+        if (l) {
+          l.style.opacity = '0';
+          setTimeout(function () { l.style.display = 'none'; }, 500);
+        }
+        setTimeout(function () { veil.style.display = 'none'; }, 700);
+      }, 820);
+    }
+  }
+
+  /* 离开：点「返回首页」时把帘子反向铺上再真跳走，首页那边接着播进场 */
+  var busy = false;
+  document.addEventListener('click', function (ev) {
+    if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+    var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null;
+    if (!a) return;
+    if (a.target && a.target !== '_self') return;
+    var raw = a.getAttribute('href') || '';
+    if (!/(^|\/)index\.html(\?|#|$)/.test(raw)) return;
+    if (!warpOn() || busy || !veil) return;
+    busy = true;
+    ev.preventDefault();
+    var dest = a.getAttribute('href');
+    var lab = veil.querySelector('.wp-label');
+    var sub = veil.querySelector('.wp-sub');
+    if (lab) lab.textContent = '返回中';
+    if (sub) sub.textContent = 'RETURNING · 正在返回首页';
+    veil.style.display = '';
+    veil.classList.add('on');
+    setTimeout(function () { window.location.href = dest; }, 700);
+  }, true);
 })();
 </script>
 

@@ -137,6 +137,18 @@
     mix-blend-mode: screen; will-change: transform;
   }
   @media (pointer: coarse) { #cursor-dot { display: none; } }
+
+  /* ★ 2026-10-08 玻璃球（canvas 2D）：跟随鼠标 + 点击换形态（球 ↔ 环）
+     · 尺寸只有 5.6r × 5.6r，跟着球一起用 transform 移动 —— 不做全屏画布，
+       所以每帧只清一小块，开销可以忽略。
+     · screen 混合：只叠加发光、不会把底下的文字压暗（内容站必须的克制）。
+     · z-index 9999 = 在 16px 光点(10000) 之下：光点仍是「指尖」，球是伴随物。 */
+  #orb-2d {
+    position: fixed; left: 0; top: 0; z-index: 9999;
+    display: block; pointer-events: none; opacity: 0;
+    mix-blend-mode: screen; will-change: transform;
+  }
+  @media (pointer: coarse) { #orb-2d { display: none; } }
   /* ★「光晕即光标」：隐藏系统箭头（输入框除外，否则打字时看不到插入点）
      只在光晕真的启用 + 精确指针设备 + 首次移动鼠标之后 才加上这个类（由 JS 控制）。 */
   html.glow-cursor, html.glow-cursor *:not(input):not(textarea) { cursor: none; }
@@ -585,7 +597,7 @@
   html.fx-off .fx-toggle .fx-dot { background: var(--txt-faint); box-shadow: none; }
 
   /* ---------- 特效关：真的降负载（不是只藏个按钮） ---------- */
-  html.fx-off #aurora-2d, html.fx-off #cursor-dot { display: none !important; }
+  html.fx-off #aurora-2d, html.fx-off #cursor-dot, html.fx-off #orb-2d { display: none !important; }
   html.fx-off.glow-cursor, html.fx-off.glow-cursor *:not(input):not(textarea) { cursor: auto; }
   html.fx-off .avatar-wrap::before { animation: none; }
   html.fx-off .badge, html.fx-off .site-nav, html.fx-off .fx-toggle,
@@ -1702,6 +1714,8 @@
 <canvas id="aurora-2d" aria-hidden="true"></canvas>
 <!-- ★ 光标：青色光点（光晕画布画的是它的倒影）-->
 <div id="cursor-dot" aria-hidden="true"></div>
+<!-- ★ 2026-10-08 玻璃球：带惯性跟着指针跑，点它换形态（球 ↔ 环）-->
+<canvas id="orb-2d" aria-hidden="true"></canvas>
 <div class="vignette"></div>
 <div class="bg-dim"></div>
 
@@ -3165,6 +3179,232 @@ function updateCursorGlow(dt) {
 
 window.addEventListener('resize', sizeGlow);
 
+/* ================================================================
+   ★ 2026-10-08 玻璃球（canvas 2D）—— 跟随鼠标 + 点击换形态（球 ↔ 环）
+   来源：用户选定参考站（thriving-r/personal-homepage）的那颗玻璃球行为，
+         在本站按「光标不碰 WebGL」的定稿原则（见上面 GLOW 的注释）用 2D canvas 重做。
+   · 与现有 #cursor-dot（16px 光点）+ 彗尾【并存】：
+       光点零延迟 = 精度；球带惯性跟在后面 = 层次。是否砍掉光点，等用户看完再定。
+   · 画布只有 5.6r × 5.6r 一小块（跟着球用 transform 移动），不做全屏画布。
+   · 点击【落在球上】才换形态；换形态带一下过冲回弹。
+   · 与「特效开关 / 减少动态效果 / 触摸端」全部联动（见 ORB.on 与 orbResync）。
+   参数含义：
+      r       球半径（CSS px）。★ 定稿：桌面 22 / 窄屏 17（2026-10-08 用户现场试定，约 44px 直径）。
+              ★ 仍可用 ?orbR=NN 覆盖（自动夹在 20~90）：以后想微调不必改代码。
+                触摸端干脆不显示球（见 CSS @media (pointer: coarse)）。
+      follow  0~1，越大越黏。指数缓动、与帧率无关：gain = 5 + (1 - follow) × 40。
+              follow 0.35 → τ≈32ms：看得出球在追光点，但不糊。
+              想更贴：调到 0.2（τ≈24ms）；想更飘：0.6（τ≈62ms）。
+      maxLag  最大滞后（CSS px）= max(r × 1.3, 40)。高速甩动时按这个距离把球拽住 ——
+              「球跟丢不见」比「球在追」难受得多。
+      pop     换形态时的过冲幅度（exp(-t)·sin(t) 的峰值），0 = 不要弹性。
+      blend   'screen' = 只叠加发光、不压暗文字（内容站更安全）；
+              'normal' = 玻璃通透感更足，但压在文字上会糊。
+      ?orbShape=1 让页面以「环」开局（取证 / 手动比对用，不写进存档）。
+   ================================================================ */
+const ORB_MAX_DPR = 1.5;                    /* 与 3D 背景的 MAX_DPR 同一档：别为光标吃满高分屏 */
+const ORB_COMPACT = window.innerWidth <= 720 || window.matchMedia('(pointer: coarse)').matches;
+const ORB = {
+  on: !window.__rmOn() && !window.__fxOff,  /* 与 GLOW.on 同一套开关 */
+  r: ORB_COMPACT ? 17 : 22,   /* ★ 2026-10-08 用户现场试定 */
+  follow: 0.35,
+  pop: 0.34,
+  blend: 'screen',
+  colCore: '#ffffff',                       /* 亮核 */
+  colBody: '#22e0ff',                       /* 球体主色 = --cyan */
+  colRim:  '#a0f5ff'                        /* 边缘光 */
+};
+
+/* ?orbR= / ?orbShape= ：现场调参（与已有 ?settle= / ?rm= 同一套思路） */
+let orbShapeArg = null;
+try {
+  const _oq = new URLSearchParams(window.location.search);
+  const _or = parseFloat(_oq.get('orbR'));
+  if (!isNaN(_or)) ORB.r = Math.min(90, Math.max(20, _or));
+  orbShapeArg = _oq.get('orbShape');
+} catch (e) { orbShapeArg = null; }
+
+const orbEl = document.getElementById('orb-2d');
+const orbCtx = orbEl ? orbEl.getContext('2d') : null;
+let orbD = 0, orbDpr = 1;
+
+/* 球的运行状态 */
+const orb = {
+  tx: 0, ty: 0,              /* 指针（CSS px）—— 球的目标 */
+  x: 0, y: 0,                /* 球心（缓动后，CSS px）*/
+  shape: orbShapeArg === '1' ? 1 : 0,   /* 0 = 球，1 = 环 */
+  clickAt: -1e9,             /* 上次换形态的时刻（秒），用来算弹性过冲 */
+  seen: false,               /* 首次移动鼠标后才出现（避免一进页面就有一颗球停在正中）*/
+  alpha: 0
+};
+
+function sizeOrb() {
+  if (!orbEl) return;
+  orbD = Math.max(24, Math.ceil(ORB.r * 5.6));   /* 5.6r = 半宽 2.8r：容得下 pop 峰值时 1.9R 的辉光，不切方角 */
+  orbDpr = Math.min(window.devicePixelRatio || 1, ORB_MAX_DPR);
+  orbEl.style.width  = orbD + 'px';
+  orbEl.style.height = orbD + 'px';
+  orbEl.width  = Math.max(2, Math.ceil(orbD * orbDpr));
+  orbEl.height = Math.max(2, Math.ceil(orbD * orbDpr));
+  orbEl.style.mixBlendMode = ORB.blend;
+}
+sizeOrb();
+
+/* 指针目标位置（CSS px）—— 光晕那边存的是 NDC，这里直接用像素，互不干扰 */
+window.addEventListener('pointermove', (e) => {
+  if (!orb.seen) { orb.seen = true; orb.x = e.clientX; orb.y = e.clientY; }
+  orb.tx = e.clientX; orb.ty = e.clientY;
+}, { passive: true });
+
+/* ★ 点击【落在球上】才换形态：球 ↔ 环。
+   命中半径放宽到 r × 1.5 —— 球在追指针时最多落后 maxLag，
+   留一条「手一停就点得到」的余量，不让人对着球戳空。
+   （输入框上不算：在文本框里点字不该顺手把球换了）*/
+window.addEventListener('pointerdown', (e) => {
+  if (!ORB.on || !orbCtx || !orb.seen) return;
+  if (e.target && e.target.closest && e.target.closest('input, textarea')) return;
+  const dx = e.clientX - orb.x, dy = e.clientY - orb.y;
+  const hit = ORB.r * 1.5;
+  if (dx * dx + dy * dy > hit * hit) return;
+  orb.shape = orb.shape ? 0 : 1;
+  orb.clickAt = performance.now() / 1000;
+}, { passive: true });
+
+/* 特效开关 / 减少动态效果：与光晕同一套联动（关掉就彻底不画、不占帧） */
+window.addEventListener('fx-toggle', orbResync);
+window.addEventListener('rmchange', orbResync);
+
+function orbResync() {
+  ORB.on = !window.__rmOn() && !window.__fxOff;
+  if (!ORB.on) {
+    orb.alpha = 0;
+    orb.seen = false;
+    orb.clickAt = -1e9;
+    orb.shape = 0;
+    if (orbEl) orbEl.style.opacity = '0';
+    if (orbCtx) orbCtx.clearRect(0, 0, orbEl.width, orbEl.height);
+  }
+}
+
+window.addEventListener('resize', sizeOrb);
+
+function orbRgba(hex, a) {
+  const n = parseInt(hex.slice(1), 16);
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+}
+
+/* 球里游的三颗气泡：给出「里面有东西」的玻璃读感（角度/半径/转速/大小）*/
+const ORB_BUBBLES = [
+  { a: 0.7, r: 0.30, sp:  0.55, sz: 0.20 },
+  { a: 2.5, r: 0.52, sp: -0.42, sz: 0.13 },
+  { a: 4.6, r: 0.38, sp:  0.70, sz: 0.10 }
+];
+
+function updateOrb(dt) {
+  if (!ORB.on || !orbCtx || !orb.seen) return;
+  const now = performance.now() / 1000;
+
+  /* 惯性缓动（指数，与帧率无关）→ 这就是「球在追鼠标」的那点滞后 */
+  const gain = 5 + (1 - ORB.follow) * 40;
+  const k = 1 - Math.exp(-dt * gain);
+  orb.x += (orb.tx - orb.x) * k;
+  orb.y += (orb.ty - orb.y) * k;
+
+  /* 最大滞后钳制：高速甩动时别让球掉队太远 */
+  const bx = orb.x - orb.tx, by = orb.y - orb.ty;
+  const dist = Math.sqrt(bx * bx + by * by);
+  const maxLag = Math.max(ORB.r * 1.3, 40);
+  if (dist > maxLag) {
+    orb.x = orb.tx + bx / dist * maxLag;
+    orb.y = orb.ty + by / dist * maxLag;
+  }
+
+  /* 换形态的弹性过冲：exp(-t)·sin(t)（与参考站同一族曲线）*/
+  const tt = now - orb.clickAt;
+  const pop = tt > 6 ? 1 : 1 + Math.exp(-tt * 6.2) * Math.sin(tt * 6.2) * ORB.pop;
+
+  /* 进场淡入（跟光晕一样：别突然闪出来）+ 位移 */
+  orb.alpha += (1 - orb.alpha) * Math.min(1, dt * 3.5);
+  orbEl.style.transform =
+    'translate3d(' + orb.x.toFixed(1) + 'px,' + orb.y.toFixed(1) + 'px,0) translate(-50%,-50%)';
+  orbEl.style.opacity = orb.alpha.toFixed(3);
+
+  drawOrb(now, pop);
+}
+
+function drawOrb(now, pop) {
+  const W = orbEl.width, H = orbEl.height;
+  const R = ORB.r * pop * orbDpr;
+  const ctx = orbCtx;
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';   /* 层与层相加：亮核 + 球体 + 气泡自然叠成玻璃 */
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+
+  /* 1. 外圈辉光：让球有一点「在场」的雾 */
+  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 1.9);
+  halo.addColorStop(0,    orbRgba(ORB.colBody, 0.22));
+  halo.addColorStop(0.50, orbRgba(ORB.colBody, 0.06));
+  halo.addColorStop(1,    orbRgba(ORB.colBody, 0));
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(0, 0, R * 1.9, 0, Math.PI * 2); ctx.fill();
+
+  /* 2. 形体路径：球 = 一个圆；环 = 外圆 + 反向内圆（nonzero 绕数自动挖洞）*/
+  ctx.beginPath();
+  if (orb.shape === 0) {
+    ctx.arc(0, 0, R, 0, Math.PI * 2);
+  } else {
+    ctx.arc(0, 0, R, 0, Math.PI * 2, false);
+    ctx.arc(0, 0, R * 0.58, 0, Math.PI * 2, true);
+  }
+
+  /* 3. 玻璃体：亮核偏左上(33%/28%)，边缘转青，最外一圈再提亮 */
+  const body = ctx.createRadialGradient(-R * 0.34, -R * 0.44, R * 0.05, 0, 0, R * 1.02);
+  body.addColorStop(0.00, orbRgba(ORB.colCore, 0.92));
+  body.addColorStop(0.12, orbRgba(ORB.colCore, 0.42));
+  body.addColorStop(0.42, orbRgba(ORB.colBody, 0.26));
+  body.addColorStop(0.78, orbRgba(ORB.colBody, 0.14));
+  body.addColorStop(1.00, orbRgba(ORB.colRim,  0.34));
+  ctx.fillStyle = body;
+  ctx.fill();
+
+  /* 4. 球内气泡（只画在球体里；环是空心带，画了会脏）*/
+  if (orb.shape === 0) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.clip();
+    for (let i = 0; i < ORB_BUBBLES.length; i++) {
+      const b = ORB_BUBBLES[i];
+      const ang = b.a + now * b.sp;
+      const bx2 = Math.cos(ang) * R * b.r;
+      const by2 = Math.sin(ang * 0.8) * R * b.r * 0.82;
+      const br = Math.max(1, R * b.sz * (0.85 + 0.15 * Math.sin(now * 2 + i)));
+      const g = ctx.createRadialGradient(bx2, by2, 0, bx2, by2, br);
+      g.addColorStop(0,    orbRgba(ORB.colCore, 0.60));
+      g.addColorStop(0.55, orbRgba(ORB.colBody, 0.22));
+      g.addColorStop(1,    orbRgba(ORB.colBody, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(bx2, by2, br, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /* 5. 边缘光：一圈细青线把形体「收住」（球和环共用同一套）*/
+  ctx.beginPath();
+  if (orb.shape === 0) {
+    ctx.arc(0, 0, R * 0.985, 0, Math.PI * 2);
+  } else {
+    ctx.arc(0, 0, R * 0.985, 0, Math.PI * 2, false);
+    ctx.arc(0, 0, R * 0.58, 0, Math.PI * 2, true);
+  }
+  ctx.lineWidth = Math.max(1, R * 0.045);
+  ctx.strokeStyle = orbRgba(ORB.colRim, 0.55);
+  ctx.stroke();
+
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 // 背景模式：不接受任何鼠标交互，只保留缓慢自转
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -3571,6 +3811,7 @@ function animate() {
 
   updateUI();
   updateCursorGlow(dt);
+  updateOrb(dt);   /* ★ 2026-10-08 玻璃球：跟随 + 点击换形态 */
   /* ★ 2026-10-08 特效关：不再重绘 3D 背景（画面停在最后一帧）—— 最省的一档 */
   if (!window.__fxOff) composer.render();
 }

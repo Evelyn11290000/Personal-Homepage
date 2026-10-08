@@ -969,7 +969,11 @@
     border-radius: var(--r-panel); border: 1px solid var(--line-2);
     background: rgba(6, 14, 20, 0.6);
     box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+    transition: opacity 0.18s ease;
   }
+  /* 竞态修复：换相册时先隐藏主图，等首图解码完成再淡入，
+     避免显示上一个相册的残留画面 */
+  .album-lb .lb-img.lb-wait { opacity: 0; }
   .album-lb .lb-meta { text-align: center; max-width: 660px; }
   .album-lb .lb-head { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
   .album-lb .lb-idx {
@@ -4229,7 +4233,23 @@ function openAlbum(list, label, i, noWarp) {
      noWarp 是内部重入标记；不能过渡时 __warp 会直接执行传入的函数。 */
   if (!noWarp && window.__warp) { window.__warp(() => openAlbum(list, label, i, true)); return; }
   albumSetList(list, label);
-  albumShow(i || 0);
+  const lbIdx0 = i || 0;
+  const lbImg = albumLb.querySelector('.lb-img');
+  /* ★ 2026-10-08 竞态修复（来自真实访客反馈）：
+     两个相册共用同一个 <img>，若「设完 src 就立刻显示」，图片解码完成前
+     画面里残留的还是上一个相册的图（点「拼装日志」却看到「镜头里的日常」）。
+     做法：先把主图藏起来，等目标相册首图解码完成（或 600ms 兜底）再淡入。 */
+  lbImg.classList.add('lb-wait');
+  let lbRevealed = false;
+  const lbReveal = () => {
+    if (lbRevealed) return;
+    lbRevealed = true;
+    lbImg.classList.remove('lb-wait');
+  };
+  lbImg.addEventListener('load', lbReveal, { once: true });
+  lbImg.addEventListener('error', lbReveal, { once: true });
+  setTimeout(lbReveal, 600);
+  albumShow(lbIdx0);
   albumLb.classList.add('on');
   albumLb.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';            // 开着相册时别让背后页面跟着滚
@@ -4238,6 +4258,8 @@ function openAlbum(list, label, i, noWarp) {
 }
 function closeAlbum() {
   if (!albumLb) return;
+  const lbImg0 = albumLb.querySelector('.lb-img');
+  if (lbImg0) lbImg0.classList.remove('lb-wait');   // 复位等待态，下次打开重新判定
   albumLb.classList.remove('on');
   albumLb.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';

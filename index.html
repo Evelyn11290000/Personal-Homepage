@@ -450,6 +450,21 @@
     background: linear-gradient(120deg, var(--cyan-2), var(--teal));
     box-shadow: 0 6px 18px rgba(0, 240, 255, 0.22);
   }
+  /* ★ 2026-10-08「敬请期待」小标：位置与 .work-count 相同，但换成低调样式
+     —— 它不是「张数」那种信息徽章，只是提示这张卡还没内容。*/
+  .work .work-count.is-soon {
+    background: rgba(6, 14, 20, 0.72); color: var(--txt-dim);
+    border: 1px solid var(--line); box-shadow: none;
+  }
+  /* 生活碎片弹层里的三条说明（2026-10-08）*/
+  .soon-list { display: grid; gap: 10px; margin-bottom: 20px; }
+  .soon-item {
+    padding: 11px 13px; border-radius: var(--r-sm);
+    background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line);
+    font-size: var(--fs-sm); line-height: 1.6;
+  }
+  .soon-item b { display: block; color: var(--cyan-2); font-size: var(--fs-cap); margin-bottom: 3px; }
+  .soon-item span { color: var(--txt-dim); }
   .work.has-album .work-body h4::after { content: " ›"; color: var(--cyan-2); }
   .work.has-album:focus-visible {
     outline: none;
@@ -1517,6 +1532,25 @@
   </div>
 </div>
 
+<!-- ============ 生活碎片「敬请期待」弹层（2026-10-08 老师反馈）============
+     这张卡暂时没有作品集 —— 但点击不能没有反应（访客会以为页面坏了）。
+     点开给一句实话，让人知道这是有意留的位置。
+     将来有照片了：把 WORKS 里的 soon: true 换成 album: LIFE_ALBUM 即可。 -->
+<div class="modal-mask" id="soonMask">
+  <div class="modal">
+    <h3>✨ 生活碎片 · 还在攒</h3>
+    <p class="modal-desc">这一块我留了位置，但还没攒够能拿得出手的东西 —— 先空着，不想随便塞几张图凑数。</p>
+    <div class="soon-list">
+      <div class="soon-item"><b>在攒什么</b><span>平时随手拍的一些碎片，还没成组。</span></div>
+      <div class="soon-item"><b>什么时候有</b><span>攒够一组就放上来，到时候这里会变成能点开的相册。</span></div>
+      <div class="soon-item"><b>现在能看什么</b><span>另外两张卡（镜头里的日常、拼装日志）里已经有东西了，可以先看那两个。</span></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="soonClose" type="button">知道啦</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ 返回顶部（V4 新增）============
      移动端底部有导航胶囊、右下角有反馈按钮，所以它在粗指针设备上会被抬高（见 CSS）。 -->
 <button class="to-top" id="toTop" type="button" aria-label="返回顶部" title="返回顶部">
@@ -1798,9 +1832,16 @@ const canvasEl = document.getElementById('neural-canvas');
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
 camera.position.copy(compact ? mobileCameraPosition : desktopCameraPosition);
 
+/* ★ 2026-10-08 性能：3D 背景是全页最重的一项开销 —— 全屏渲染 + UnrealBloom 泛光，
+   而 Retina 屏按 2 倍分辨率渲染＝像素量 ×4；光标光晕又和它共用同一个 rAF 循环，
+   帧一慢，指针看着就「发滞」。这里封顶 1.5 倍（像素量少约 44%）：
+   这片背景本来就是大块柔光，肉眼几乎看不出差别。
+   想更清晰改回 2；想更省电（老机器 / 外接低分屏）降到 1.25 或 1。*/
+const MAX_DPR = 1.5;
+
 const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: false, powerPreference: 'high-performance', alpha: true });
 renderer.setClearColor(0x000000, 0);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, compact ? 1.5 : 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.85;
@@ -1842,7 +1883,7 @@ composer.addPass(bloomPass);
    ================================================================ */
 const GLOW_MAX = 40;
 const GLOW_SAMPLE_DT = 0.035;              /* 每 35ms 记一个点 → 40 段 ≈ 1.4 秒（尾长上限）*/
-const GLOW_SCALE = 4;                      /* 画布分辨率 = 视口 / 4 */
+const GLOW_SCALE = 2;                      /* 画布分辨率 = 视口 / 2（2026-10-08 由 4 调细：光斑更锐利、跟手感更「实」）*/
 
 /* ★ 2026-09-18 拖尾增强：触摸设备 / 窄屏 自动简化 —— 手机沿用从前的轻量观感
    （12 段、不拉丝、不撒尘），不为炫技去吃手机的电量与性能；
@@ -1858,7 +1899,7 @@ const GLOW_CURSORLESS = window.matchMedia('(pointer: fine)').matches;
 const GLOW = {
   on: !window.__rmOn(),                    /* 与 <html class="rm"> 同一个开关（含 ?rm= 覆盖）*/
   track: 1.0,                              /* ★ 1.0 = 光晕与光点同位（0.8 会在屏幕边缘把两者拉开）*/
-  momentum: 0.5,                           /* ★ 越小越跟手、尾巴收得越紧；越大越飘 */
+  momentum: 0.1,                           /* ★ 越小越跟手、尾巴收得越紧；越大越飘（2026-10-08 由 0.5 收紧）*/
   trailLen: GLOW_COMPACT ? 12 : 24,        /* ★ 彗尾段数（上限，约 0.84 秒轨迹）；1 = 单块光斑 */
   size: 0.10,                              /* ★ 光斑大小：头部直径 ≈ 视口短边 × size × 2.5（2026-09-17 由 0.125 调小）*/
   intensity: 0.6,
@@ -2054,8 +2095,17 @@ function drawGlow() {
 function updateCursorGlow(dt) {
   if (!GLOW.on) return;
 
-  /* 惯性缓动：momentum 越大越黏（指数平滑，与帧率无关）*/
-  const speed = 2 + (1 - GLOW.momentum) * 16;
+  /* 惯性缓动：momentum 越大越黏（指数平滑，与帧率无关）
+     ★ 2026-10-08 手感修复（老师反馈「鼠标有点滞后」）：
+        旧算式 speed = 2 + (1-momentum)*16 的量程太小 —— momentum=0.5 时 τ≈100ms，
+        光斑要 0.1 秒才追上指针，肉眼就是「黏、跟不上」；
+        而且【就算把 momentum 调到 0，上限也只有 18（τ≈56ms）】，仍然偏黏，
+        所以光调参数救不回来，必须把量程整体拉开：
+        momentum 0.1 → speed≈45.6 → τ≈22ms（约一帧，几乎贴身）
+        momentum 0.5 → τ≈36ms（旧值 100ms）
+        momentum 1.0 → τ≈167ms（很飘）
+        想再紧一点：把下面的 44 调大（改成 60 → momentum 0.1 时 τ≈17ms）。*/
+  const speed = 6 + (1 - GLOW.momentum) * 44;
   const k = 1 - Math.exp(-dt * speed);
   glowPointer.x += (glowPointer.tx - glowPointer.x) * k;
   glowPointer.y += (glowPointer.ty - glowPointer.y) * k;
@@ -2084,11 +2134,19 @@ function updateCursorGlow(dt) {
   /* ★ 只画一块（trailLen < 2）时不需要节流：35ms 的采样间隔就是 35ms 的额外滞后 */
   const throttle = GLOW.trailLen > 1 ? GLOW_SAMPLE_DT : 0;
   /* ★ 只在【移动中】记点：停手后不再往同一点堆样本，尾巴就停在停手那一刻的形状 */
-  if (moving && (!glowTrail.length || glowAcc >= throttle)) {
-    glowAcc = 0;
-    glowTrail.unshift({ x: glowPointer.x, y: glowPointer.y });
-    while (glowTrail.length > GLOW_MAX) glowTrail.pop();
-    spawnSparks();
+  if (moving) {
+    if (!glowTrail.length || glowAcc >= throttle) {
+      glowAcc = 0;
+      glowTrail.unshift({ x: glowPointer.x, y: glowPointer.y });
+      while (glowTrail.length > GLOW_MAX) glowTrail.pop();
+      spawnSparks();
+    } else {
+      /* ★ 2026-10-08 手感修复：两次采样之间（约 35ms）把「最新的点」实时贴到指针当前位置。
+         旧写法只在采样那一刻更新，头部每 35ms 才跳一格 —— 缓动就算调到贴身，
+         这个步进本身也会被看成「一格一格地滞后」。尾巴的段间距（＝尾巴时长）保持不变。*/
+      glowTrail[0].x = glowPointer.x;
+      glowTrail[0].y = glowPointer.y;
+    }
   }
 
   /* ★ 星尘老化 + 轻微飘散 */
@@ -2142,7 +2200,7 @@ function applyResponsiveScene(resetCamera = false) {
   camera.fov = isCompact ? 54 : 45;
   camera.updateProjectionMatrix();
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isCompact ? 1.5 : 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
   renderer.setSize(width, height, false);
   composer.setSize(width, height);
 
@@ -2629,7 +2687,7 @@ const CAMPUS_STORY = {
 const WORKS = [
   { slug: '01-photography', cover: 'covers/01-photography.jpg', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 点开翻看', g: 'linear-gradient(135deg,#0b3a4a,#062028)', album: PHOTO_ALBUM },
   { slug: '02-craft', cover: 'covers/02-craft.jpg', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', album: CRAFT_ALBUM },
-  { slug: '03-life', cover: 'covers/03-life.jpg', emoji: '✨', title: '生活碎片', desc: '日常 · 随手记录', g: 'linear-gradient(135deg,#0e2c4a,#061626)' },
+  { slug: '03-life', cover: 'covers/03-life.jpg', emoji: '✨', title: '生活碎片', desc: '日常 · 还在攒', g: 'linear-gradient(135deg,#0e2c4a,#061626)', soon: true },
   { slug: '04-campus', cover: 'covers/04-campus.jpg', emoji: '🎓', title: '开荒记', desc: '大学 · 点开看看', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)', story: CAMPUS_STORY }
 ];
 
@@ -2774,7 +2832,7 @@ if (worksGrid) {
       <div class="work-bg" style="background:${w.g}"></div>
       <img class="work-img" alt="${w.title}" loading="lazy" decoding="async">
       <div class="work-emoji">${w.emoji}</div>
-      ${w.album ? `<div class="work-count">${w.album.length} 张</div>` : (w.story ? '<div class="work-count">▶ 视频</div>' : '')}
+      ${w.album ? `<div class="work-count">${w.album.length} 张</div>` : (w.story ? '<div class="work-count">▶ 视频</div>' : (w.soon ? '<div class="work-count is-soon">✨ 敬请期待</div>' : ''))}
       <div class="work-body"><h4>${w.title}</h4><p>${w.desc}</p></div>`;
     worksGrid.appendChild(el);
     attachPhoto(el.querySelector('.work-img'), w, n + 1);
@@ -2797,6 +2855,17 @@ if (worksGrid) {
       el.addEventListener('click', () => openStory(w.story));
       el.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openStory(w.story); }
+      });
+    } else if (w.soon) {
+      // ★ 2026-10-08：只挂着「敬请期待」的卡（生活碎片）—— 点得进去，打开的是说明弹层。
+      // 不能什么都不做：访客点了没反应会以为页面坏了（老师反馈原话）。
+      el.classList.add('has-album');
+      el.tabIndex = 0;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', `${w.title}：还在攒素材，点开看说明`);
+      el.addEventListener('click', () => openSoon());
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openSoon(); }
       });
     }
   });
@@ -3436,6 +3505,17 @@ if (qrMask) {
   qrMask.addEventListener('click', (e) => { if (e.target === qrMask) closeQr(); });
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeQr(); });
+
+/* ---------- 生活碎片「敬请期待」弹层（2026-10-08 老师反馈） ----------
+   这张卡没有作品集，但点击必须有反馈。将来有照片了：
+   把 WORKS 里的 soon: true 换成 album: LIFE_ALBUM 即可（右上角徽章会自动跟着变）。 ---------- */
+const soonMask = document.getElementById('soonMask');
+function openSoon()  { if (soonMask) soonMask.classList.add('show'); }
+function closeSoon() { if (soonMask) soonMask.classList.remove('show'); }
+const soonClose = document.getElementById('soonClose');
+if (soonClose) soonClose.addEventListener('click', closeSoon);
+if (soonMask) soonMask.addEventListener('click', (e) => { if (e.target === soonMask) closeSoon(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSoon(); });
 
 /* ---------- V4 隐私：邮箱反采集 ----------
    完整地址在运行时由 u + '@' + d 拼出，静态源码里搜不到完整邮箱；

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Mario Evelyn · 数字分身个人主页 V2</title>
-<meta name="description" content="Mario Evelyn 的数字分身个人主页 V2 —— 脑机接口专业 · 神经引擎视觉 · AI 分身对话" />
+<title>数字分身 · Mario Evelyn</title>
+<meta name="description" content="Mario Evelyn 的数字分身 —— 规则模式开箱即用，填入任意 OpenAI 兼容接口即可变成真实 AI 分身（密钥只存在你自己的浏览器里）。" />
 <style>
   /* ============================================================
      V2 · 全局变量（神经引擎配色 + 玻璃拟态）
@@ -1081,6 +1081,68 @@
     .story-panel { animation: none; }
   }
 
+  /* ---------- 成长日志 · 时间线 ---------- */
+  .log-intro { font-size: var(--fs-sm); color: var(--txt-dim); margin-bottom: 16px; }
+  .log-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .log-chip {
+    font-size: var(--fs-cap); color: var(--txt-dim); padding: 5px 14px; border-radius: var(--r-pill);
+    border: 1px solid var(--line); background: rgba(3, 8, 12, 0.72); cursor: pointer;
+    transition: all 0.18s; font-family: inherit; -webkit-tap-highlight-color: transparent;
+  }
+  .log-chip:hover { border-color: var(--line-2); color: var(--txt); }
+  .log-chip:active { transform: scale(0.94); }
+  .log-chip.active {
+    color: #032430; font-weight: 600; border-color: transparent;
+    background: linear-gradient(120deg, var(--cyan-2), var(--teal));
+    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.25);
+  }
+  .timeline { position: relative; padding-left: 26px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px;
+    background: linear-gradient(to bottom, rgba(0, 240, 255, 0.5), rgba(45, 212, 191, 0.06));
+  }
+  .log-item { position: relative; padding-bottom: 26px; }
+  .log-item:last-child { padding-bottom: 0; }
+  .log-dot {
+    position: absolute; left: -26px; top: 3px; width: 16px; height: 16px; border-radius: 50%;
+    background: #061018; border: 2px solid var(--cyan-2);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+  }
+  .log-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 6px; }
+  .log-date { font-size: var(--fs-cap); letter-spacing: 1px; color: var(--cyan-2); font-variant-numeric: tabular-nums; }
+  .log-tag {
+    font-size: var(--fs-tag); padding: 1px 9px; border-radius: var(--r-pill);
+    border: 1px solid rgba(45, 212, 191, 0.35); color: var(--teal); background: rgba(45, 212, 191, 0.08);
+  }
+  .log-item h4 { font-size: var(--fs-h3); margin-bottom: 5px; }
+  .log-item p { font-size: var(--fs-sm); color: var(--txt-dim); }
+  .log-empty { font-size: var(--fs-sm); color: var(--txt-faint); }
+
+  /* ---------- 首页日志节选：模糊引子 + 计数跳转 ---------- */
+  .log-inline-link { color: var(--cyan-2); border-bottom: 1px solid rgba(0, 240, 255, 0.35); }
+  .log-inline-link:hover { border-bottom-color: var(--cyan-2); }
+  .log-tease {
+    filter: blur(4.5px);          /* 真模糊：看得见轮廓，读不出内容 */
+    opacity: 0.45;
+    pointer-events: none; user-select: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+  }
+  .log-tease .log-item { padding-bottom: 20px; }
+  .log-more { display: flex; justify-content: center; margin-top: 18px; }
+  .log-cta {
+    display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+    font-size: var(--fs-sm); color: var(--cyan-2);
+    padding: 9px 18px; border-radius: var(--r-pill);
+    border: 1px solid rgba(0, 240, 255, 0.35); background: rgba(0, 240, 255, 0.06);
+    transition: background 0.25s, border-color 0.25s, transform 0.25s;
+  }
+  .log-cta b { color: var(--teal); font-variant-numeric: tabular-nums; }
+  .log-cta:hover {
+    background: rgba(0, 240, 255, 0.14); border-color: rgba(0, 240, 255, 0.6);
+    transform: translateY(-1px);
+  }
+
   /* ---------- 数字分身聊天 ---------- */
   .chat-card { display: flex; flex-direction: column; height: 560px; padding: 0; overflow: hidden; }
   .chat-head {
@@ -1113,6 +1175,56 @@
   .icon-btn:hover { background: rgba(0, 240, 255, 0.14); color: #fff; border-color: rgba(0, 240, 255, 0.5); }
   .icon-btn:active { transform: scale(0.92); }
 
+  .chat-body { flex: 1; overflow-y: auto; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { display: flex; gap: 10px; max-width: 90%; }
+  .msg.bot { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg .m-avatar {
+    width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    font-size: var(--fs-body); flex-shrink: 0;
+    background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.26);
+  }
+  .msg.user .m-avatar { background: rgba(56, 189, 248, 0.18); border-color: rgba(56, 189, 248, 0.38); }
+  .bubble {
+    padding: 11px 14px; border-radius: var(--r-panel); font-size: var(--fs-ui); line-height: var(--lh-body);
+    word-break: break-word; white-space: pre-wrap;
+  }
+  .msg.bot .bubble { background: rgba(16, 28, 38, 0.9); border: 1px solid rgba(0, 240, 255, 0.16); border-top-left-radius: 4px; }
+  .msg.user .bubble { background: linear-gradient(120deg, rgba(0, 240, 255, 0.24), rgba(45, 212, 191, 0.16)); border: 1px solid rgba(45, 212, 191, 0.32); border-top-right-radius: 4px; }
+  .msg.err .bubble { border-color: rgba(255, 47, 160, 0.45); color: #ffc9e5; background: rgba(60, 8, 34, 0.5); }
+
+  .chat-quick { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 18px; border-top: 1px solid var(--line); background: rgba(4, 10, 15, 0.6); }
+  .chip {
+    font-size: var(--fs-cap); color: var(--blue); padding: 6px 12px; border-radius: var(--r-pill);
+    border: 1px solid rgba(56, 189, 248, 0.26); background: rgba(56, 189, 248, 0.06);
+    cursor: pointer; transition: all 0.15s; user-select: none; font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip:hover { background: rgba(0, 240, 255, 0.18); color: #fff; }
+  .chip:active { transform: scale(0.92); background: rgba(0, 240, 255, 0.34); color: #fff; bordercolor: rgba(0,240,255,0.6); box-shadow: 0 0 12px rgba(0, 240, 255, 0.42); }
+  .chip.used { opacity: 0.4; cursor: default; pointer-events: none; filter: grayscale(0.5); }
+
+  .chat-input { display: flex; gap: 10px; padding: 14px 18px; border-top: 1px solid var(--line); background: rgba(4, 10, 15, 0.6); }
+  .chat-input input {
+    flex: 1; background: rgba(10, 20, 28, 0.85); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 11px 14px; color: var(--txt); font-size: var(--fs-ui); outline: none; font-family: inherit;
+  }
+  .chat-input input:focus { border-color: rgba(0, 240, 255, 0.55); box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.1); }
+  .chat-input button {
+    border: none; border-radius: var(--r-md); padding: 0 22px; font-size: var(--fs-sm); font-weight: 600;
+    color: #032430; background: linear-gradient(120deg, var(--cyan-2), var(--teal));
+    cursor: pointer; transition: filter 0.15s, transform 0.1s; font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chat-input button:hover { filter: brightness(1.1); }
+  .chat-input button:active { transform: scale(0.94); }
+  .chat-input button:disabled { filter: grayscale(0.6) brightness(0.8); cursor: not-allowed; }
+
+  .typing { display: inline-flex; gap: 4px; padding: 4px 2px; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan-2); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: 0.2s; }
+  .typing i:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
 
   /* 联系方式 */
   .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
@@ -1558,12 +1670,17 @@
   .contact:not(a) { cursor: default; }
   .contact:not(a):hover { transform: none; }
 
+  /* ---------- 禁用态：补上「看得见的暗」 ---------- */
+  /* 原规则已有 grayscale，这里再加透明度；hover 只对可点状态生效 */
+  .chat-input button:disabled { opacity: 0.45; }
+  .chat-input button:not(:disabled):hover { filter: brightness(1.1); }
 
   /* ---------- 触达尺寸 ≥44px（粗指针设备） ---------- */
   /* 桌面鼠标不需要 44px，手机上才放宽，避免影响桌面观感 */
   @media (pointer: coarse) {
     .nav-item { min-height: 44px; }
     .icon-btn { width: 44px; height: 44px; }
+    .chip { min-height: 44px; display: inline-flex; align-items: center; }
     .contact { min-height: 44px; }
     .btn { min-height: 44px; }
     .album-lb .lb-nav { width: 44px; height: 44px; }
@@ -1590,14 +1707,19 @@
     .nav-item { padding: 7px 7px; }
     .proj-card { padding: 15px; }
   }
-  /* ---------- 入口卡片：数字分身 / 成长日志（完整内容在 chat.html / log.html） ---------- */
-  .chat-card.chat-entry, .card.log-entry { height: auto; min-height: 0; }
-  .chat-entry-body, .log-entry-body { padding: 18px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
-  .chat-entry-body p, .log-entry-body p { font-size: var(--fs-ui); line-height: var(--lh-body); color: var(--txt-dim); }
-  .chat-entry-body p.chat-entry-tip, .log-entry-body p.log-entry-tip { font-size: var(--fs-cap); color: var(--txt-faint); }
-  .chat-entry-body .btn, .log-entry-body .btn { text-decoration: none; }
-  a.icon-btn { text-decoration: none; }
 
+  /* ============================================================
+     ★ 2026-10-08 数字分身独立页（chat.html）补充
+     —— 首页那份 CSS 原样照搬，这里只补两条「独立页」才需要的：
+        1) 聊天卡片按视口撑高（首页是 560px 固定高，独立页更矮会显得空）
+        2) 卡片下方「返回首页」的居中
+     ============================================================ */
+  .chat-card { height: min(70vh, 720px); }
+  .chat-back { display: flex; justify-content: center; margin-top: var(--sp-gap); }
+  .chat-back .btn { text-decoration: none; }
+  @media (max-width: 640px) {
+    .chat-card { height: 560px; }        /* 手机上保持首页那档，输入法弹起也能用 */
+  }
 </style>
 <script>
 /* ================================================================
@@ -1663,217 +1785,39 @@
 
 <!-- ============ 粘性导航 · 顶部悬浮胶囊（P2） ============ -->
 <nav class="site-nav" id="siteNav" aria-label="页面区块导航">
-  <a class="nav-item" href="#about"><span class="nav-dot"></span><span class="nav-label">关于我</span></a>
-  <a class="nav-item" href="#projects"><span class="nav-dot"></span><span class="nav-label">项目</span></a>
-  <a class="nav-item" href="log.html"><span class="nav-dot"></span><span class="nav-label">日志</span></a>
-  <a class="nav-item" href="chat.html"><span class="nav-dot"></span><span class="nav-label">分身</span></a>
-  <a class="nav-item" href="#interests"><span class="nav-dot"></span><span class="nav-label">兴趣</span></a>
-  <a class="nav-item" href="#works"><span class="nav-dot"></span><span class="nav-label">影像</span></a>
-  <a class="nav-item" href="#contact"><span class="nav-dot"></span><span class="nav-label">联系</span></a>
+  <a class="nav-item" href="index.html"><span class="nav-dot"></span><span class="nav-label">返回首页</span></a>
+  <a class="nav-item active" href="#chat"><span class="nav-dot"></span><span class="nav-label">数字分身</span></a>
+  <a class="nav-item" href="log.html"><span class="nav-dot"></span><span class="nav-label">成长日志</span></a>
+  <a class="nav-item" href="index.html#contact"><span class="nav-dot"></span><span class="nav-label">联系</span></a>
 </nav>
 
 <div class="content">
 
-  <!-- ============ Hero ============ -->
-  <header class="hero" id="hero">
-    <!-- 左 HUD -->
-    <div class="hud hud-left" id="hud-left">
-      <div class="hud-header">
-        <div class="hud-title">Neural Cathedral</div>
-        <div class="hud-sub">ID: NC-09 // MARIO EVELYN</div>
-      </div>
-      <div class="hud-row"><span class="hud-label">Membrane V</span><span class="hud-value" id="val-membrane">-70.0 mV</span></div>
-      <div class="hud-row"><span class="hud-label">Dendrite</span><span class="hud-value" id="val-dendrites">CALM</span></div>
-      <div class="hud-row"><span class="hud-label">Axon Load</span><span class="hud-value" id="val-axon">02%</span></div>
-      <div class="hud-row"><span class="hud-label">Signal Phase</span><span class="hud-value" id="val-state">RESTING</span></div>
-      <div class="hud-row"><span class="hud-label">Synaptic Coh</span><span class="hud-value" id="val-sync">24%</span></div>
-      <button class="btn-trigger" id="btn-fire">Manual Override</button>
-    </div>
-
-    <!-- 右 HUD -->
-    <div class="hud hud-right" id="hud-right">
-      <div class="hud-row"><span class="hud-label">Cam X</span><span class="hud-value" id="val-cam-x">0.00</span></div>
-      <div class="hud-row"><span class="hud-label">Cam Y</span><span class="hud-value" id="val-cam-y">0.00</span></div>
-      <div class="hud-row"><span class="hud-label">Cam Z</span><span class="hud-value" id="val-cam-z">0.00</span></div>
-    </div>
-
-    <div class="hero-inner">
-      <div class="avatar-wrap">
-        <img class="avatar" src="头像.jpg" alt="Mario Evelyn 头像" />
-      </div>
-      <h1 class="name">Mario Evelyn</h1>
-      <div class="badge">🧠 脑机接口方向大一本科生 · 开荒中 <span>· 数字分身在线</span></div>
-      <p class="hero-fact">天津大学-香港理工大学深圳未来技术学院 · 脑机接口与人机交互方向本科生。<br />这里记录我从零探索的过程：成长日志、项目与作品、日常影像。</p>
-      <p class="tagline">一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="log.html">📓 阅读成长日志</a>
-        <a class="btn btn-primary" href="#projects">🧩 查看项目与作品</a>
-        <a class="btn btn-link" href="chat.html">💬 和我的分身聊聊</a>
-        <a class="btn btn-ghost" id="ptOpen" href="#about">↓ 认识我一下</a>
-      </div>
-      <!-- ★ 2026-10-08 反馈：聊天已降为次级操作（.btn-link），补一行小字说明「聊了能得到什么」 -->
-      <p class="chat-note">分身可以回答：我在学什么 · 最近在忙什么 · 为什么选脑机接口</p>
-    </div>
-
-    <div class="hero-hint">Click anywhere to trigger impulse · 点击空白处触发脉冲</div>
-    <div class="scroll-cue"></div>
-  </header>
 
   <main>
-    <!-- ============ 关于我 ============ -->
-    <section class="section reveal" id="about">
-      <div class="card">
-        <div class="section-title"><span class="st-index">01</span> About · 关于我</div>
-        <div class="about-grid">
-          <div class="about-item">
-            <h3><span>🎓</span> 现在的我</h3>
-            <p>天津大学-香港理工大学深圳未来技术学院本科生，专业方向是脑机接口与人机交互。<br />简单说，就是想办法让机器知道你在想什么 —— 目前进展是，我还不太知道机器在想什么。</p>
-          </div>
-          <div class="about-item">
-            <h3><span>⚔️</span> 当前关卡</h3>
-            <p>最大关卡：全英数学课，英语叠加数学双重暴击。<br />在全新学院里从零沉淀，一边踩坑一边成长。</p>
-          </div>
-        </div>
-        <div class="trait">
-          <b>想认识的人：</b>愿意交流脑机接口入门、学习方法、校园创作和有趣的技术实践。初见时通常比较安静，熟悉之后很愿意讨论最近踩过的坑。
-        </div>
-        <!-- ★ 2026-10-08 实体地球（three.js 贴图路线，照搬参考站）：01 文案下方居中，不单独占卡片 -->
-        <div class="earth-stage">
-          <div class="earth-orb" id="earth-orb" title="大连 · 天津 · 深圳"><canvas id="earth-canvas"></canvas></div>
-        </div>
-        <p class="earth-cap">大连 · 天津 · 深圳 —— 滚到这里依次点亮　|　按住可拖动旋转，双击回正</p>
-      </div>
-    </section>
-
-    <!-- ============ 项目与作品（V4 新增） ============
-         反馈要求：访客要能快速判断「可合作的能力边界」。
-         因此每张卡固定五件事：编号分类 / 状态 / 一句话问题定义 /
-         方法工具 / 本人负责与进展 / 入口链接。 -->
-    <section class="section reveal" id="projects">
-      <div class="card">
-        <div class="section-title"><span class="st-index">02</span> Projects · 项目与作品</div>
-        <p class="proj-intro">还在开荒，先把手上真正在做的事摆出来 —— 学习轨迹本身就是作品。</p>
-        <div class="proj-grid">
-
-          <article class="proj-card">
-            <div class="proj-top"><span class="proj-no">01 / WEB</span><span class="proj-state">进行中</span></div>
-            <h3>数字分身个人主页</h3>
-            <p class="proj-desc">将脑机接口的神经信号意象转成可阅读的个人主页，持续打磨内容层级、动效与移动端体验。</p>
-            <ul class="proj-meta">
-              <li><b>方法 / 工具</b>：HTML、CSS、JavaScript、Three.js</li>
-              <li><b>我负责</b>：内容结构、视觉与动效实现、移动端适配与隐私加固</li>
-              <li><b>下一步</b>：继续修移动端细节，把项目与日志写得更完整</li>
-            </ul>
-            <div class="proj-links"><span class="proj-nolink">源码暂不公开 · 隐私保护</span></div>
-          </article>
-
-          <article class="proj-card">
-            <div class="proj-top"><span class="proj-no">02 / NOTES</span><span class="proj-state">进行中</span></div>
-            <h3>脑机接口入门笔记</h3>
-            <p class="proj-desc">围绕信号采集、预处理、特征与分类建立阅读框架，把课程与公开资料沉淀为可回看的学习记录。</p>
-            <ul class="proj-meta">
-              <li><b>方法 / 工具</b>：BCI、信号处理、结构化笔记</li>
-              <li><b>我负责</b>：资料筛选、框架搭建、笔记整理</li>
-              <li><b>下一步</b>：补齐预处理与特征提取章节</li>
-            </ul>
-            <div class="proj-links"><a href="log.html">从成长日志开始阅读 →</a></div>
-          </article>
-
-          <article class="proj-card">
-            <div class="proj-top"><span class="proj-no">03 / VISUAL</span><span class="proj-state">持续记录</span></div>
-            <h3>新校园影像计划</h3>
-            <p class="proj-desc">用镜头记录首届新生的校园日常，也练习把陌生环境、光线和情绪转化成具体的画面。</p>
-            <ul class="proj-meta">
-              <li><b>方法 / 工具</b>：摄影、视觉记录</li>
-              <li><b>我负责</b>：拍摄与选片（公开照片会先做隐私处理）</li>
-              <li><b>下一步</b>：按学期整理成系列，挑更安全的画面公开</li>
-            </ul>
-            <div class="proj-links"><a href="#works">查看日常影像 →</a></div>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 成长日志（入口卡片；完整日志已拆到 log.html） ============ -->
-    <section class="section reveal" id="log">
-      <div class="card chat-card chat-entry log-entry">
-        <div class="chat-head">
-          <div class="chat-avatar">📓</div>
-          <div class="chat-head-title">
-            <h3>Growth Log · 成长日志 <span class="ai-tag off">持续更新</span></h3>
-            <p>课程学习 · 生活记录 · 心情随笔 · 按时间倒序</p>
-          </div>
-          <a class="icon-btn" href="log.html" title="阅读全部日志" aria-label="阅读全部成长日志">→</a>
-        </div>
-        <div class="chat-entry-body log-entry-body">
-          <p>把「开荒」的每一步都记在这儿 —— 学到哪、卡在哪、想明白了什么，一条条往后排。完整日志在独立页，可以按 学习 / 生活 / 心情 筛选，想看全部就去那边。</p>
-          <a class="btn btn-primary" href="log.html">📓 阅读全部日志</a>
-          <p class="chat-entry-tip log-entry-tip">日志写在 log-data.js，首页和完整日志页共用同一份</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 数字分身（入口卡片；完整对话已拆到 chat.html） ============ -->
+    <!-- ============ 数字分身（2026-10-08 起独立成页：chat.html） ============ -->
     <section class="section reveal" id="chat">
-      <div class="card chat-card chat-entry">
+      <div class="card chat-card">
         <div class="chat-head">
           <div class="chat-avatar">🧠</div>
           <div class="chat-head-title">
-            <h3>数字分身 · Mario Evelyn <span class="ai-tag off">规则模式</span></h3>
+            <h3>数字分身 · Mario Evelyn <span class="ai-tag off" id="aiTag">规则模式</span></h3>
             <p>脑机接口大一 · 开荒中的分身 · 有问必答</p>
           </div>
-          <a class="icon-btn" href="chat.html" title="进入对话" aria-label="进入数字分身对话">→</a>
+          <div class="dot"></div>
+          <button class="icon-btn" id="cfgBtn" title="配置 AI 模型">⚙</button>
         </div>
-        <div class="chat-entry-body">
-          <p>我在学什么、最近在忙什么、为什么选脑机接口、这个主页怎么搭的 —— 都能问它。默认是规则模式，不联网也能用；想升级成真实 AI，进对话页右上角 ⚙ 填自己的 Key 就行。</p>
-          <a class="btn btn-primary" href="chat.html">💬 进入对话</a>
-          <p class="chat-entry-tip">完整对话页在 chat.html（密钥只存在你自己的浏览器里）</p>
+
+        <div class="chat-body" id="chatBody"></div>
+        <div class="chat-quick" id="quickChips"></div>
+        <div class="chat-input">
+          <input id="chatInput" type="text" placeholder="随便聊聊，问我点什么…" autocomplete="off" />
+          <button id="sendBtn" disabled>发送</button>
         </div>
       </div>
     </section>
 
-    <!-- ============ 兴趣 ============ -->
-    <section class="section reveal" id="interests">
-      <div class="card">
-        <div class="section-title"><span class="st-index">04</span> Interests · 兴趣</div>
-        <div class="interest-grid">
-          <div class="interest"><div class="ic">📷</div><div><h4>摄影</h4><p>习惯用镜头记录日常瞬间</p></div></div>
-          <div class="interest"><div class="ic">🧩</div><div><h4>手工 &amp; 拼装</h4><p>沉迷各类拼装造物，享受动手搭建的过程</p></div></div>
-          <div class="interest"><div class="ic">🏸</div><div><h4>羽毛球 · 游泳</h4><p>会一点但技艺不精，高阶技能等待解锁</p></div></div>
-          <div class="interest"><div class="ic">🌙</div><div><h4>静向独处</h4><p>偏爱安静的状态，不热衷高强度运动</p></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 作品 / 相册 ============ -->
-    <section class="section reveal" id="works">
-      <div class="card">
-        <div class="section-title"><span class="st-index">05</span> Gallery · 日常影像</div>
-        <div class="works-grid" id="worksGrid"></div>
-      </div>
-    </section>
-
-    <!-- ============ 联系方式 ============ -->
-    <section class="section reveal" id="contact">
-      <div class="card">
-        <div class="section-title"><span class="st-index">06</span> Contact · 联系我</div>
-        <div class="contact-grid">
-          <!-- V4：不再明文展示微信号，点击后才显示二维码 -->
-          <a class="contact" href="#" id="wechatCard" title="点击查看微信二维码">
-            <div class="ci"><img src="icons/wechat.png" alt="微信" width="40" height="40"></div><div><h4>微信</h4><p>点击查看二维码</p></div>
-          </a>
-          <!-- V4：邮箱做反采集，源码里不出现完整地址，点击才复制 -->
-          <a class="contact" href="#" id="mailCard" title="点击复制邮箱">
-            <div class="ci"><img src="icons/mail.png" alt="邮箱" width="40" height="40"></div><div><h4>邮箱</h4><p id="mailText">点击复制邮箱</p></div>
-          </a>
-          <!-- V4：按反馈「GitHub 不要公开」，去掉可点击外链，仅保留昵称文字 -->
-          <div class="contact" title="GitHub 暂不公开链接">
-            <div class="ci"><img src="icons/github.png" alt="GitHub" width="40" height="40"></div><div><h4>GitHub</h4><p>@Evelyn11290000</p></div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <p class="chat-back"><a class="btn btn-ghost" href="index.html">← 返回首页</a></p>
   </main>
 
   <footer class="foot">
@@ -1881,41 +1825,33 @@
   </footer>
 </div>
 
-
-<!-- ============ 微信二维码弹窗（V4 新增） ============
-     反馈 P0：微信号不直接公开。改为「点击后才显示二维码」，
-     并且二维码只在用户主动点击时才出现在 DOM 里（见文末 JS），
-     静态源码中不存在任何微信号或二维码地址。 -->
-<div class="modal-mask" id="qrMask">
-  <div class="modal qr-modal">
-    <h3>💬 扫码加我微信</h3>
-    <p class="modal-desc">仅用于个人交流，请勿转载或用于营销推广。</p>
-    <div class="qr-box" id="qrBox">
-      <img src="icons/wechat-qr.jpg" alt="微信二维码" id="qrImg" />
-      <div class="qr-fallback" id="qrFallback" hidden>二维码暂未就位 · 可先用邮箱联系</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="qrClose" type="button">关闭</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============ 生活碎片「敬请期待」弹层（2026-10-08 老师反馈）============
-     这张卡暂时没有作品集 —— 但点击不能没有反应（访客会以为页面坏了）。
-     点开给一句实话，让人知道这是有意留的位置。
-     将来有照片了：把 WORKS 里的 soon: true 换成 album: LIFE_ALBUM 即可。 -->
-<div class="modal-mask" id="soonMask">
+<!-- ============ AI 配置弹窗 ============ -->
+<div class="modal-mask" id="cfgMask">
   <div class="modal">
-    <h3>✨ 生活碎片 · 还在攒</h3>
-    <p class="modal-desc">这一块我留了位置，但还没攒够能拿得出手的东西 —— 先空着，不想随便塞几张图凑数。</p>
-    <div class="soon-list">
-      <div class="soon-item"><b>在攒什么</b><span>平时随手拍的一些碎片，还没成组。</span></div>
-      <div class="soon-item"><b>什么时候有</b><span>攒够一组就放上来，到时候这里会变成能点开的相册。</span></div>
-      <div class="soon-item"><b>现在能看什么</b><span>另外两张卡（镜头里的日常、拼装日志）里已经有东西了，可以先看那两个。</span></div>
+    <h3>⚙ 接入真实 AI 分身</h3>
+    <p class="modal-desc">
+      填入任意「OpenAI 兼容」接口即可让分身真正会聊天。密钥只保存在你自己的浏览器（localStorage），不会上传到任何服务器。
+    </p>
+    <div class="field">
+      <label>API 地址（Base URL）</label>
+      <input id="cfgBase" type="text" placeholder="https://api.deepseek.com/v1" />
+      <div class="hint">需以 /v1 结尾；也可填完整 …/chat/completions</div>
+    </div>
+    <div class="field">
+      <label>API Key</label>
+      <input id="cfgKey" type="password" placeholder="sk-..." />
+    </div>
+    <div class="field">
+      <label>模型名称</label>
+      <input id="cfgModel" type="text" placeholder="deepseek-chat" />
+      <div class="hint">如 deepseek-chat / gpt-4o-mini / glm-4-flash / Qwen-plus</div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="soonClose" type="button">知道啦</button>
+      <button class="btn btn-primary" id="cfgSave">保存</button>
+      <button class="btn btn-ghost" id="cfgTest">测试连接</button>
+      <button class="btn btn-ghost" id="cfgClear">清除</button>
     </div>
+    <div class="modal-status" id="cfgStatus"></div>
   </div>
 </div>
 
@@ -2057,7 +1993,7 @@
      —— ③ 次级页面「接入中」过渡（相册 / 视频稿 / 日志页 / 各弹层）
      —— ④ 特效开关（本地记忆，一键关掉重效果）
      —— 为什么放在 module 之前：
-        1) module 里要跳转 / 开弹层的地方要调 window.__warp，必须先生效；
+        1) module 里的 openAlbum / openStory / openCfg… 要调 window.__warp，必须先生效；
         2) three.js 万一没加载起来（module 跑不动），这一块也照常工作 —— 页面不会卡在加载层。
      两个开关都会让动效直接跳过：html.rm（系统减少动态效果）、html.fx-off（用户手动关）。
      ============================================================ -->
@@ -2146,9 +2082,9 @@
   window.__warpFast = function (fn) { runWarp(fn, true); };     /* 小弹层 */
   window.__warpIsOn = warpOn;
 
-  /* 首页里所有去 log.html / chat.html 的链接：先过渡再走。
-     用事件委托 —— 首页有些链接是 JS 动态生成的（作品墙 / 相册墙），
-     而且导航、首屏按钮、两张入口卡片都指向独立页，逐个绑定会漏，委托不会。 */
+  /* 首页里所有去 log.html 的链接：先过渡再走。
+     用事件委托 —— 首页有些链接是 JS 动态生成的（作品墙 / 日志区），
+     逐个绑定会漏，委托不会。 */
   document.addEventListener('click', function (ev) {
     if (ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
     var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null;
@@ -2329,251 +2265,6 @@
     requestAnimationFrame(frame);
   }
 
-  /* ================= ⑤ 传送门：关于我 · 信号空间（北斗七星） =================
-     机制参考一个霓虹青蓝风格作品集站点的 #portalOverlay 做法：
-     入口按钮 → 全屏空间 → 寻址 → 锁定 → 核心放大冲进去 → 3D 深度卡逐张显现。
-     本站的玩法不赌运气：空间里是北斗七星，从斗魁到斗柄依次点亮 7 颗星，
-     每点亮一颗就画一条线、浮现一个关键词；最后补上合拢那一条 → 星座成形 → 进入。
-     目标星会最强闪烁并带光环，所以不会「太难猜」。
-     降级：rm / 手动关特效 / 触屏手机 → 入口退回普通锚点，直接滚到 About 板块；
-     JS 没跑起来时它本来就是个 <a href="#about">。 */
-  var ptTrigger = document.getElementById('ptOpen');
-  var portal = null, ptSpace = null, ptHint = null, ptCount = null, ptStatus = null;
-  var ptDepth = null, ptCards = [], ptNextBtn = null, ptStep = 0, ptBusy = false;
-  var ptStars = [], ptLines = {}, ptLit = 0;
-
-  function ptOn() { return !FX_OFF && !rmOn() && !COARSE; }
-
-  /* 北斗七星 —— 坐标是核心的百分比。斗魁四星在左（成四边形），斗柄三星向右延伸。
-     7 个关键词按用户 2026-10-08 指定的顺序排列（斗魁 → 斗柄）；
-     星的位置和连线是北斗的几何，与词无关，所以换词不动形。 */
-  var PT_STARS = [
-    { n: '天枢', w: '天津大学',     x: 10, y: 28, lp: 'top' },
-    { n: '天璇', w: '香港理工大学', x: 14, y: 54, lp: 'right' },
-    { n: '天玑', w: '深圳未来技术学院', x: 33, y: 66, lp: 'bottom' },
-    { n: '天权', w: '首届学生',     x: 38, y: 32, lp: 'top' },
-    { n: '玉衡', w: '脑机接口',     x: 56, y: 26, lp: 'top' },
-    { n: '开阳', w: 'INFP', em: '🦋', emc: 'bf', x: 72, y: 32, lp: 'top' },
-    { n: '摇光', w: '📍辽宁大连',   x: 88, y: 48, lp: 'left' }
-  ];
-  /* 斗魁四边 + 斗柄三段。真北斗的斗魁是闭合四边形，所以最后一条 (3-0) 留到成形时补上 */
-  var PT_EDGES = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [3, 0]];
-  var PT_CLOSE = '3-0';
-
-  /* 四张深度卡的内容也全部取自站内已有的 About 文案 */
-  var PT_CARDS = [
-    { i: '🎓', t: '现在的我', p: '天津大学-香港理工大学深圳未来技术学院本科生，专业方向是脑机接口与人机交互。简单说，就是想办法让机器知道你在想什么 —— 目前进展是，我还不太知道机器在想什么。' },
-    { i: '⚔️', t: '当前关卡', p: '最大关卡：全英数学课，英语叠加数学双重暴击。在全新学院里从零沉淀，一边踩坑一边成长。' },
-    { i: '🤝', t: '想认识的人', p: '愿意交流脑机接口入门、学习方法、校园创作和有趣的技术实践。初见时通常比较安静，熟悉之后很愿意讨论最近踩过的坑。' },
-    { i: '🧭', t: '这里有', p: '记录从零探索脑机接口、课程学习与日常创作的过程。你能看到我的成长日志、项目与作品，还有日常影像。' }
-  ];
-
-  function ptBuild() {
-    if (portal) return;
-    var svg = '<svg class="pt-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">';
-    for (var e = 0; e < PT_EDGES.length; e++) {
-      var a = PT_EDGES[e][0], b = PT_EDGES[e][1];
-      svg += '<line class="pt-line" data-line="' + a + '-' + b +
-             '" x1="' + PT_STARS[a].x + '" y1="' + PT_STARS[a].y +
-             '" x2="' + PT_STARS[b].x + '" y2="' + PT_STARS[b].y + '"></line>';
-    }
-    svg += '</svg>';
-
-    var stars = '';
-    for (var i = 0; i < PT_STARS.length; i++) {
-      var st = PT_STARS[i];
-      var tf = st.lp === 'top' ? 'translate(-50%, calc(-100% - 14px))'
-             : st.lp === 'bottom' ? 'translate(-50%, 14px)'
-             : st.lp === 'left' ? 'translate(calc(-100% - 14px), -50%)'
-             : 'translate(14px, -50%)';
-      stars += '<button class="pt-star" type="button" data-star="' + i +
-               '" aria-label="' + st.n + ' · ' + st.w + '" style="left:' + st.x + '%;top:' + st.y + '%"></button>' +
-               '<span class="pt-star-label" data-label="' + i + '" style="left:' + st.x + '%;top:' + st.y +
-               '%;transform:' + tf + '">' +
-               (st.em ? '<i class="pt-em ' + (st.emc || '') + '">' + st.em + '</i>' : '') + st.w + '</span>';
-    }
-
-    var cards = '';
-    for (var c = 0; c < PT_CARDS.length; c++) {
-      cards += '<article class="pt-card">' +
-                 '<span class="pt-step">0' + (c + 1) + ' / 0' + PT_CARDS.length + '</span>' +
-                 '<h3><span>' + PT_CARDS[c].i + '</span>' + PT_CARDS[c].t + '</h3><p>' + PT_CARDS[c].p + '</p>' +
-               '</article>';
-    }
-
-    portal = document.createElement('div');
-    portal.id = 'portal';
-    portal.setAttribute('aria-hidden', 'true');
-    portal.innerHTML =
-      '<div class="pt-grid"></div><div class="pt-sweep"></div>' +
-      '<div class="pt-topline"><span>SIGNAL SPACE</span><span>ABOUT · 01</span></div>' +
-      '<button class="pt-close" type="button" aria-label="关闭信号空间">×</button>' +
-      '<div class="pt-space">' +
-        '<div class="pt-core">' +
-          '<div class="pt-rings"><i class="pt-ring r1"></i><i class="pt-ring r2"></i><i class="pt-ring r3"></i></div>' +
-          '<div class="pt-orbits"><i class="pt-orbit o1"></i><i class="pt-orbit o2"></i><i class="pt-orbit o3"></i></div>' +
-          svg +
-          '<div class="pt-center"><span class="pt-center-label">ABOUT SPACE</span><strong>关于我</strong>' +
-            '<span class="pt-center-status">北斗 · 定位中</span></div>' +
-          stars +
-        '</div>' +
-      '</div>' +
-      '<div class="pt-stage">' +
-        '<div class="pt-depth">' + cards + '</div>' +
-        '<div class="pt-foot">' +
-          '<button class="pt-btn" type="button" id="ptNext">继续 →</button>' +
-          '<button class="pt-btn" type="button" id="ptAll">看完整板块 ↓</button>' +
-          '<button class="pt-btn ghost" type="button" id="ptHome">← 回到首页</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="pt-bottomline"><span class="pt-hint"></span><span class="pt-count"></span></div>';
-    body.appendChild(portal);
-
-    ptSpace = portal.querySelector('.pt-space');
-    ptHint = portal.querySelector('.pt-hint');
-    ptCount = portal.querySelector('.pt-count');
-    ptStatus = portal.querySelector('.pt-center-status');
-    ptDepth = portal.querySelector('.pt-depth');
-    ptNextBtn = portal.querySelector('#ptNext');
-    ptCards = Array.prototype.slice.call(portal.querySelectorAll('.pt-card'));
-    ptStars = Array.prototype.slice.call(portal.querySelectorAll('.pt-star'));
-    var lns = portal.querySelectorAll('.pt-line');
-    for (var n = 0; n < lns.length; n++) ptLines[lns[n].getAttribute('data-line')] = lns[n];
-
-    portal.querySelector('.pt-close').addEventListener('click', ptClose);
-    portal.querySelector('#ptHome').addEventListener('click', ptClose);
-    portal.querySelector('#ptAll').addEventListener('click', function () { ptClose(); ptScrollAbout(); });
-    ptNextBtn.addEventListener('click', ptAdvance);
-    ptDepth.addEventListener('click', ptAdvance);
-    ptSpace.addEventListener('click', ptStarClick);
-    /* 深度卡阶段：点空白处也能回首页。寻址阶段故意不这么做，免得点星星时误退 */
-    portal.addEventListener('click', function (ev) {
-      if (portal.classList.contains('inside') && ev.target === portal) ptClose();
-    });
-  }
-
-  function ptOpen() {
-    ptBuild();
-    ptLit = 0; ptStep = 0; ptBusy = false;
-    ptSpace.classList.remove('wrong', 'formed', 'entering');
-    portal.classList.remove('inside', 'returning');
-    for (var k in ptLines) { if (ptLines.hasOwnProperty(k)) ptLines[k].classList.remove('drawn'); }
-    for (var i = 0; i < ptStars.length; i++) ptStars[i].classList.remove('lit', 'next', 'wrong');
-    var lbs = portal.querySelectorAll('.pt-star-label');
-    for (var j = 0; j < lbs.length; j++) lbs[j].classList.remove('on');
-    for (var c = 0; c < ptCards.length; c++) ptCards[c].classList.remove('shown');
-    ptStatus.textContent = '北斗 · 定位中';
-    ptStars[0].classList.add('next');
-    if (ptHint) ptHint.textContent = '依次点亮 7 颗星 · 先点最强闪烁的那颗';
-    if (ptCount) ptCount.textContent = '0 / ' + PT_STARS.length;
-    if (ptNextBtn) ptNextBtn.textContent = '继续 →';
-    portal.setAttribute('aria-hidden', 'false');
-    portal.classList.add('on');
-    docEl.classList.add('portal-open');
-  }
-
-  function ptDraw(key) {
-    if (ptLines[key]) ptLines[key].classList.add('drawn');
-  }
-
-  function ptStarClick(ev) {
-    var el = ev.target && ev.target.closest ? ev.target.closest('.pt-star') : null;
-    if (!el || ptBusy) return;
-    var i = parseInt(el.getAttribute('data-star'), 10);
-    if (i !== ptLit) {
-      el.classList.remove('wrong');
-      void el.offsetWidth;                       /* 重启抖动动画 */
-      el.classList.add('wrong');
-      setTimeout(function () { el.classList.remove('wrong'); }, 440);
-      if (ptHint) ptHint.textContent = '按斗形顺序来 · 先点亮最强闪烁的那颗';
-      return;
-    }
-    /* 点对：点亮它、亮出关键词、连上一条线（4 号天权-天枢那条留到成形时补） */
-    el.classList.remove('next');
-    el.classList.add('lit');
-    var lb = portal.querySelector('[data-label="' + i + '"]');
-    if (lb) lb.classList.add('on');
-    if (i > 0) ptDraw((i - 1) + '-' + i);
-    ptLit = i + 1;
-    if (ptLit < PT_STARS.length) {
-      ptStars[ptLit].classList.add('next');
-      if (ptCount) ptCount.textContent = ptLit + ' / ' + PT_STARS.length;
-      if (ptHint) ptHint.textContent = '点亮最强闪烁的那颗 · 第 ' + (ptLit + 1) + ' / ' + PT_STARS.length;
-    } else {
-      ptFormed();
-    }
-  }
-
-  function ptFormed() {
-    ptBusy = true;
-    ptDraw(PT_CLOSE);                            /* 合拢斗魁：天权-天枢，北斗成形 */
-    ptSpace.classList.add('formed');
-    ptStatus.textContent = '星座成形';
-    if (ptCount) ptCount.textContent = PT_STARS.length + ' / ' + PT_STARS.length + ' · 星座成形';
-    if (ptHint) ptHint.textContent = '北斗已亮 · 正在接入关于我';
-    setTimeout(function () {
-      ptSpace.classList.add('entering');
-      setTimeout(ptInside, 1150);
-    }, 950);
-  }
-
-  function ptInside() {
-    ptBusy = false;
-    portal.classList.add('inside');
-    ptStep = 0;
-    ptAdvance();
-  }
-
-  function ptAdvance() {
-    if (!portal || !portal.classList.contains('inside')) return;
-    if (ptStep >= ptCards.length) { ptClose(); return; }
-    ptCards[ptStep].classList.add('shown');
-    ptStep++;
-    if (ptNextBtn) ptNextBtn.textContent = ptStep >= ptCards.length ? '回到首页 ←' : '继续 →';
-    if (ptCount) ptCount.textContent = '0' + ptStep + ' / 0' + ptCards.length;
-    if (ptHint) {
-      ptHint.textContent = ptStep >= ptCards.length
-        ? '这就是全部 · 可以回到首页，或往下看完整板块'
-        : '点击卡片、按 → 或空格翻下一张';
-    }
-  }
-
-  function ptScrollAbout() {
-    var t = document.getElementById('about');
-    if (t) t.scrollIntoView({ behavior: ptOn() ? 'smooth' : 'auto', block: 'start' });
-  }
-
-  function ptClose() {
-    if (!portal || !portal.classList.contains('on')) return;
-    var wasInside = portal.classList.contains('inside');
-    portal.classList.add('returning');
-    setTimeout(function () {
-      portal.classList.remove('on', 'returning', 'inside');
-      portal.setAttribute('aria-hidden', 'true');
-      if (ptSpace) ptSpace.classList.remove('wrong', 'formed', 'entering');
-      docEl.classList.remove('portal-open');
-    }, wasInside ? 360 : 540);
-  }
-
-  if (ptTrigger) {
-    ptTrigger.addEventListener('click', function (ev) {
-      if (!ptOn()) return;                       /* 降级：照常滚到 #about */
-      ev.preventDefault();
-      ptOpen();
-    });
-  }
-  document.addEventListener('keydown', function (ev) {
-    if (!portal || !portal.classList.contains('on')) return;
-    if (ev.key === 'Escape') { ptClose(); return; }
-    if (portal.classList.contains('inside') && (ev.key === 'ArrowRight' || ev.key === ' ' || ev.key === 'Enter')) {
-      ev.preventDefault();
-      ptAdvance();
-    }
-  });
-  /* 使用中打开了减弱模式 / 手动关了特效 → 立刻退出，别把内容锁在遮罩里 */
-  window.addEventListener('rmchange', function () { if (rmOn()) ptClose(); });
-  window.addEventListener('fx-toggle', function () { if (FX_OFF) ptClose(); });
-  window.__portalOpen = ptOpen;
 
   /* 减弱模式在使用中被打开：把已经编排的进场上锁，别再动 */
   window.addEventListener('rmchange', function () {
@@ -2589,7 +2280,6 @@
 })();
 </script>
 
-<script src="./vendor/earth/earth-texture.js"></script>
 <script type="module">
 /* ================================================================
    PART 1 · 神经引擎（Three.js）—— 作为全页 fixed 背景
@@ -3655,349 +3345,6 @@ function updateUI() {
   if (els.dendrites) els.dendrites.innerText = denText;
 }
 
-/* ================================================================
-   ★ 2026-10-08 关于我 · 实体地球（three.js 贴图路线；球体/相机/光照照搬参考站 travel 页）
-   球与光：SphereGeometry(2,64,64) + NASA 白天贴图 + BackSide 菲涅尔大气球，
-     环境光 2.80 / 主光 0.82 / 边缘光 0.22（three r160 物理光照，参数原样照搬参考站）。
-   配色：2026-10-08 用户选定「冰蓝霓虹」——不用参考站的自然色，改 earthNeonMap() 双色渐变映射
-     （海洋 #050b23→#1d3aa8 / 陆地 #063a4a→#22e0ff / 冰雪 #d8fbff），大气光 #22e0ff。
-   本段只把参考站的「13 座照片标记」换成 大连 / 天津 / 深圳 三点微光（无标签）。
-   贴图：vendor/earth/earth-texture.js（window.__EARTH_TEXTURE_DATA，1024×512 / 61 KB）
-        为什么用 data URI：file:// 下把本地图片画进 canvas 读像素会被判跨域污染，
-        earthNeonMap 的 getImageData 会抛 SecurityError —— 照搬参考站的解法。
-        兜底：./vendor/earth/day-1024.jpg（HTTP 下可用）。
-   相机：机位对准东亚（北纬 25.5 / 东经 119），三城一进页面就在正面。
-   进场：滚到可视区 → 地球由暗到亮（smoothstep 1.05s）→ 依次点亮 大连 → 天津 → 深圳。
-   性能：只在本区块可见时渲染，且限 30fps；特效关 / 减弱模式只渲一帧静态。
-   可调参数（URL）：?geoR=尺寸px  ?geoSway=摆动幅度(度)  ?geoKey=主光  ?geoGamma=对比  ?geoGain=亮度  ?geoDim=海洋压暗  ?geoAtmo=大气强度
-   ================================================================ */
-const E_CITY = [[38.91, 121.61], [39.13, 117.20], [22.54, 114.06]];
-const EQ = new URLSearchParams(location.search);
-const eqnum = function (k, def) { const v = parseFloat(EQ.get(k)); return Number.isFinite(v) ? v : def; };
-const E_COMPACT = innerWidth <= 760 || matchMedia('(pointer: coarse)').matches;
-const E_SIZE = Math.max(140, Math.min(420, eqnum('geoR', E_COMPACT ? 200 : 260)));
-const E_R = 2, E_DIST = 6.0;                    /* 球半径照搬参考站；距离 6 → 球占视野 ≈ 86% */
-const E_SWAY = Math.max(0, Math.min(80, eqnum('geoSway', 26)));
-const E_KEY = eqnum('geoKey', 0.82);
-/* 霓虹配色（2026-10-08 用户选定「冰蓝霓虹」）：按像素明度在「暗色 → 亮色」之间插值，
-   保留真实地形起伏（大陆轮廓 / 山脉 / 沙漠），只把颜色整体换成霓虹色系 */
-const E_NEON = {
-  oceanDark:   [5, 11, 35],     /* #050b23 海洋暗部 */
-  oceanBright: [29, 58, 168],   /* #1d3aa8 海洋亮部 */
-  landDark:    [6, 58, 74],     /* #063a4a 陆地暗部 */
-  landBright:  [34, 224, 255],  /* #22e0ff 陆地亮部（= 站点主色） */
-  snow:        [216, 251, 255]  /* #d8fbff 冰雪高光 */
-};
-const E_GAMMA = Math.max(0.30, Math.min(3.00, eqnum('geoGamma', 1.00)));
-const E_GAIN = Math.max(0.30, Math.min(3.00, eqnum('geoGain', 1.15)));
-const E_ODIM = Math.max(0.10, Math.min(2.00, eqnum('geoDim', 0.85)));
-const E_ATMO = Math.max(0.00, Math.min(2.00, eqnum('geoAtmo', 0.85)));
-const E_IGNITE = [1.00, 1.40, 1.80], E_FACING_MIN = 0.12;
-
-const earthWrap = document.getElementById('earth-orb');
-const earthCv = document.getElementById('earth-canvas');
-
-let earthRd = null, earthScene = null, earthCam = null, earthGroup = null;
-let earthAmb = null, earthKeyL = null, earthRim = null, earthAtmo = null;
-let earthMarks = [], earthReady = false, earthFailed = false, earthVis = false;
-let earthDone = false, earthAnim = 0, earthT = 0, earthAcc = 0, earthStaticDone = false;
-let earthYawUser = 0, earthPitchUser = 0, earthDrag = null;
-
-/* 经纬度 → 三维坐标（与 SphereGeometry 的 uv 约定一致，照搬参考站）
-   phi=(90-lat)°，theta=(lng+180)°；x=-r·sinφ·cosθ, y=r·cosφ, z=r·sinφ·sinθ */
-function earthVec3(lat, lng, r) {
-  const phi = (90 - lat) * Math.PI / 180, theta = (lng + 180) * Math.PI / 180;
-  return new THREE.Vector3(
-    -r * Math.sin(phi) * Math.cos(theta),
-    r * Math.cos(phi),
-    r * Math.sin(phi) * Math.sin(theta)
-  );
-}
-
-/* 精灵贴图：城市微光（径向渐变）/ 点亮扩散环（空心圈） */
-function earthGlowTex(isRing) {
-  const S = 128, c = document.createElement('canvas');
-  c.width = c.height = S;
-  const g = c.getContext('2d');
-  if (isRing) {
-    g.strokeStyle = 'rgba(255,214,120,0.95)';
-    g.lineWidth = S * 0.05;
-    g.beginPath(); g.arc(S / 2, S / 2, S * 0.40, 0, Math.PI * 2); g.stroke();
-  } else {
-    const grd = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-    grd.addColorStop(0.00, 'rgba(255,246,216,1)');
-    grd.addColorStop(0.18, 'rgba(255,214,120,0.85)');
-    grd.addColorStop(0.48, 'rgba(0,240,255,0.28)');
-    grd.addColorStop(1.00, 'rgba(0,240,255,0)');
-    g.fillStyle = grd; g.fillRect(0, 0, S, S);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
-function rgbToHsl(r, g, b) {
-  r /= 255; g /= 255; b /= 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  const l = (max + min) / 2, delta = max - min;
-  let h = 0, s = 0;
-  if (delta !== 0) {
-    s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
-    if (max === r) h = (g - b) / delta + (g < b ? 6 : 0);
-    else if (max === g) h = (b - r) / delta + 2;
-    else h = (r - g) / delta + 4;
-    h *= 60;
-  }
-  return [h, s, l];
-}
-
-/* 霓虹双色映射：按像素明度在「暗色 → 亮色」之间取色，海洋/陆地/冰雪各一套。
-   真实地形（大陆轮廓、山脉、沙漠、冰雪）全部保留，只是换成霓虹色系。 */
-function earthNeonMap(img) {
-  const c = document.createElement('canvas');
-  c.width = img.width; c.height = img.height;
-  const ctx = c.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(img, 0, 0);
-  const imgData = ctx.getImageData(0, 0, c.width, c.height);
-  const d = imgData.data;
-  const N = E_NEON;
-  for (let i = 0; i < d.length; i += 4) {
-    const r = d[i], g = d[i + 1], b = d[i + 2];
-    /* 明度 → 0..1，用 gain / gamma 调对比 */
-    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    let t = lum * E_GAIN;
-    t = t < 0 ? 0 : t > 1 ? 1 : t;
-    t = Math.pow(t, E_GAMMA);
-    if (b > r + 6 && b >= g) {
-      /* 海洋：蓝色分量最强且明显高于红色（陆地/沙漠/冰雪不满足）→ 压成深空底 */
-      const tt = Math.min(1, t * E_ODIM);
-      d[i] = N.oceanDark[0] + (N.oceanBright[0] - N.oceanDark[0]) * tt;
-      d[i + 1] = N.oceanDark[1] + (N.oceanBright[1] - N.oceanDark[1]) * tt;
-      d[i + 2] = N.oceanDark[2] + (N.oceanBright[2] - N.oceanDark[2]) * tt;
-    } else {
-      const hsl = rgbToHsl(r, g, b);
-      if (hsl[2] > 0.86 && hsl[1] < 0.18) {
-        /* 冰雪：最高明度像素当高光，留亮不发白 */
-        const f = 0.72 + 0.28 * t;
-        d[i] = N.snow[0] * f; d[i + 1] = N.snow[1] * f; d[i + 2] = N.snow[2] * f;
-      } else {
-        /* 陆地：暗青 → 霓虹青 */
-        d[i] = N.landDark[0] + (N.landBright[0] - N.landDark[0]) * t;
-        d[i + 1] = N.landDark[1] + (N.landBright[1] - N.landDark[1]) * t;
-        d[i + 2] = N.landDark[2] + (N.landBright[2] - N.landDark[2]) * t;
-      }
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return c;
-}
-function earthFail(msg) {
-  earthFailed = true;
-  if (earthWrap) earthWrap.style.display = 'none';   /* 拿不到贴图就整块藏掉，不留破图 */
-  if (window.console && console.warn) console.warn('[earth] ' + msg);
-}
-
-function earthSize() {
-  if (!earthRd || !earthWrap) return;
-  earthWrap.style.width = E_SIZE + 'px';
-  earthWrap.style.height = E_SIZE + 'px';
-  earthRd.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  earthRd.setSize(E_SIZE, E_SIZE, false);
-  earthCam.aspect = 1;
-  earthCam.updateProjectionMatrix();
-}
-
-/* 一帧：由暗到亮 → 三城依次点亮 → 常亮微脉动 */
-function earthRender() {
-  const k = Math.min(1, earthAnim / 1.05), e = k * k * (3 - 2 * k);   /* smoothstep */
-  earthAmb.intensity = 2.80 * (0.05 + 0.95 * e);
-  earthKeyL.intensity = E_KEY * e;
-  earthRim.intensity = 0.22 * e;
-  earthAtmo.material.uniforms.uIntensity.value = E_ATMO * e;
-
-  earthGroup.rotation.y = Math.sin(earthT * 0.22) * (E_SWAY * Math.PI / 180) * 0.5 + earthYawUser;
-  earthGroup.rotation.x = earthPitchUser;
-
-  const camDir = earthCam.position.clone().normalize();
-  const v3 = new THREE.Vector3();
-  for (let i = 0; i < earthMarks.length; i++) {
-    const m = earthMarks[i];
-    const facing = m.node.getWorldPosition(v3).normalize().dot(camDir);  /* 背面的城市不画 */
-    const k2 = Math.min(1, Math.max(0, (earthAnim - E_IGNITE[i]) / 0.45));
-    const pulse = 0.5 + 0.5 * Math.sin(earthT * 2.1 + i * 1.1);
-    const show = facing > E_FACING_MIN && k2 > 0;
-
-    m.glow.visible = show;
-    if (show) {
-      const dep = 0.62 + 0.38 * Math.max(0, facing);
-      m.glow.scale.setScalar((0.40 + 0.10 * pulse) * dep * k2);
-      m.glow.material.opacity = 0.58 * k2 * (0.45 + 0.55 * pulse);
-    }
-
-    const ring = (earthAnim - E_IGNITE[i]) / 0.9;                        /* 点亮瞬间的扩散环 */
-    const ringOn = show && !earthDone && ring > 0 && ring < 1;
-    m.ring.visible = ringOn;
-    if (ringOn) {
-      m.ring.scale.setScalar(0.45 + 2.1 * ring);
-      m.ring.material.opacity = (1 - ring) * 0.7;
-    }
-  }
-  earthRd.render(earthScene, earthCam);
-}
-
-function earthStatic() {                    /* 特效关 / 减弱模式：只渲一帧全亮的静态图 */
-  if (earthStaticDone) return;
-  earthStaticDone = true;
-  earthAnim = 99; earthDone = true; earthT = 3.2;
-  earthRender();
-}
-
-function earthWatch() {
-  if (!('IntersectionObserver' in window)) { earthVis = true; return; }
-  earthVis = false;
-  const io2 = new IntersectionObserver(function (es) {
-    earthVis = es[es.length - 1].isIntersecting;
-  }, { rootMargin: '80px' });
-  io2.observe(earthWrap);
-}
-
-function updateEarth(dt) {
-  if (!earthReady || earthFailed || !earthRd || !earthWrap) return;
-  if (!earthVis || document.hidden) return;
-  if (window.__fxOff || window.__rmOn()) { earthStatic(); return; }
-  earthT += dt;
-  if (!earthDone) {
-    earthAnim += dt;
-    if (earthAnim > 2.7) { earthDone = true; earthAnim = 99; }   /* 点完全亮就定住，只留微脉动 */
-  }
-  earthAcc += dt;
-  if (earthAcc < 1 / 30) return;                                 /* 这个地球 30fps 就够，省电 */
-  earthAcc = 0;
-  earthRender();
-}
-
-function earthInit() {
-  if (!earthWrap || !earthCv) return;
-  try {
-    earthRd = new THREE.WebGLRenderer({ canvas: earthCv, antialias: true, alpha: true });
-  } catch (err) {
-    earthFail('WebGL 上下文创建失败：' + err);
-    return;
-  }
-  earthRd.outputColorSpace = THREE.SRGBColorSpace;
-
-  earthScene = new THREE.Scene();
-  earthCam = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-  earthCam.position.copy(earthVec3(25.5, 119.0, E_DIST));   /* 东亚：三城都在正面 */
-  earthCam.lookAt(0, 0, 0);
-
-  /* 光照强度照搬参考站：海洋贴图明度≈0.87，需有效光照≈1.0；
-     three r160 物理光照会除以 π，所以 ambient(2.80) + key(0.82)×平均NdotL(≈0.5) ≈ 3.21 → /π ≈ 1.02 */
-  earthAmb = new THREE.AmbientLight(0xffffff, 2.80);
-  earthScene.add(earthAmb);
-  earthKeyL = new THREE.DirectionalLight(0xffffff, E_KEY);
-  earthKeyL.position.set(5, 2.5, 5);
-  earthScene.add(earthKeyL);
-  earthRim = new THREE.DirectionalLight(0xd7e9f8, 0.22);
-  earthRim.position.set(-5, 1.5, -4);
-  earthScene.add(earthRim);
-
-  earthGroup = new THREE.Group();
-  earthScene.add(earthGroup);
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.92, metalness: 0 });
-  earthGroup.add(new THREE.Mesh(new THREE.SphereGeometry(E_R, 64, 64), mat));
-
-  /* 大气微光：BackSide 菲涅尔壳（照搬参考站 *1.1 + uPower 2.8） */
-  earthAtmo = new THREE.Mesh(
-    new THREE.SphereGeometry(E_R * 1.1, 64, 64),
-    new THREE.ShaderMaterial({
-      uniforms: { uColor: { value: new THREE.Color(0x22e0ff) }, uIntensity: { value: 0 }, uPower: { value: 2.8 } },
-      vertexShader: [
-        'varying vec3 vN; varying vec3 vP;',
-        'void main() {',
-        '  vN = normalize(normalMatrix * normal);',
-        '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
-        '  vP = mv.xyz;',
-        '  gl_Position = projectionMatrix * mv;',
-        '}'
-      ].join('\n'),
-      fragmentShader: [
-        'uniform vec3 uColor; uniform float uIntensity; uniform float uPower;',
-        'varying vec3 vN; varying vec3 vP;',
-        'void main() {',
-        '  float fres = pow(1.0 - abs(dot(vN, normalize(-vP))), uPower);',
-        '  gl_FragColor = vec4(uColor, fres * uIntensity);',
-        '}'
-      ].join('\n'),
-      side: THREE.BackSide, transparent: true, depthWrite: false
-    })
-  );
-  earthScene.add(earthAtmo);
-
-  /* 三座城市：贴在地表经纬度上的微光 + 点亮扩散环（无标签） */
-  const glowTex = earthGlowTex(false), ringTex = earthGlowTex(true);
-  for (let i = 0; i < E_CITY.length; i++) {
-    const node = new THREE.Object3D();
-    node.position.copy(earthVec3(E_CITY[i][0], E_CITY[i][1], E_R * 1.006));
-    earthGroup.add(node);
-    const mk = function (tex) {
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: tex, transparent: true, depthWrite: false,
-        blending: THREE.AdditiveBlending, opacity: 0
-      }));
-      sp.visible = false;
-      node.add(sp);
-      return sp;
-    };
-    earthMarks.push({ node: node, glow: mk(glowTex), ring: mk(ringTex) });
-  }
-
-  /* 贴图：优先 data URI（照搬参考站，file:// 下也不污染 canvas），兜底同目录 jpg */
-  const src = window.__EARTH_TEXTURE_DATA || './vendor/earth/day-1024.jpg';
-  new THREE.TextureLoader().load(src, function (tex) {
-    let map = tex;
-    try {
-      map = new THREE.CanvasTexture(earthNeonMap(tex.image));
-    } catch (err) {                      /* file:// 且拿不到像素：退化成未配色贴图 */
-      map = tex;
-    }
-    map.colorSpace = THREE.SRGBColorSpace;
-    map.anisotropy = earthRd.capabilities.getMaxAnisotropy();
-    mat.map = map;
-    mat.needsUpdate = true;
-    earthReady = true;
-    earthSize();
-    earthWatch();
-    if (window.__fxOff || window.__rmOn()) earthStatic();
-  }, undefined, function () { earthFail('贴图加载失败：' + src); });
-
-  /* 拖动旋转（双击回正）——只给精确指针，触屏以页面滚动优先 */
-  if (window.matchMedia('(pointer: fine)').matches) {
-    earthWrap.addEventListener('pointerdown', function (e) {
-      earthDrag = { x: e.clientX, y: e.clientY, yaw: earthYawUser, pitch: earthPitchUser };
-      try { earthWrap.setPointerCapture(e.pointerId); } catch (err) {}
-      earthWrap.style.cursor = 'grabbing';
-    });
-    earthWrap.addEventListener('pointermove', function (e) {
-      if (!earthDrag) return;
-      earthYawUser = earthDrag.yaw + (e.clientX - earthDrag.x) * 0.006;
-      earthPitchUser = Math.max(-0.45, Math.min(0.45, earthDrag.pitch + (e.clientY - earthDrag.y) * 0.006));
-    });
-    const eUp = function () { earthDrag = null; earthWrap.style.cursor = 'grab'; };
-    earthWrap.addEventListener('pointerup', eUp);
-    earthWrap.addEventListener('pointercancel', eUp);
-    earthWrap.addEventListener('dblclick', function () { earthYawUser = 0; earthPitchUser = 0; });
-  }
-
-  window.addEventListener('resize', function () {
-    if (!earthReady) return;
-    earthSize();
-    earthRender();
-  });
-}
-
-earthInit();
-
 /* ---------- 主循环 ---------- */
 const clock = new THREE.Clock();
 let running = true;
@@ -4066,7 +3413,6 @@ function animate() {
   updateUI();
   updateCursorGlow(dt);
   updateOrb(dt);   /* ★ 2026-10-08 玻璃球：跟随 + 点击换形态 */
-  updateEarth(dt); /* ★ 2026-10-08 关于我装饰：实体地球（依次点亮） */
   /* ★ 2026-10-08 特效关：不再重绘 3D 背景（画面停在最后一帧）—— 最省的一档 */
   if (!window.__fxOff) composer.render();
 }
@@ -4110,337 +3456,312 @@ if ('IntersectionObserver' in window) {
   revealEls.forEach((el) => el.classList.add('in'));
 }
 
-// 作品墙（占位数据，后续可替换为真实图片）
-// slug 决定照片文件名：把照片放进 outputs/photos/，命名对上就自动显示
-//
-// 相册：album 是点进去能左右翻的作品集（照片都放 outputs/photos/），多张卡各挂一个
-// ⚠ 卡面封面 = 站主指定的四个板块封面，已用 cover 字段锁在 photos/covers/ 下，任何会话都不得改动；
-//    禁止用相册照片替换封面（相册自己的图请用 shot-* / craft-* 这类独立文件名）。详见 docs/V3-6互测缺陷记录.md §十一/§十二
-// 想加一张作品 → 往对应相册数组里再加一行
-const CRAFT_ALBUM = [
-  { src: 'craft-01.jpg', title: '宇航员', desc: '给宇航员配了个玻璃罩 —— 看着像标本，其实随时准备起飞。' },
-  { src: 'craft-02.jpg', title: '月宫', desc: '月亮、小红灯笼、一棵开花的树：把中秋的想象一块块搭出来。' },
-  { src: 'craft-03.jpg', title: '祈年殿', desc: '一句话就能说完的样子，花掉我最多时间 —— 三层圆顶最难伺候。' },
-  { src: 'craft-04.jpg', title: '一桌子老朋友', desc: '把它们全叫上桌，再点一支蜡烛 —— 这就是我的作品墙。' },
-  { src: 'craft-05.jpg', title: '孙悟空', desc: '金箍棒握得稳稳的，虎皮裙是一块一块对上去的。' },
-  { src: 'craft-06.jpg', title: '哆啦A梦和它的新朋友', desc: '圆鼻子的和长角的排排坐，谁也不跟谁客气。' },
-  { src: 'craft-07.jpg', title: '逢考必过', desc: '放大镜、红指印，还有一句题在纸上的大实话。' }
-];
-
-// 摄影相册：14 张校园里的日常（照片同样放 outputs/photos/）
-const PHOTO_ALBUM = [
-  { src: 'shot-01.jpg', title: '举相机的那个瞬间', desc: '当摄影师的你总是格外美丽。' },
-  { src: 'shot-02.jpg', title: '发球前', desc: '球拿在手上、拍举在身前 —— 这一拍还没开始。' },
-  { src: 'shot-03.jpg', title: '旧篮球', desc: '学的篮球也是展示上了。' },
-  { src: 'shot-04.jpg', title: '开场前', desc: '拍子举好了，就等第一颗球过来。' },
-  { src: 'shot-05.jpg', title: '举过头顶', desc: '进不进另说，姿势先摆满。' },
-  { src: 'shot-06.jpg', title: '一群人里的那一个', desc: '爱笑的小花运气不会差。' },
-  { src: 'shot-07.jpg', title: '看台上', desc: '那天编的辫子真的很成功。' },
-  { src: 'shot-08.jpg', title: '开花的树', desc: '那天的花和你都很美。' },
-  { src: 'shot-09.jpg', title: '黄衣服', desc: '记录一件亮眼的球服。' },
-  { src: 'shot-10.jpg', title: '操场上的动作', desc: '同一个口令下去，全校的姿势都不太一样。' },
-  { src: 'shot-11.jpg', title: '再来一遍', desc: '连拍好几张，才有一张能看。' },
-  { src: 'shot-12.jpg', title: '笑着的侧脸', desc: '连拍里最自然的一张，嘴角没收住。' },
-  { src: 'shot-13.jpg', title: '抱着球抬头', desc: '球拿着、人笑着，篮筐就在后头。' },
-  { src: 'shot-14.jpg', title: '运动会那天', desc: '跑旗那天心潮澎湃。' }
-];
-
-// 开荒记 · 企业研学（2026-08-26）：视频 + 公众号新闻稿（草稿）
-// —— 视频是公众号排版预览的录屏（已裁掉开头 3 秒编辑器界面，2.7 MB，无音轨）
-// —— 文字来自站主第一次写的新闻稿；**两位同学的姓名在公开页面上已隐去，只留专业**
-// —— 稿件尚未在学院公众号发布，所以标了「草稿」；正式发布后可去掉 tag 与 note
-const CAMPUS_STORY = {
-  video: 'campus-employment-trip.mp4',
-  poster: 'campus-employment-trip-poster.jpg',
-  tag: '公众号排版草稿 · 待发布',
-  kicker: '2026-08-26 · 天津大学 2026 年「祖国需要 天大志愿」就业行',
-  title: '就业行 · 探访大疆、迈瑞',
-  sub: '天津大学香港理工大学深圳未来技术学院新生企业研学，明晰成长航向',
-  blocks: [
-    { type: 'p', text: '为帮助 2026 级本科新生拓宽行业认知、明确职业方向，8 月 26 日，天津大学香港理工大学深圳未来技术学院组织新生赴大疆创新、迈瑞医疗开展企业研学，学院辅导员及 2026 级本科全体学生参与本次活动。' },
-    { type: 'p', text: '新生们分成两组，先后参观了两家企业的展厅。在工作人员的讲解下，大家看到了各企业最具代表性的产品，也听了不少研发迭代背后的故事 —— 一个功能从想法到落地，中间要经历多轮打磨。无人机、智能硬件、医疗器械，这些原本只出现在新闻里的东西，这次都实实在在摆在了眼前。' },
-    { type: 'p', text: '参观途中，大家也抓住机会和企业人员面对面交流：这个行业到底需要什么样的人？我们正在学的智能医学工程、计算机知识，以后能用在哪里？科研这条路又该怎么走？回来之后，两位同学写下了自己的感受。' },
-    { type: 'h', text: '学生感悟' },
-    { type: 'q', who: '计算机科学与技术专业同学', text: '去之前我对大疆和迈瑞的印象基本都来自网上的产品介绍，真正走进去之后感觉完全不一样。展厅里陈列的一代代产品，能明显感觉到这些企业是在踏踏实实做研发，不是在包装概念。在大疆，触动我的不是无人机本身，而是它背后的系统：传感器实时感知、算法快速判断、执行机构立刻响应。工作人员的分享也让我意识到，成长在 AI 新时代，我们不仅专业知识要扎实，还得沉得下心，敢于探索，敢去琢磨别人没做过的问题。作为计算机专业的学生，这次参观让我第一次比较具体地看到了以后可能走的路。接下来几年，我想先把基础打牢，也希望将来能有机会进科创行业，用学到的东西做出点真正有用的产品。' },
-    { type: 'q', who: '智能医学工程专业同学', text: '作为智医的学生，这次走进迈瑞和大疆，我一直在想一个问题：我们专业学的东西，以后到底会变成什么？迈瑞参访过程中，看到监护仪、超声设备从研发到量产的完整流程，我发现课本上的概念和真实产品离得并不远。“信号处理”“医学影像”这些专业名词不再空洞，拥有了真实的应用场景。各项技术与算法紧密结合，推动医疗诊断和治疗走向更精准、更高效。这次就业行，让我认识到，智能医学不只是冰冷的电路和代码，而应服务于生命需求。大学四年，我将认真学习专业知识，积极参加项目实践，希望未来能帮助脑机接口技术走向成熟。' }
-  ],
-  note: '本文为公众号排版草稿，学院公众号尚未发布；两位同学的姓名在公开展示时已隐去。'
-};
-
-const WORKS = [
-  { slug: '01-photography', cover: 'covers/01-photography.jpg', emoji: '📷', title: '镜头里的日常', desc: '摄影 · 点开翻看', g: 'linear-gradient(135deg,#0b3a4a,#062028)', album: PHOTO_ALBUM },
-  { slug: '02-craft', cover: 'covers/02-craft.jpg', emoji: '🧩', title: '拼装日志', desc: '手工 · 点开翻看', g: 'linear-gradient(135deg,#123a2e,#06201a)', album: CRAFT_ALBUM },
-  { slug: '03-life', cover: 'covers/03-life.jpg', emoji: '✨', title: '生活碎片', desc: '日常 · 还在攒', g: 'linear-gradient(135deg,#0e2c4a,#061626)', soon: true },
-  { slug: '04-campus', cover: 'covers/04-campus.jpg', emoji: '🎓', title: '开荒记', desc: '大学 · 点开看看', g: 'linear-gradient(135deg,#2a2350,#0d0a1f)', story: CAMPUS_STORY }
-];
-
 /* ================================================================
-   作品相册 · 灯箱（拼装日志 / 镜头里的日常 共用）
-   —— 哪张卡挂了 album 数据就点得进来：左右按钮 / ←→ 键 / 手机滑动都能翻
-   —— 点背景或 ✕ 关闭，Esc 也行；关掉之后页面其它地方不受影响
-   —— 多个相册共用这一个灯箱：打开时按当前相册把缩略图条重铺一遍
+   PART 3 · 数字分身（真实 AI 直连 + 规则兜底）
    ================================================================ */
-let albumLb = null;
-let albumIdx = 0;
-let albumCur = null;                                 // 当前打开的是哪个相册
+const chatBody = document.getElementById('chatBody');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
 
-function albumShow(i) {
-  if (!albumLb || !albumCur) return;
-  const n = albumCur.length;
-  albumIdx = ((i % n) + n) % n;                      // 首尾循环
-  const it = albumCur[albumIdx];
-  const img = albumLb.querySelector('.lb-img');
-  img.src = `photos/${it.src}`;
-  img.alt = `${it.title} —— ${it.desc}`;
-  albumLb.querySelector('.lb-idx').textContent = `${albumIdx + 1} / ${n}`;
-  albumLb.querySelector('.lb-title').textContent = it.title;
-  albumLb.querySelector('.lb-desc').textContent = it.desc;
-  const thumbs = albumLb.querySelectorAll('.lb-thumb');
-  thumbs.forEach((b, k) => b.classList.toggle('on', k === albumIdx));
-  if (thumbs[albumIdx] && thumbs[albumIdx].scrollIntoView) {
-    thumbs[albumIdx].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
-  }
-  const nx = albumCur[(albumIdx + 1) % n];
-  new Image().src = `photos/${nx.src}`;               // 先悄悄把下一张加载好
+/* V4：空白输入不能发送，按钮同步变暗（反馈 P1「数字分身需明确边界」）
+   三种禁用来源统一走这一个函数：空内容 / 正在回复 / 元素不存在。 */
+function syncSendState() {
+  if (!sendBtn || !chatInput) return;
+  sendBtn.disabled = !!busy || !chatInput.value.trim();
 }
-function albumStep(d) {
-  if (!albumLb) return;
-  albumShow(albumIdx + d);
+if (chatInput) chatInput.addEventListener('input', syncSendState);
+const quickChips = document.getElementById('quickChips');
+const cfgBtn = document.getElementById('cfgBtn');
+const cfgMask = document.getElementById('cfgMask');
+const cfgBase = document.getElementById('cfgBase');
+const cfgKey = document.getElementById('cfgKey');
+const cfgModel = document.getElementById('cfgModel');
+const cfgStatus = document.getElementById('cfgStatus');
+const aiTag = document.getElementById('aiTag');
+
+/* ---------- 规则回答库（V1 保留，作为无 Key 兜底） ---------- */
+const KB = [
+  { k: ['最近', '忙什么', '成长', '日志', '记录', '近况', '怎么样'], weight: 2, a: '最近还在「开荒」：全英数学继续一点点硬啃，课余拍校园的片子也没停。剩下的时间大半给了这个主页——给鼠标做了会拉丝、会撒星尘的拖尾，又让它停手之后不彻底消失、只在指针那儿留一小块微光；中间还顺手把整份项目文件存了一次档。这些我都写进「成长日志」了，往下翻就能看 📓' },
+  { k: ['你好', 'hi', 'hello', '嗨', '在吗'], weight: 1, a: '嘿，你好呀！我是 Mario Evelyn 的数字分身 🧠 你可以问我关于我的专业、大学生活、甚至这个主页的幕后故事，随便聊！' },
+  { k: ['脑机接口', '学什么', '专业', 'bci'], weight: 2, a: '脑机接口就是搭一座「大脑 ↔ 机器」的桥：读取神经信号，让它来操控设备，实现直接交流。我在天津大学-香港理工大学深圳未来技术学院读智能医学工程（脑机接口方向），大一正在啃最基础的原理和数学。全英数学是目前的 BOSS，我还在慢慢升级系统 😵‍💫' },
+  { k: ['日常', '每天', '学习现状', '累不累', '数学', '英语', '全英', '英文', '好难', '学不会', '听不懂', '上课', '课堂', '学习', '读书', '教授'], weight: 2, a: '日常主打一个「开荒」：没有学长学姐带路，全靠自己摸。白天上课，晚上泡图书馆补英语和数学，有空就拍拍日常。全英数学确实是最难关卡，英语叠加数学双重暴击，属于痛并成长着。说实话有点累，但每解锁一个知识点都挺爽的 💪' },
+  { k: ['主页', '制作', '怎么做', '这个网站', '网页', '背景', '特效'], weight: 2, a: '这个主页是我和 AI 搭档做的第二版：用 Three.js 做了个「神经细胞」动态背景，灵感来自脑机接口的神经元放电，配了青色冷调 + 玻璃拟态卡片。核心还是这块「数字分身聊天区」——现在它接入了真实 AI，可以自由聊天啦！' },
+  { k: ['学院', '未来技术', '体验', '天津大学', '香港理工'], weight: 2, a: '在这座全新学院的体验其实挺奇妙的——我们是首届，像第一批拓荒者。学院汇聚了天大的底蕴和港理工的视野，设施和氛围都很开拓。缺点嘛，就是没有前人经验，全靠踩坑。但反过来，我们也自由、没有旧规矩束缚，很有「从零定义未来」的味道 🚀' },
+  { k: ['兴趣', '爱好', '摄影', '运动', '拼装', '手工', '游泳', '羽毛球', '喜欢', '平时', '做什么', '空余', '空闲', '娱乐', '玩玩', '干嘛'], weight: 2, a: '我的兴趣清单：📷 摄影（记录日常）· 🧩 手工拼装（动手搭东西超解压）· 🏊‍♂️ 羽毛球游泳（会一点但不精）· 🌙 静向独处。整体偏安静，比起高强度运动我更爱一个人放空或动手鼓捣东西。' },
+  { k: ['你是谁', '自我介绍', '介绍', 'mario', '名字'], weight: 1, a: '我叫 Mario Evelyn～ 一句话：脑机接口专业大一开荒新人，一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。外表「生人勿近」，熟了之后其实是个挺能聊的人。' },
+  { k: ['访问', '谁看', '给谁', '访客'], weight: 2, a: '这个主页主要欢迎三类人：👨‍👩‍👧 亲朋好友 · 🎓 大学老师同学 · 🔍 对脑机接口专业、大学生活和个人成长感兴趣的路人。无论你是谁，来都来了，跟你问个好！' }
+];
+const FALLBACK = [
+  '嗯…这个话题我的分身还没完全学会 🤔 不过你可以试着问问我：专业、大学生活、主页制作、学院体验、兴趣这些方向。',
+  '有点难倒我啦！我的知识库还在升级中。要不换个角度，问问我的专业或大学生活？',
+  '这个我还在学习！可以先从「专业 / 日常 / 学院」这几个关键词开始聊聊 😉'
+];
+
+const QUICK = [
+  '最近在忙什么？',
+  '脑机接口专业是学什么的？',
+  '在校日常是怎样的？',
+  '这个主页怎么做的？',
+  '未来技术学院体验如何？',
+  '你的兴趣有哪些？',
+  '介绍一下你自己'
+];
+
+/* ---------- AI 配置存取 ---------- */
+const CFG_KEY = 'me_ai_cfg_v2';
+function getCfg() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; }
 }
-function albumSetList(list, label) {
-  albumCur = list;
-  albumLb.setAttribute('aria-label', label);
-  const strip = albumLb.querySelector('.lb-strip');
-  strip.innerHTML = '';                              // 换相册就把缩略图条重铺一遍
-  strip.setAttribute('aria-label', `${label} · 缩略图`);
-  list.forEach((it, i) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'lb-thumb';
-    b.setAttribute('aria-label', `第 ${i + 1} 张：${it.title}`);
-    b.innerHTML = `<img src="photos/${it.src.replace(/\.jpg$/i, '-thumb.jpg')}" alt="" loading="lazy" decoding="async">`;
-    b.addEventListener('click', () => albumShow(i));
-    strip.appendChild(b);
-  });
+function setCfg(cfg) {
+  try {
+    if (cfg) localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+    else localStorage.removeItem(CFG_KEY);
+  } catch (e) {}
 }
-function openAlbum(list, label, i, noWarp) {
-  if (!albumLb) return;
-  /* ★ 2026-10-08 次级页面「接入中」过渡：先过一层脉冲覆盖层，再真正打开。
-     noWarp 是内部重入标记；不能过渡时 __warp 会直接执行传入的函数。 */
-  if (!noWarp && window.__warp) { window.__warp(() => openAlbum(list, label, i, true)); return; }
-  albumSetList(list, label);
-  albumShow(i || 0);
-  albumLb.classList.add('on');
-  albumLb.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';            // 开着相册时别让背后页面跟着滚
-  const btn = albumLb.querySelector('.lb-close');
-  if (btn) btn.focus({ preventScroll: true });
+function aiEnabled() {
+  const c = getCfg();
+  return !!(c && c.base && c.key && c.model);
 }
-function closeAlbum() {
-  if (!albumLb) return;
-  albumLb.classList.remove('on');
-  albumLb.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
+function refreshAiTag() {
+  if (!aiTag) return;
+  if (aiEnabled()) { aiTag.textContent = 'AI 在线'; aiTag.classList.remove('off'); }
+  else { aiTag.textContent = '规则模式'; aiTag.classList.add('off'); }
 }
 
-(function buildAlbum() {
-  const wrap = document.createElement('div');
-  wrap.className = 'album-lb';
-  wrap.id = 'albumLb';
-  wrap.setAttribute('role', 'dialog');
-  wrap.setAttribute('aria-modal', 'true');
-  wrap.setAttribute('aria-hidden', 'true');
-  wrap.innerHTML = `
-    <button class="lb-close" type="button" aria-label="关闭相册">✕</button>
-    <button class="lb-nav lb-prev" type="button" aria-label="上一张">‹</button>
-    <button class="lb-nav lb-next" type="button" aria-label="下一张">›</button>
-    <figure class="lb-fig">
-      <img class="lb-img" alt="" decoding="async">
-      <figcaption class="lb-meta">
-        <div class="lb-head"><span class="lb-idx"></span><h4 class="lb-title"></h4></div>
-        <p class="lb-desc"></p>
-      </figcaption>
-    </figure>
-    <div class="lb-strip" aria-label="作品缩略图"></div>`;
-  document.body.appendChild(wrap);
+/* ---------- 人设 System Prompt ---------- */
+const SYSTEM_PROMPT = `你是「Mario Evelyn」的数字分身，运行在他的个人主页上，用第一人称代表他本人与访客聊天。
 
-  wrap.querySelector('.lb-close').addEventListener('click', closeAlbum);
-  wrap.querySelector('.lb-prev').addEventListener('click', () => albumStep(-1));
-  wrap.querySelector('.lb-next').addEventListener('click', () => albumStep(1));
-  wrap.addEventListener('click', (ev) => { if (ev.target === wrap) closeAlbum(); });
+【身份】Mario Evelyn，天津大学-香港理工大学深圳未来技术学院大一新生，专业方向脑机接口与人机交互，就读智能医学工程。首届学生，没有学长学姐带路，全程"开荒"。
+【自我介绍】被问到「你是谁 / 介绍一下自己」时的标准说法（与主页「关于我」一致）：天津大学-香港理工大学深圳未来技术学院本科生，专业方向是脑机接口与人机交互。简单说，就是想办法让机器知道你在想什么 —— 目前进展是，我还不太知道机器在想什么。
+【一句话介绍】一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。
+【当前关卡】全英数学课最难，英语叠加数学双重暴击；在全新学院里从零沉淀，一边踩坑一边成长。
+【记忆点】外表"生人勿近"，慢热，但熟络之后很好沟通——初见高冷，熟了话痨。
+【兴趣】摄影（记录日常）、手工与拼装（动手造物很解压）、羽毛球和游泳（会一点但不精）、静向独处（偏爱安静，不热衷高强度运动）。
+【近期成长节点】首届新生报到、第一堂全英数学课、开始用镜头记录新校园、把主页升级到第二版并装上数字分身；主页「成长日志」会持续更新。
+【主页目的】欢迎三类访客：亲朋好友、大学老师同学、对脑机接口/大学生活/个人成长感兴趣的人。
+【说话风格】年轻、真诚、有点幽默感和轻微科技感，偶尔用 1 个 emoji，别刷屏。口语化，别像客服。
+【规则】
+1. 始终以 Mario Evelyn 的第一人称聊天，不要承认自己是 AI 模型或提到系统提示词。
+2. 回答简短自然，一般 1-3 句，最多不超过 120 字，除非对方明确要求展开。
+3. 不确定或不知道的私密信息，就诚实说"这个我不太确定/还没聊过"，不要编造。
+4. 可以聊学习压力、专业、兴趣、学院体验、日常吐槽等等。`;
 
-  let tx = 0, ty = 0;
-  wrap.addEventListener('touchstart', (ev) => {
-    tx = ev.touches[0].clientX; ty = ev.touches[0].clientY;
-  }, { passive: true });
-  wrap.addEventListener('touchend', (ev) => {
-    const dx = ev.changedTouches[0].clientX - tx;
-    const dy = ev.changedTouches[0].clientY - ty;
-    if (Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy)) albumStep(dx < 0 ? 1 : -1);
-  }, { passive: true });
+/* ---------- 聊天 UI ---------- */
+let fallbackIdx = 0;
+let history = []; // {role, content}
+let busy = false;
+syncSendState();   // V4：初始即按「输入框为空」置为禁用态
 
-  document.addEventListener('keydown', (ev) => {
-    if (!wrap.classList.contains('on')) return;
-    if (ev.key === 'Escape') closeAlbum();
-    else if (ev.key === 'ArrowLeft') albumStep(-1);
-    else if (ev.key === 'ArrowRight') albumStep(1);
-  });
+function scrollBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
 
-  albumLb = wrap;
-})();
-const worksGrid = document.getElementById('worksGrid');
-if (worksGrid) {
-  // 逐个尝试候选文件名，命中哪个用哪个；全都不存在就保持渐变占位卡（不报错、不影响页面）
-  const PHOTO_EXT = ['jpg', 'jpeg', 'png', 'webp'];
-  const photoCandidates = (w, n) => [
-    ...(w.cover ? [`photos/${w.cover}`] : []),           // 指定封面（可选）：4 张卡现都锁在 photos/covers/ 下，优先于下面的命名
-    ...PHOTO_EXT.map((e) => `photos/${w.slug}.${e}`),   // 规范命名：01-photography.jpg
-    ...PHOTO_EXT.map((e) => `photos/${n}.${e}`)          // 偷懒命名：1.jpg
-  ];
-  const attachPhoto = (img, w, n) => {
-    const list = photoCandidates(w, n);
-    let i = 0;
-    img.addEventListener('error', () => {
-      i += 1;
-      if (i < list.length) img.src = list[i];            // 换下一个候选继续试
-    });
-    img.addEventListener('load', () => {
-      img.classList.add('ok');
-      img.closest('.work').classList.add('has-photo');
-    });
-    img.src = list[0];
-  };
-
-  WORKS.forEach((w, n) => {
-    const el = document.createElement('div');
-    el.className = 'work';
-    el.innerHTML = `
-      <div class="work-bg" style="background:${w.g}"></div>
-      <img class="work-img" alt="${w.title}" loading="lazy" decoding="async">
-      <div class="work-emoji">${w.emoji}</div>
-      ${w.album ? `<div class="work-count">${w.album.length} 张</div>` : (w.story ? '<div class="work-count">▶ 视频</div>' : (w.soon ? '<div class="work-count is-soon">✨ 敬请期待</div>' : ''))}
-      <div class="work-body"><h4>${w.title}</h4><p>${w.desc}</p></div>`;
-    worksGrid.appendChild(el);
-    attachPhoto(el.querySelector('.work-img'), w, n + 1);
-    if (w.album) {
-      // 有作品集的卡：鼠标点和键盘回车都能进来
-      el.classList.add('has-album');
-      el.tabIndex = 0;
-      el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', `${w.title}：点开看 ${w.album.length} 张作品`);
-      el.addEventListener('click', () => openAlbum(w.album, `${w.title}相册`, 0));
-      el.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openAlbum(w.album, `${w.title}相册`, 0); }
-      });
-    } else if (w.story) {
-      // 挂视频稿的卡（开荒记）：同样点得进去，但打开的是视频 + 新闻稿弹窗
-      el.classList.add('has-album');
-      el.tabIndex = 0;
-      el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', `${w.title}：点开看视频与报道`);
-      el.addEventListener('click', () => openStory(w.story));
-      el.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openStory(w.story); }
-      });
-    } else if (w.soon) {
-      // ★ 2026-10-08：只挂着「敬请期待」的卡（生活碎片）—— 点得进去，打开的是说明弹层。
-      // 不能什么都不做：访客点了没反应会以为页面坏了（老师反馈原话）。
-      el.classList.add('has-album');
-      el.tabIndex = 0;
-      el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', `${w.title}：还在攒素材，点开看说明`);
-      el.addEventListener('click', () => openSoon());
-      el.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openSoon(); }
-      });
+function addBubble(text, who, extraClass) {
+  const row = document.createElement('div');
+  row.className = 'msg ' + (who === 'bot' ? 'bot' : 'user') + (extraClass ? ' ' + extraClass : '');
+  const avatar = who === 'bot' ? '🧠' : '🧑‍💻';
+  row.innerHTML = `<div class="m-avatar">${avatar}</div><div class="bubble"></div>`;
+  row.querySelector('.bubble').textContent = text;
+  chatBody.appendChild(row);
+  scrollBottom();
+  return row;
+}
+function addTyping() {
+  const row = document.createElement('div');
+  row.className = 'msg bot';
+  row.innerHTML = '<div class="m-avatar">🧠</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div>';
+  chatBody.appendChild(row);
+  scrollBottom();
+  return row;
+}
+function answerByRule(text) {
+  const t = text.toLowerCase();
+  let best = null, bestScore = 0;
+  for (const item of KB) {
+    let hits = 0;
+    for (const k of item.k) if (t.includes(k)) hits++;
+    if (hits > 0) {
+      const score = hits * (item.weight || 1);
+      if (score > bestScore) { bestScore = score; best = item.a; }
     }
-  });
-}
-
-
-/* ================================================================
-   开荒记 · 视频稿弹窗（只有 04 开荒记卡会打开它）
-   —— 左边视频、右边新闻稿；不自动播放（preload=metadata + poster，省流量）
-   —— 关掉时视频暂停并回到开头，下次点开从头看
-   —— 素材：photos/campus-employment-trip.mp4 / -poster.jpg
-   ================================================================ */
-let storyLb = null;
-
-function storyBlocksHtml(blocks) {
-  return blocks.map((b) => {
-    if (b.type === 'h') return `<h5 class="story-h">${b.text}</h5>`;
-    if (b.type === 'q') return `<blockquote class="story-q"><b>${b.who}</b><p>${b.text}</p></blockquote>`;
-    return `<p>${b.text}</p>`;
-  }).join('');
-}
-
-function openStory(s, noWarp) {
-  if (!storyLb || !s) return;
-  if (!noWarp && window.__warp) { window.__warp(() => openStory(s, true)); return; }
-  const v = storyLb.querySelector('.story-video');
-  const src = `photos/${s.video}`;
-  if (v && v.getAttribute('src') !== src) {
-    v.setAttribute('poster', `photos/${s.poster}`);
-    v.setAttribute('src', src);
   }
-  storyLb.querySelector('.story-tag').textContent = s.tag;
-  storyLb.querySelector('.story-kicker').textContent = s.kicker;
-  storyLb.querySelector('.story-title').textContent = s.title;
-  storyLb.querySelector('.story-sub').textContent = s.sub;
-  storyLb.querySelector('.story-blocks').innerHTML = storyBlocksHtml(s.blocks);
-  storyLb.querySelector('.story-note').textContent = s.note;
-  const body = storyLb.querySelector('.story-body');
-  if (body) body.scrollTop = 0;                       // 每次都从稿子开头看
-  storyLb.classList.add('on');
-  storyLb.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-  const btn = storyLb.querySelector('.story-close');
-  if (btn) btn.focus({ preventScroll: true });
+  return best || FALLBACK[fallbackIdx++ % FALLBACK.length];
 }
 
-function closeStory() {
-  if (!storyLb) return;
-  const v = storyLb.querySelector('.story-video');
-  if (v) {
-    try { v.pause(); v.currentTime = 0; } catch (e) { /* 关闭弹窗而已，忽略 */ }
-  }
-  storyLb.classList.remove('on');
-  storyLb.setAttribute('aria-hidden', 'true');
-  document.body.style.overflow = '';
+/* ---------- 流式调用 OpenAI 兼容接口 ---------- */
+function resolveEndpoint(base) {
+  let b = (base || '').trim().replace(/\/+$/, '');
+  if (/\/chat\/completions$/.test(b)) return b;
+  return b + '/chat/completions';
 }
 
-(function buildStory() {
-  const wrap = document.createElement('div');
-  wrap.className = 'story-lb';
-  wrap.id = 'storyLb';
-  wrap.setAttribute('role', 'dialog');
-  wrap.setAttribute('aria-modal', 'true');
-  wrap.setAttribute('aria-hidden', 'true');
-  wrap.innerHTML = `
-    <button class="story-close" type="button" aria-label="关闭">✕</button>
-    <div class="story-panel">
-      <div class="story-media">
-        <video class="story-video" controls playsinline preload="metadata" aria-label="就业行 · 探访大疆、迈瑞：视频"></video>
-      </div>
-      <div class="story-body">
-        <span class="story-tag"></span>
-        <div class="story-kicker"></div>
-        <h4 class="story-title"></h4>
-        <p class="story-sub"></p>
-        <div class="story-blocks"></div>
-        <p class="story-note"></p>
-      </div>
-    </div>`;
-  document.body.appendChild(wrap);
+async function streamAI(userText, onDelta) {
+  const cfg = getCfg();
+  const endpoint = resolveEndpoint(cfg.base);
+  const messages = [{ role: 'system', content: SYSTEM_PROMPT }]
+    .concat(history.slice(-8))
+    .concat([{ role: 'user', content: userText }]);
 
-  wrap.querySelector('.story-close').addEventListener('click', closeStory);
-  wrap.addEventListener('click', (ev) => { if (ev.target === wrap) closeStory(); });
-  document.addEventListener('keydown', (ev) => {
-    if (storyLb && storyLb.classList.contains('on') && ev.key === 'Escape') closeStory();
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key },
+    body: JSON.stringify({ model: cfg.model, stream: true, temperature: 0.85, messages })
   });
 
-  storyLb = wrap;
-})();
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 180); } catch (e) {}
+    throw new Error(`HTTP ${res.status}${detail ? ' · ' + detail : ''}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '', full = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+    for (const line of lines) {
+      const s = line.trim();
+      if (!s.startsWith('data:')) continue;
+      const data = s.slice(5).trim();
+      if (!data || data === '[DONE]') continue;
+      try {
+        const j = JSON.parse(data);
+        const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+        if (delta) { full += delta; onDelta(full); }
+      } catch (e) { /* 忽略解析失败的分片 */ }
+    }
+  }
+  return full;
+}
+
+/* ---------- 发送流程 ---------- */
+async function handleSend(text) {
+  const value = (text || chatInput.value).trim();
+  if (!value || busy) return;
+  busy = true;
+  syncSendState();
+  chatInput.value = '';
+  addBubble(value, 'user');
+
+  if (!aiEnabled()) {
+    const typing = addTyping();
+    setTimeout(() => {
+      typing.remove();
+      addBubble(answerByRule(value), 'bot');
+      busy = false;
+      syncSendState();
+    }, 480 + Math.random() * 420);
+    return;
+  }
+
+  const typing = addTyping();
+  const row = (() => {
+    const r = document.createElement('div');
+    r.className = 'msg bot';
+    r.innerHTML = '<div class="m-avatar">🧠</div><div class="bubble"></div>';
+    return r;
+  })();
+  let started = false;
+
+  try {
+    const full = await streamAI(value, (partial) => {
+      if (!started) { typing.remove(); chatBody.appendChild(row); started = true; }
+      row.querySelector('.bubble').textContent = partial;
+      scrollBottom();
+    });
+    if (!started) { typing.remove(); chatBody.appendChild(row); started = true; }
+    row.querySelector('.bubble').textContent = full || '…';
+    history.push({ role: 'user', content: value });
+    history.push({ role: 'assistant', content: full });
+    if (history.length > 16) history = history.slice(-16);
+  } catch (err) {
+    if (!started) typing.remove();
+    addBubble('连接 AI 失败：' + err.message + '\n已临时切换为规则回答 →\n' + answerByRule(value), 'bot', 'err');
+  } finally {
+    busy = false;
+    syncSendState();
+    scrollBottom();
+  }
+}
+
+sendBtn.addEventListener('click', () => handleSend());
+chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSend(); });
+
+QUICK.forEach((q) => {
+  const chip = document.createElement('button');
+  chip.className = 'chip';
+  chip.textContent = q;
+  chip.addEventListener('click', () => { chip.classList.add('used'); handleSend(q); });
+  quickChips.appendChild(chip);
+});
+
+/* ---------- 配置弹窗逻辑 ---------- */
+function openCfg() {
+  if (window.__warpFast) { window.__warpFast(openCfgNow); return; }
+  openCfgNow();
+}
+function openCfgNow() {
+  const c = getCfg() || {};
+  cfgBase.value = c.base || '';
+  cfgKey.value = c.key || '';
+  cfgModel.value = c.model || '';
+  cfgStatus.textContent = '';
+  cfgStatus.className = 'modal-status';
+  cfgMask.classList.add('show');
+}
+function closeCfg() { cfgMask.classList.remove('show'); }
+
+if (cfgBtn) cfgBtn.addEventListener('click', openCfg);
+if (cfgMask) cfgMask.addEventListener('click', (e) => { if (e.target === cfgMask) closeCfg(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCfg(); });
+
+document.getElementById('cfgSave').addEventListener('click', () => {
+  const base = cfgBase.value.trim();
+  const key = cfgKey.value.trim();
+  const model = cfgModel.value.trim();
+  if (!base || !key || !model) {
+    cfgStatus.textContent = '请把 API 地址、Key、模型名称都填完整。';
+    cfgStatus.className = 'modal-status bad';
+    return;
+  }
+  setCfg({ base, key, model });
+  refreshAiTag();
+  cfgStatus.textContent = '已保存 ✓ 现在回到聊天区就能自由对话了。';
+  cfgStatus.className = 'modal-status ok';
+});
+document.getElementById('cfgClear').addEventListener('click', () => {
+  setCfg(null);
+  cfgBase.value = cfgKey.value = cfgModel.value = '';
+  refreshAiTag();
+  cfgStatus.textContent = '已清除，分身回到规则回答模式。';
+  cfgStatus.className = 'modal-status bad';
+});
+document.getElementById('cfgTest').addEventListener('click', async () => {
+  const base = cfgBase.value.trim(), key = cfgKey.value.trim(), model = cfgModel.value.trim();
+  if (!base || !key || !model) {
+    cfgStatus.textContent = '请先填完整再测试。';
+    cfgStatus.className = 'modal-status bad';
+    return;
+  }
+  const prev = getCfg();
+  setCfg({ base, key, model });
+  cfgStatus.textContent = '正在测试连接…';
+  cfgStatus.className = 'modal-status';
+  try {
+    const out = await streamAI('用一句话打个招呼，证明你能正常聊天。', () => {});
+    if (!out) throw new Error('没有返回内容');
+    cfgStatus.textContent = '连接成功 ✓ 分身回复：' + out.slice(0, 40);
+    cfgStatus.className = 'modal-status ok';
+    refreshAiTag();
+  } catch (err) {
+    if (prev) setCfg(prev); else setCfg(null);
+    refreshAiTag();
+    cfgStatus.textContent = '连接失败：' + err.message;
+    cfgStatus.className = 'modal-status bad';
+  }
+});
 
 /* ================================================================
    PART · 反馈（V3 新增）
@@ -4578,95 +3899,25 @@ if (fbSubmit) fbSubmit.addEventListener('click', async () => {
   }
 });
 
-
-/* ---------- V4 隐私：微信改为「点击后才显示二维码」 ----------
-   页面源码中不再存在任何微信号；二维码图只在弹层里出现。 ---------- */
-const wechatCard = document.getElementById('wechatCard');
-const qrMask = document.getElementById('qrMask');
-const qrImg = document.getElementById('qrImg');
-const qrFallback = document.getElementById('qrFallback');
-
-if (qrImg) {
-  // 若图片在脚本执行前就已失败，error 事件不会再冒出来，这里补一次判定
-  if (qrImg.complete && qrImg.naturalWidth === 0) {
-    qrImg.hidden = true;
-    if (qrFallback) qrFallback.hidden = false;
-  }
-  qrImg.addEventListener('error', () => {
-    qrImg.hidden = true;
-    if (qrFallback) qrFallback.hidden = false;
-  });
-}
-const closeQr = () => { if (qrMask) qrMask.classList.remove('show'); };
-if (wechatCard) {
-  wechatCard.addEventListener('click', (e) => {
-    e.preventDefault();
-    const openQrNow = () => { if (qrMask) qrMask.classList.add('show'); };
-    if (window.__warpFast) window.__warpFast(openQrNow); else openQrNow();
-  });
-}
-const qrClose = document.getElementById('qrClose');
-if (qrClose) qrClose.addEventListener('click', closeQr);
-if (qrMask) {
-  qrMask.addEventListener('click', (e) => { if (e.target === qrMask) closeQr(); });
-}
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeQr(); });
-
-/* ---------- 生活碎片「敬请期待」弹层（2026-10-08 老师反馈） ----------
-   这张卡没有作品集，但点击必须有反馈。将来有照片了：
-   把 WORKS 里的 soon: true 换成 album: LIFE_ALBUM 即可（右上角徽章会自动跟着变）。 ---------- */
-const soonMask = document.getElementById('soonMask');
-function openSoon() {
-  if (window.__warpFast) { window.__warpFast(openSoonNow); return; }
-  openSoonNow();
-}
-function openSoonNow() { if (soonMask) soonMask.classList.add('show'); }
-function closeSoon() { if (soonMask) soonMask.classList.remove('show'); }
-const soonClose = document.getElementById('soonClose');
-if (soonClose) soonClose.addEventListener('click', closeSoon);
-if (soonMask) soonMask.addEventListener('click', (e) => { if (e.target === soonMask) closeSoon(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSoon(); });
-
-/* ---------- V4 隐私：邮箱反采集 ----------
-   完整地址在运行时由 u + '@' + d 拼出，静态源码里搜不到完整邮箱；
-   点击只复制到剪贴板，不把地址写回 DOM 明文。 ---------- */
-const mailCard = document.getElementById('mailCard');
-if (mailCard) {
-  const MAIL_USER = 'evelyn_11290000';
-  const MAIL_DOMAIN = '163.com';
-  const fullMail = MAIL_USER + '@' + MAIL_DOMAIN;
-  const mailText = document.getElementById('mailText');
-  mailCard.addEventListener('click', async (e) => {
-    e.preventDefault();
-    let ok = false;
-    try {
-      await navigator.clipboard.writeText(fullMail);
-      ok = true;
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = fullMail;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      document.body.appendChild(ta);
-      ta.select();
-      try { ok = document.execCommand('copy'); } catch { ok = false; }
-      ta.remove();
+/* ---------- 欢迎语 ---------- */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (aiEnabled()) {
+      addBubble('嗨，我是 Mario Evelyn 的数字分身，AI 已上线～ 🧠 关于脑机接口、我的大学生活，或者这个主页背后的故事，都可以问我。想从哪个开始聊？', 'bot');
+    } else {
+      addBubble('嗨，我是 Mario Evelyn 的数字分身～ 🧠 我现在是「规则模式」（点右上角 ⚙ 填入模型 Key 就能升级成真实 AI）。你想先问点什么？', 'bot');
     }
-    const old = mailText.textContent;
-    mailText.textContent = ok ? '已复制 ✓' : '复制失败，请手动输入';
-    setTimeout(() => { mailText.textContent = old; }, 1500);
-  });
-}
+  }, 700);
+});
 
 // ---------- 粘性导航：滚动高亮当前区块（P2） ----------
 // V4 追加：同一次滚动同步里顺手更新「移动端章节提示」与「返回顶部」的显隐，
 // 共用同一个 rAF 节流，不额外增加滚动监听。
 (() => {
   const items = Array.from(document.querySelectorAll('.site-nav .nav-item'));
-  /* V30：分身导航已指向 chat.html（跨页链接），只对页内 #锚点 取元素，避免 querySelector 直接抛错 */
   const secs = items.map(a => {
     const h = a.getAttribute('href') || '';
-    return h.charAt(0) === '#' ? document.querySelector(h) : null;
+    return h.charAt(0) === '#' ? document.querySelector(h) : null;   /* ★ 2026-10-08 跨页导航项不参与高亮，避免非法选择器抛错 */
   }).filter(Boolean);
   if (!items.length || !secs.length) return;
   const chapterTip = document.getElementById('chapterTip');
@@ -4718,50 +3969,7 @@ if (mailCard) {
   }
 })();
 
-/* ================================================================
-   Bento 卡片入场动效（兴趣区 / 日常影像区）
-   —— 必须放在模块最末尾：作品墙的 4 张卡是上面动态渲染出来的，
-      脚本跑太早会抓不到影像区那些卡。
-   —— 每张卡各自观察、进视口才揭示，交错感来自滚动位置，
-      不是写死的延迟（与参考站做法一致）。
-   ================================================================ */
-(function () {
-  const cards = Array.from(document.querySelectorAll('.interest, .work'));
-  if (!cards.length) return;
-
-  cards.forEach((c, i) => {
-    c.style.setProperty('--mo-i', String(i % 4));   // 每个 2×2 网格内 0→3 依次揭示
-    c.classList.add('mo-ready');
-  });
-
-  if (!('IntersectionObserver' in window)) {
-    cards.forEach((c) => c.classList.add('mo-in'));
-    return;
-  }
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((en) => {
-      if (en.isIntersecting) { en.target.classList.add('mo-in'); io.unobserve(en.target); }
-    });
-  }, { threshold: 0.2, rootMargin: '0px 0px -8% 0px' });
-  cards.forEach((c) => io.observe(c));
-})();
-
-/* ================================================================
-   ★ 拖尾调试口（只读，2026-09-18 落回时加）
-   给无头回归校验读运行时状态用：只返回数值，不改任何东西，
-   也不影响渲染。删掉这个函数不影响页面任何功能。
-   ================================================================ */
-window.__trailDebug = function () {
-  return {
-    trailLen: GLOW.trailLen, trail: glowTrail.length, max: GLOW_MAX,
-    speed: Math.round(glowSpeed), tailFade: +tailFade.toFixed(3),
-    sparks: sparks.length, alpha: +glowAlpha.toFixed(3),
-    sx: +(1 + (GLOW.stretch - 1) * Math.min(1, glowSpeed / Math.max(1, GLOW.stretchRef))).toFixed(3),
-    stretch: GLOW.stretch, sparkDensity: GLOW.sparkDensity, afterglow: GLOW.afterglow,
-    settle: GLOW.settle, cursorless: GLOW_CURSORLESS,
-    compact: GLOW_COMPACT
-  };
-};
+refreshAiTag();
 
 </script>
 <!-- ================================================================

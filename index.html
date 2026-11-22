@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Mario Evelyn · 数字分身个人主页 V2</title>
-<meta name="description" content="Mario Evelyn 的数字分身个人主页 V2 —— 脑机接口专业 · 神经引擎视觉 · AI 分身对话" />
+<title>Mario Evelyn · 数字分身个人主页 v4</title>
+<meta name="description" content="Mario Evelyn 的数字分身个人主页 v4 —— 脑机接口专业 · 神经引擎视觉 · 接入真实语言模型的数字分身" />
 <style>
   /* ============================================================
      V2 · 全局变量（神经引擎配色 + 玻璃拟态）
@@ -1716,7 +1716,7 @@
         <a class="btn btn-ghost" id="ptOpen" href="#about">↓ 认识我一下</a>
       </div>
       <!-- ★ 2026-10-08 反馈：聊天已降为次级操作（.btn-link），补一行小字说明「聊了能得到什么」 -->
-      <p class="chat-note">分身可以回答：我在学什么 · 最近在忙什么 · 为什么选脑机接口</p>
+      <p class="chat-note">分身已接入真实语言模型：我在学什么 · 最近在忙什么 · 以及你临时想到的任何问题</p>
     </div>
 
     <div class="hero-hint">Click anywhere to trigger impulse · 点击空白处触发脉冲</div>
@@ -1764,9 +1764,9 @@
             <h3>数字分身个人主页</h3>
             <p class="proj-desc">将脑机接口的神经信号意象转成可阅读的个人主页，持续打磨内容层级、动效与移动端体验。</p>
             <ul class="proj-meta">
-              <li><b>方法 / 工具</b>：HTML、CSS、JavaScript、Three.js</li>
-              <li><b>我负责</b>：内容结构、视觉与动效实现、移动端适配与隐私加固</li>
-              <li><b>下一步</b>：继续修移动端细节，把项目与日志写得更完整</li>
+              <li><b>方法 / 工具</b>：HTML、CSS、JavaScript、Three.js；期末版追加 Node.js 服务端 + DeepSeek 语言模型 API</li>
+              <li><b>我负责</b>：内容结构、视觉与动效实现、移动端适配与隐私加固；期末版另负责分身资料整理、提示词与边界设计、25 题效果测试</li>
+              <li><b>下一步</b>：按测试结果继续调优分身的回答质量与边界，补齐移动端细节</li>
             </ul>
             <div class="proj-links"><span class="proj-nolink">源码暂不公开 · 隐私保护</span></div>
           </article>
@@ -1824,15 +1824,15 @@
         <div class="chat-head">
           <div class="chat-avatar">🧠</div>
           <div class="chat-head-title">
-            <h3>数字分身 · Mario Evelyn <span class="ai-tag off">规则模式</span></h3>
+            <h3>数字分身 · Mario Evelyn <span class="ai-tag">真实 AI</span></h3>
             <p>脑机接口大一 · 开荒中的分身 · 有问必答</p>
           </div>
           <a class="icon-btn" href="chat.html" title="进入对话" aria-label="进入数字分身对话">→</a>
         </div>
         <div class="chat-entry-body">
-          <p>我在学什么、最近在忙什么、为什么选脑机接口、这个主页怎么搭的 —— 都能问它。默认是规则模式，不联网也能用；想升级成真实 AI，进对话页右上角 ⚙ 填自己的 Key 就行。</p>
+          <p>我在学什么、最近在忙什么、为什么选脑机接口、这个主页怎么搭的 —— 都能问它，没预设过的问题也行。期末版由服务端调用真实语言模型，基于我的资料实时生成回答，访客不用填任何配置。</p>
           <a class="btn btn-primary" href="chat.html">💬 进入对话</a>
-          <p class="chat-entry-tip">完整对话页在 chat.html（密钥只存在你自己的浏览器里）</p>
+          <p class="chat-entry-tip">完整对话页在 chat.html · 点右上角 ⚙ 可查看模型厂商与型号（密钥只存在服务端）</p>
         </div>
       </div>
     </section>
@@ -1881,7 +1881,7 @@
   </main>
 
   <footer class="foot">
-    <b>MARIO EVELYN</b> · MIND-CHIP × COLLEGE-FRESH · 数字分身个人主页 <b>v3</b>
+    <b>MARIO EVELYN</b> · MIND-CHIP × COLLEGE-FRESH · 数字分身个人主页 <b>v4</b>
   </footer>
 </div>
 
@@ -4472,7 +4472,7 @@ function closeStory() {
       读取 / 修改 / 删除一律被拒绝。前端不做任何权限假象 ——
       「把按钮藏起来」不等于安全，真正的门闩在数据库上。
    ================================================================ */
-const SITE_VERSION = 'v3';  /* 提交时自动附带，方便分辨反馈来自哪一版页面 */
+const SITE_VERSION = 'v4';  /* 提交时自动附带，方便分辨反馈来自哪一版页面 */
 const SUPABASE_URL = 'https://powpjlyhnyenmdinimzq.supabase.co';
 /* publishable / anon key：本来就是公开值，放前端是设计如此（详见文件上方那段说明）。
    高权限的 secret / service_role key 绝不能出现在这里。 */

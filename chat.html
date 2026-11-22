@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>数字分身 · Mario Evelyn</title>
-<meta name="description" content="Mario Evelyn 的数字分身 —— 规则模式开箱即用，填入任意 OpenAI 兼容接口即可变成真实 AI 分身（密钥只存在你自己的浏览器里）。" />
+<meta name="description" content="Mario Evelyn 的数字分身 —— 服务端接入真实语言模型，访客无需任何配置即可自由提问，答案基于本人资料实时生成。" />
 <style>
   /* ============================================================
      V2 · 全局变量（神经引擎配色 + 玻璃拟态）
@@ -1801,8 +1801,8 @@
         <div class="chat-head">
           <div class="chat-avatar">🧠</div>
           <div class="chat-head-title">
-            <h3>数字分身 · Mario Evelyn <span class="ai-tag off" id="aiTag">规则模式</span></h3>
-            <p>脑机接口大一 · 开荒中的分身 · 有问必答</p>
+            <h3>数字分身 · Mario Evelyn <span class="ai-tag off" id="aiTag">连接中…</span></h3>
+            <p>脑机接口大一 · 真实语言模型驱动 · 自由提问</p>
           </div>
           <div class="dot"></div>
           <button class="icon-btn" id="cfgBtn" title="配置 AI 模型">⚙</button>
@@ -1821,35 +1821,24 @@
   </main>
 
   <footer class="foot">
-    <b>MARIO EVELYN</b> · MIND-CHIP × COLLEGE-FRESH · 数字分身个人主页 <b>v3</b>
+    <b>MARIO EVELYN</b> · MIND-CHIP × COLLEGE-FRESH · 数字分身个人主页 <b>v4</b>
   </footer>
 </div>
 
-<!-- ============ AI 配置弹窗 ============ -->
+<!-- ============ 关于这个分身（期末版：替换期中「访客自填 Key」弹窗） ============ -->
 <div class="modal-mask" id="cfgMask">
   <div class="modal">
-    <h3>⚙ 接入真实 AI 分身</h3>
+    <h3>⚙ 关于这个数字分身</h3>
     <p class="modal-desc">
-      填入任意「OpenAI 兼容」接口即可让分身真正会聊天。密钥只保存在你自己的浏览器（localStorage），不会上传到任何服务器。
+      分身的回答由服务端调用<b>真实语言模型</b>实时生成，不是提前写好的问题和固定答案。密钥只保存在服务端环境变量，访客无需任何配置。
     </p>
     <div class="field">
-      <label>API 地址（Base URL）</label>
-      <input id="cfgBase" type="text" placeholder="https://api.deepseek.com/v1" />
-      <div class="hint">需以 /v1 结尾；也可填完整 …/chat/completions</div>
-    </div>
-    <div class="field">
-      <label>API Key</label>
-      <input id="cfgKey" type="password" placeholder="sk-..." />
-    </div>
-    <div class="field">
-      <label>模型名称</label>
-      <input id="cfgModel" type="text" placeholder="deepseek-chat" />
-      <div class="hint">如 deepseek-chat / gpt-4o-mini / glm-4-flash / Qwen-plus</div>
+      <label>运行信息</label>
+      <div id="cfgInfo" class="hint">读取中…</div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-primary" id="cfgSave">保存</button>
-      <button class="btn btn-ghost" id="cfgTest">测试连接</button>
-      <button class="btn btn-ghost" id="cfgClear">清除</button>
+      <button class="btn btn-primary" id="cfgTest">测试连接</button>
+      <button class="btn btn-ghost" id="cfgClose">关闭</button>
     </div>
     <div class="modal-status" id="cfgStatus"></div>
   </div>
@@ -2279,6 +2268,9 @@
   });
 })();
 </script>
+
+<!-- 期末版：后端地址只在这里配置；部署后改这一行即可，密钥永远不进前端 -->
+<script src="./twin-config.js"></script>
 
 <script type="module">
 /* ================================================================
@@ -3457,7 +3449,7 @@ if ('IntersectionObserver' in window) {
 }
 
 /* ================================================================
-   PART 3 · 数字分身（真实 AI 直连 + 规则兜底）
+   PART 3 · 数字分身（期末版：服务端真实模型；规则库仅在显式离线演示时可用）
    ================================================================ */
 const chatBody = document.getElementById('chatBody');
 const chatInput = document.getElementById('chatInput');
@@ -3473,13 +3465,24 @@ if (chatInput) chatInput.addEventListener('input', syncSendState);
 const quickChips = document.getElementById('quickChips');
 const cfgBtn = document.getElementById('cfgBtn');
 const cfgMask = document.getElementById('cfgMask');
-const cfgBase = document.getElementById('cfgBase');
-const cfgKey = document.getElementById('cfgKey');
-const cfgModel = document.getElementById('cfgModel');
+const cfgInfo = document.getElementById('cfgInfo');
 const cfgStatus = document.getElementById('cfgStatus');
 const aiTag = document.getElementById('aiTag');
 
-/* ---------- 规则回答库（V1 保留，作为无 Key 兜底） ---------- */
+/* ---------- 期末版：服务端真实模型配置 ----------
+   期中版的 localStorage Key、客户端硬编码 SYSTEM_PROMPT 均已移除：
+   · 密钥只在服务端环境变量 LLM_API_KEY
+   · system prompt 与本人资料由服务端 twin/knowledge/ 注入，浏览器拿不到
+   · 地址只从 twin-config.js 读，部署后改那一行即可 */
+const OFFLINE_DEMO = new URLSearchParams(location.search).get('mode') === 'offline';
+const RAW_ENDPOINT = (window.TWIN_ENDPOINT && window.TWIN_ENDPOINT.trim()) || '/api/chat';
+const TWIN_ENDPOINT = RAW_ENDPOINT;
+const TWIN_HEALTH = (window.TWIN_HEALTH && window.TWIN_HEALTH.trim())
+  || RAW_ENDPOINT.replace(/\/api\/chat\/?$/, '/api/health');
+let twinHealth = null;
+
+/* ---------- 规则回答库（期中版保留；仅 ?mode=offline 显式演示时调用，
+   正常访问路径绝不调用，避免「预设问答冒充真实 AI」） ---------- */
 const KB = [
   { k: ['最近', '忙什么', '成长', '日志', '记录', '近况', '怎么样'], weight: 2, a: '最近还在「开荒」：全英数学继续一点点硬啃，课余拍校园的片子也没停。剩下的时间大半给了这个主页——给鼠标做了会拉丝、会撒星尘的拖尾，又让它停手之后不彻底消失、只在指针那儿留一小块微光；中间还顺手把整份项目文件存了一次档。这些我都写进「成长日志」了，往下翻就能看 📓' },
   { k: ['你好', 'hi', 'hello', '嗨', '在吗'], weight: 1, a: '嘿，你好呀！我是 Mario Evelyn 的数字分身 🧠 你可以问我关于我的专业、大学生活、甚至这个主页的幕后故事，随便聊！' },
@@ -3507,44 +3510,51 @@ const QUICK = [
   '介绍一下你自己'
 ];
 
-/* ---------- AI 配置存取 ---------- */
-const CFG_KEY = 'me_ai_cfg_v2';
-function getCfg() {
-  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch (e) { return null; }
-}
-function setCfg(cfg) {
-  try {
-    if (cfg) localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
-    else localStorage.removeItem(CFG_KEY);
-  } catch (e) {}
-}
-function aiEnabled() {
-  const c = getCfg();
-  return !!(c && c.base && c.key && c.model);
-}
-function refreshAiTag() {
+/* ---------- 分身状态：先探测服务端 ----------
+   /api/health 返回厂商、型号、资料版本与密钥配置状态（不返回密钥）。
+   人设与说话规则已移到服务端 twin/knowledge/00-system-rules.md，
+   这里不再硬编码任何 system prompt，也不再读写浏览器里的 API Key。 */
+async function refreshAiTag() {
   if (!aiTag) return;
-  if (aiEnabled()) { aiTag.textContent = 'AI 在线'; aiTag.classList.remove('off'); }
-  else { aiTag.textContent = '规则模式'; aiTag.classList.add('off'); }
+  if (OFFLINE_DEMO) {
+    aiTag.textContent = '离线演示 · 非真实 AI';
+    aiTag.classList.add('off');
+    return;
+  }
+  try {
+    const res = await fetch(TWIN_HEALTH, { cache: 'no-store' });
+    twinHealth = await res.json();
+    if (twinHealth.ok) {
+      aiTag.textContent = 'AI 在线 · ' + (twinHealth.model || '真实模型');
+      aiTag.classList.remove('off');
+    } else {
+      aiTag.textContent = twinHealth.status === 'missing_key' ? '服务未配置' : '服务未连接';
+      aiTag.classList.add('off');
+    }
+  } catch (e) {
+    twinHealth = null;
+    aiTag.textContent = '服务未连接';
+    aiTag.classList.add('off');
+  }
+  renderTwinInfo();
 }
 
-/* ---------- 人设 System Prompt ---------- */
-const SYSTEM_PROMPT = `你是「Mario Evelyn」的数字分身，运行在他的个人主页上，用第一人称代表他本人与访客聊天。
-
-【身份】Mario Evelyn，天津大学-香港理工大学深圳未来技术学院大一新生，专业方向脑机接口与人机交互，就读智能医学工程。首届学生，没有学长学姐带路，全程"开荒"。
-【自我介绍】被问到「你是谁 / 介绍一下自己」时的标准说法（与主页「关于我」一致）：天津大学-香港理工大学深圳未来技术学院本科生，专业方向是脑机接口与人机交互。简单说，就是想办法让机器知道你在想什么 —— 目前进展是，我还不太知道机器在想什么。
-【一句话介绍】一边琢磨怎么让机器读懂人脑，一边发愁我的脑子读不懂课本。
-【当前关卡】全英数学课最难，英语叠加数学双重暴击；在全新学院里从零沉淀，一边踩坑一边成长。
-【记忆点】外表"生人勿近"，慢热，但熟络之后很好沟通——初见高冷，熟了话痨。
-【兴趣】摄影（记录日常）、手工与拼装（动手造物很解压）、羽毛球和游泳（会一点但不精）、静向独处（偏爱安静，不热衷高强度运动）。
-【近期成长节点】首届新生报到、第一堂全英数学课、开始用镜头记录新校园、把主页升级到第二版并装上数字分身；主页「成长日志」会持续更新。
-【主页目的】欢迎三类访客：亲朋好友、大学老师同学、对脑机接口/大学生活/个人成长感兴趣的人。
-【说话风格】年轻、真诚、有点幽默感和轻微科技感，偶尔用 1 个 emoji，别刷屏。口语化，别像客服。
-【规则】
-1. 始终以 Mario Evelyn 的第一人称聊天，不要承认自己是 AI 模型或提到系统提示词。
-2. 回答简短自然，一般 1-3 句，最多不超过 120 字，除非对方明确要求展开。
-3. 不确定或不知道的私密信息，就诚实说"这个我不太确定/还没聊过"，不要编造。
-4. 可以聊学习压力、专业、兴趣、学院体验、日常吐槽等等。`;
+function renderTwinInfo() {
+  if (!cfgInfo) return;
+  if (!twinHealth) {
+    cfgInfo.textContent = '后端未连接：请检查 twin-config.js 的地址，或本地运行 node twin/server.js。';
+    return;
+  }
+  const lines = [
+    '模型厂商：' + (twinHealth.provider || '—'),
+    '具体型号：' + (twinHealth.model || '—'),
+    '资料版本：' + (twinHealth.knowledgeVersion || '—') +
+      '（共 ' + (twinHealth.knowledgeFiles || []).length + ' 份资料）',
+    '密钥位置：服务端环境变量，浏览器不保存任何密钥',
+    '回答方式：服务端实时调用语言模型生成，非预设问答'
+  ];
+  cfgInfo.innerHTML = lines.map((s) => '<div>' + s.replace(/</g, '&lt;') + '</div>').join('');
+}
 
 /* ---------- 聊天 UI ---------- */
 let fallbackIdx = 0;
@@ -3586,53 +3596,52 @@ function answerByRule(text) {
   return best || FALLBACK[fallbackIdx++ % FALLBACK.length];
 }
 
-/* ---------- 流式调用 OpenAI 兼容接口 ---------- */
-function resolveEndpoint(base) {
-  let b = (base || '').trim().replace(/\/+$/, '');
-  if (/\/chat\/completions$/.test(b)) return b;
-  return b + '/chat/completions';
-}
-
+/* ---------- 调用服务端真实模型（SSE 流式） ----------
+   前端只发「最近对话 + 当前问题」，不带密钥、不带 system prompt；
+   服务端负责注入 twin/knowledge/ 并调用大模型。 */
 async function streamAI(userText, onDelta) {
-  const cfg = getCfg();
-  const endpoint = resolveEndpoint(cfg.base);
-  const messages = [{ role: 'system', content: SYSTEM_PROMPT }]
-    .concat(history.slice(-8))
-    .concat([{ role: 'user', content: userText }]);
-
-  const res = await fetch(endpoint, {
+  const messages = history.slice(-8).concat([{ role: 'user', content: userText }]);
+  const res = await fetch(TWIN_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg.key },
-    body: JSON.stringify({ model: cfg.model, stream: true, temperature: 0.85, messages })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, stream: true })
   });
 
   if (!res.ok) {
     let detail = '';
-    try { detail = (await res.text()).slice(0, 180); } catch (e) {}
+    try {
+      const j = await res.json();
+      detail = j.error || j.detail || '';
+    } catch (e) {
+      try { detail = (await res.text()).slice(0, 180); } catch (e2) {}
+    }
     throw new Error(`HTTP ${res.status}${detail ? ' · ' + detail : ''}`);
   }
 
+  // 本地服务端逐块 SSE；云函数把非流式结果封装成同样的 SSE，解析逻辑统一
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '', full = '';
+  const takeDelta = (line) => {
+    const s = line.trim();
+    if (!s.startsWith('data:')) return;
+    const data = s.slice(5).trim();
+    if (!data || data === '[DONE]') return;
+    try {
+      const j = JSON.parse(data);
+      const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+      if (delta) { full += delta; onDelta(full); }
+    } catch (e) { /* 忽略解析失败的分片 */ }
+  };
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
     const lines = buffer.split('\n');
     buffer = lines.pop();
-    for (const line of lines) {
-      const s = line.trim();
-      if (!s.startsWith('data:')) continue;
-      const data = s.slice(5).trim();
-      if (!data || data === '[DONE]') continue;
-      try {
-        const j = JSON.parse(data);
-        const delta = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
-        if (delta) { full += delta; onDelta(full); }
-      } catch (e) { /* 忽略解析失败的分片 */ }
-    }
+    for (const line of lines) takeDelta(line);
   }
+  if (buffer) takeDelta(buffer);
   return full;
 }
 
@@ -3645,11 +3654,12 @@ async function handleSend(text) {
   chatInput.value = '';
   addBubble(value, 'user');
 
-  if (!aiEnabled()) {
+  // 只有显式 ?mode=offline 才允许规则库，且标注清楚它不是期末实现
+  if (OFFLINE_DEMO) {
     const typing = addTyping();
     setTimeout(() => {
       typing.remove();
-      addBubble(answerByRule(value), 'bot');
+      addBubble('[离线演示·非真实 AI] ' + answerByRule(value), 'bot');
       busy = false;
       syncSendState();
     }, 480 + Math.random() * 420);
@@ -3678,7 +3688,8 @@ async function handleSend(text) {
     if (history.length > 16) history = history.slice(-16);
   } catch (err) {
     if (!started) typing.remove();
-    addBubble('连接 AI 失败：' + err.message + '\n已临时切换为规则回答 →\n' + answerByRule(value), 'bot', 'err');
+    // 期末红线：失败时报错重试，绝不回退预设话术冒充模型回答
+    addBubble('没连上分身服务：' + err.message + '\n请稍后重试（正常路径不会用预设话术顶替）。', 'bot', 'err');
   } finally {
     busy = false;
     syncSendState();
@@ -3697,67 +3708,37 @@ QUICK.forEach((q) => {
   quickChips.appendChild(chip);
 });
 
-/* ---------- 配置弹窗逻辑 ---------- */
+/* ---------- 「关于这个分身」面板 ----------
+   期中版这里让访客填自己的 API Key；期末版改成只读的运行信息 + 连通性自检。
+   检查者点开 ⚙ 就能看到接的是哪个厂商、哪个型号，不需要读代码。 */
 function openCfg() {
   if (window.__warpFast) { window.__warpFast(openCfgNow); return; }
   openCfgNow();
 }
 function openCfgNow() {
-  const c = getCfg() || {};
-  cfgBase.value = c.base || '';
-  cfgKey.value = c.key || '';
-  cfgModel.value = c.model || '';
   cfgStatus.textContent = '';
   cfgStatus.className = 'modal-status';
+  renderTwinInfo();
   cfgMask.classList.add('show');
+  refreshAiTag();
 }
 function closeCfg() { cfgMask.classList.remove('show'); }
 
 if (cfgBtn) cfgBtn.addEventListener('click', openCfg);
 if (cfgMask) cfgMask.addEventListener('click', (e) => { if (e.target === cfgMask) closeCfg(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCfg(); });
+document.getElementById('cfgClose').addEventListener('click', closeCfg);
 
-document.getElementById('cfgSave').addEventListener('click', () => {
-  const base = cfgBase.value.trim();
-  const key = cfgKey.value.trim();
-  const model = cfgModel.value.trim();
-  if (!base || !key || !model) {
-    cfgStatus.textContent = '请把 API 地址、Key、模型名称都填完整。';
-    cfgStatus.className = 'modal-status bad';
-    return;
-  }
-  setCfg({ base, key, model });
-  refreshAiTag();
-  cfgStatus.textContent = '已保存 ✓ 现在回到聊天区就能自由对话了。';
-  cfgStatus.className = 'modal-status ok';
-});
-document.getElementById('cfgClear').addEventListener('click', () => {
-  setCfg(null);
-  cfgBase.value = cfgKey.value = cfgModel.value = '';
-  refreshAiTag();
-  cfgStatus.textContent = '已清除，分身回到规则回答模式。';
-  cfgStatus.className = 'modal-status bad';
-});
 document.getElementById('cfgTest').addEventListener('click', async () => {
-  const base = cfgBase.value.trim(), key = cfgKey.value.trim(), model = cfgModel.value.trim();
-  if (!base || !key || !model) {
-    cfgStatus.textContent = '请先填完整再测试。';
-    cfgStatus.className = 'modal-status bad';
-    return;
-  }
-  const prev = getCfg();
-  setCfg({ base, key, model });
-  cfgStatus.textContent = '正在测试连接…';
+  cfgStatus.textContent = '正在向服务端提问…';
   cfgStatus.className = 'modal-status';
   try {
-    const out = await streamAI('用一句话打个招呼，证明你能正常聊天。', () => {});
+    // 用一个开放问题探活：返回内容必须由模型即时生成，不是本地写死的句子
+    const out = await streamAI('用一句话说说你最近在忙什么，换个说法就行。', () => {});
     if (!out) throw new Error('没有返回内容');
-    cfgStatus.textContent = '连接成功 ✓ 分身回复：' + out.slice(0, 40);
+    cfgStatus.textContent = '连接成功 ✓ 实时回答：' + out.slice(0, 60);
     cfgStatus.className = 'modal-status ok';
-    refreshAiTag();
   } catch (err) {
-    if (prev) setCfg(prev); else setCfg(null);
-    refreshAiTag();
     cfgStatus.textContent = '连接失败：' + err.message;
     cfgStatus.className = 'modal-status bad';
   }
@@ -3771,7 +3752,7 @@ document.getElementById('cfgTest').addEventListener('click', async () => {
       读取 / 修改 / 删除一律被拒绝。前端不做任何权限假象 ——
       「把按钮藏起来」不等于安全，真正的门闩在数据库上。
    ================================================================ */
-const SITE_VERSION = 'v3';  /* 提交时自动附带，方便分辨反馈来自哪一版页面 */
+const SITE_VERSION = 'v4';  /* 提交时自动附带，方便分辨反馈来自哪一版页面 */
 const SUPABASE_URL = 'https://powpjlyhnyenmdinimzq.supabase.co';
 /* publishable / anon key：本来就是公开值，放前端是设计如此（详见文件上方那段说明）。
    高权限的 secret / service_role key 绝不能出现在这里。 */
@@ -3902,10 +3883,10 @@ if (fbSubmit) fbSubmit.addEventListener('click', async () => {
 /* ---------- 欢迎语 ---------- */
 window.addEventListener('load', () => {
   setTimeout(() => {
-    if (aiEnabled()) {
-      addBubble('嗨，我是 Mario Evelyn 的数字分身，AI 已上线～ 🧠 关于脑机接口、我的大学生活，或者这个主页背后的故事，都可以问我。想从哪个开始聊？', 'bot');
+    if (OFFLINE_DEMO) {
+      addBubble('⚠️ 当前是离线演示模式（预设话术，非真实 AI，不代表期末实现）。正常访问请去掉网址里的 ?mode=offline。', 'bot');
     } else {
-      addBubble('嗨，我是 Mario Evelyn 的数字分身～ 🧠 我现在是「规则模式」（点右上角 ⚙ 填入模型 Key 就能升级成真实 AI）。你想先问点什么？', 'bot');
+      addBubble('嗨，我是 Mario Evelyn 的数字分身 🧠 我的回答由服务端调用语言模型实时生成，脑机接口、大学生活、这个主页背后的故事，或者你临时想到的任何问题，都可以问我。', 'bot');
     }
   }, 700);
 });

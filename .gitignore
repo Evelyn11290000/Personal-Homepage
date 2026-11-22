@@ -1,0 +1,16 @@
+# 密钥：绝不进仓库
+twin/.env
+.env
+*.env.local
+
+# 调用日志（含访客问题，留作本地证据，不公开）
+PROCESS/logs/*.jsonl
+
+# 系统 / 依赖
+.DS_Store
+node_modules/
+npm-debug.log*
+
+# 部署临时文件（仅上传云函数时用，不进仓库）
+twin-deploy.zip
+twin-scf-upload/

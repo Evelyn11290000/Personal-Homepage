@@ -1,0 +1,2 @@
+每次真实 API 调用会在这里追加 api-YYYY-MM-DD.jsonl（问题、回答、耗时、模型、token）。
+该文件类型已在 .gitignore 中排除，留作本地作业证据，不公开。

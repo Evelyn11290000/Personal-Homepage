@@ -1720,6 +1720,37 @@
   @media (max-width: 640px) {
     .chat-card { height: 560px; }        /* 手机上保持首页那档，输入法弹起也能用 */
   }
+
+  /* ============================================================
+     ★ 期末版 · 手机端聊天体验优化（2026-11-24）
+     问题：手机上 7 个快捷问题换行堆成 3-4 排，把聊天区挤到只剩一两条消息；
+           输入框对比度低，看起来像「不存在」。
+     改动：① 快捷问题改单行横向滚动  ② 输入框提高对比度、加大字号
+           ③ 手机卡片用动态高度，把空间还给对话  ④ 底部悬浮按钮避让输入框
+     ============================================================ */
+  @media (max-width: 640px) {
+    /* 卡片高度跟着可用视口走，输入法弹起也不至于把输入框顶没 */
+    .chat-card { height: min(72dvh, 640px); min-height: 480px; }
+    /* 快捷问题：单行横向滑动，不再堆叠 */
+    .chat-quick {
+      flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding: 8px 12px; gap: 8px; scrollbar-width: none;
+    }
+    .chat-quick::-webkit-scrollbar { display: none; }
+    .chat-quick .chip { flex: 0 0 auto; white-space: nowrap; min-height: 38px; padding: 6px 13px; font-size: 12px; }
+    /* 输入框：更亮的底、更明显的边框、更大的字 */
+    .chat-input { padding: 10px 12px; background: rgba(8, 18, 26, 0.92); }
+    .chat-input input {
+      background: rgba(20, 38, 50, 0.95); border-color: rgba(0, 240, 255, 0.38);
+      font-size: 16px; padding: 12px 14px;
+    }
+    .chat-input input::placeholder { color: rgba(190, 220, 228, 0.75); }
+    .chat-input button { padding: 0 18px; min-height: 44px; }
+    /* 对话区多留点空间 */
+    .chat-body { padding: 14px 12px; }
+    /* 底部悬浮按钮往上挪，别压住输入区 */
+    .chat-back { margin-bottom: 76px; }
+  }
 </style>
 <script>
 /* ================================================================
